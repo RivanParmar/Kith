@@ -1,6 +1,5 @@
-package com.kith.ui.theme
+package com.kith.core.designsystem.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

@@ -30,4 +30,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Kith"
+
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(":app")

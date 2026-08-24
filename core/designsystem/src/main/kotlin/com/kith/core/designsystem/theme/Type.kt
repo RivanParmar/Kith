@@ -1,4 +1,4 @@
-package com.kith.ui.theme
+package com.kith.core.designsystem.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
