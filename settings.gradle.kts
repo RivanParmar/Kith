@@ -39,3 +39,8 @@ include(":core:designsystem")
 include(":core:model")
 include(":core:navigation")
 include(":core:ui")
+
+include(":feature:auth:api")
+include(":feature:auth:impl")
+include(":feature:onboarding:api")
+include(":feature:onboarding:impl")

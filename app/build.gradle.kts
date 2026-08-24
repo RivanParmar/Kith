@@ -1,43 +1,44 @@
+import com.kith.KithBuildType
+
 plugins {
     alias(libs.plugins.kith.android.application)
     alias(libs.plugins.kith.android.application.compose)
+    alias(libs.plugins.kith.hilt)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
     namespace = "com.kith"
-    compileSdk {
-        version = release(37)
-    }
 
     defaultConfig {
         applicationId = "com.kith"
-        minSdk = 28
-        targetSdk = 37
         versionCode = 1
-        versionName = "1.0"
+        versionName = "0.0.1" // X.Y.Z; X = Major, Y = minor, Z = Patch level
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = KithBuildType.DEBUG.applicationIdSuffix
+        }
         release {
             optimization {
                 enable = false
             }
         }
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-    buildFeatures {
-        compose = true
-    }
 }
 
 dependencies {
+    implementation(projects.feature.auth.api)
+    implementation(projects.feature.auth.impl)
+    implementation(projects.feature.onboarding.api)
+    implementation(projects.feature.onboarding.impl)
 
+    implementation(projects.core.ui)
     implementation(projects.core.designsystem)
+    implementation(projects.core.model)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
