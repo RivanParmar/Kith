@@ -33,3 +33,9 @@ rootProject.name = "Kith"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(":app")
+include(":core:datastore")
+include(":core:datastore-proto")
+include(":core:designsystem")
+include(":core:model")
+include(":core:navigation")
+include(":core:ui")
