@@ -21,6 +21,8 @@ kotlin {
 
 dependencies {
     compileOnly(libs.android.gradlePlugin)
+    compileOnly(libs.ksp.gradlePlugin)
+    compileOnly(libs.room.gradlePlugin)
 }
 
 tasks {
@@ -59,6 +61,10 @@ gradlePlugin {
         register("hilt") {
             id = libs.plugins.kith.hilt.get().pluginId
             implementationClass = "AndroidHiltConventionPlugin"
+        }
+        register("androidRoom") {
+            id = libs.plugins.kith.android.room.get().pluginId
+            implementationClass = "AndroidRoomConventionPlugin"
         }
         register("jvmLibrary") {
             id = libs.plugins.kith.jvm.library.get().pluginId
