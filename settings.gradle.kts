@@ -38,6 +38,7 @@ include(":core:datastore-proto")
 include(":core:designsystem")
 include(":core:model")
 include(":core:navigation")
+include(":core:network")
 include(":core:ui")
 
 include(":feature:auth:api")
