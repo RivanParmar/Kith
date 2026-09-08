@@ -5,4 +5,5 @@ data class User(
     val name : String,
     val profileImageUrl: String?,
     val isPremium: Boolean,
+    val rating: Float,
 )

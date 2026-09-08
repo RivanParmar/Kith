@@ -33,4 +33,5 @@ fun UserEntity.asExternalModel() = User(
     name = name,
     profileImageUrl = profileImageUrl,
     isPremium = isPremium,
+    rating = rating,
 )

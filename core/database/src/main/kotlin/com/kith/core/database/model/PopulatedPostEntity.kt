@@ -35,4 +35,5 @@ fun PopulatedPostEntity.asExternalModel() = Post(
     author = author.asExternalModel(),
     community = community.asExternalModel(),
     createdAt = post.createdAt,
+    isInPerson = post.isInPerson,
 )

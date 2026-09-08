@@ -10,4 +10,5 @@ data class Post(
     val author: User,
     val community: Community,
     val createdAt: Instant,
+    val isInPerson: Boolean,
 )
