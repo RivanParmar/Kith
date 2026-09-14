@@ -14,7 +14,7 @@
     <!-- Draw stroke from 0% to 100% -->
     <objectAnimator
         android:startOffset="800"
-        android:duration="600"
+        android:duration="750"
         android:interpolator="@android:interpolator/fast_out_slow_in"
         android:propertyName="trimPathEnd"
         android:valueFrom="0.0"
