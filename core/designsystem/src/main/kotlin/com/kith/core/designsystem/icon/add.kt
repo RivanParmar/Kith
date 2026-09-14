@@ -10,14 +10,14 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
 @Suppress("CheckReturnValue")
-internal val star_rate: ImageVector
+internal val add: ImageVector
   get() {
-    if (_star_rate != null) {
-      return _star_rate!!
+    if (_add != null) {
+      return _add!!
     }
-    _star_rate =
+    _add =
       ImageVector.Builder(
-          name = "star_rate",
+          name = "add",
           defaultWidth = 24.dp,
           defaultHeight = 24.dp,
           viewportWidth = 24f,
@@ -35,36 +35,24 @@ internal val star_rate: ImageVector
             strokeLineMiter = 1f,
             pathFillType = PathFillType.NonZero,
           ) {
-            moveTo(9.6f, 15.65f)
-            lineTo(12f, 13.8f)
-            lineToRelative(2.4f, 1.85f)
-            lineTo(13.5f, 12.6f)
-            lineTo(15.75f, 11f)
-            horizontalLineToRelative(-2.8f)
-            lineTo(12f, 7.9f)
-            lineTo(11.05f, 11f)
-            horizontalLineTo(8.25f)
-            lineToRelative(2.25f, 1.6f)
-            lineTo(9.6f, 15.65f)
-            close()
-            moveTo(5.83f, 21f)
-            lineTo(8.15f, 13.4f)
-            lineTo(2f, 9f)
-            horizontalLineTo(9.6f)
-            lineTo(12f, 1f)
-            lineToRelative(2.4f, 8f)
-            horizontalLineTo(22f)
-            lineToRelative(-6.15f, 4.4f)
-            lineTo(18.18f, 21f)
-            lineTo(12f, 16.3f)
-            lineTo(5.83f, 21f)
-            close()
-            moveTo(12f, 11.77f)
+            moveTo(11f, 13f)
+            horizontalLineTo(5f)
+            verticalLineTo(11f)
+            horizontalLineToRelative(6f)
+            verticalLineTo(5f)
+            horizontalLineToRelative(2f)
+            verticalLineToRelative(6f)
+            horizontalLineToRelative(6f)
+            verticalLineToRelative(2f)
+            horizontalLineTo(13f)
+            verticalLineToRelative(6f)
+            horizontalLineTo(11f)
+            verticalLineTo(13f)
             close()
           }
         }
         .build()
-    return _star_rate!!
+    return _add!!
   }
 
-private var _star_rate: ImageVector? = null
+private var _add: ImageVector? = null

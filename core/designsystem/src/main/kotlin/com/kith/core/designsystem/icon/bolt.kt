@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
 @Suppress("CheckReturnValue")
-public val bolt: ImageVector
+internal val bolt: ImageVector
   get() {
     if (_bolt != null) {
       return _bolt!!
