@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/kith_logo">
+    <target
+        android:name="logo_group"
+        android:animation="@animator/kith_logo_scale" />
+    <target
+        android:name="logo_circle"
+        android:animation="@animator/circle_trim" />
+    <target
+        android:name="logo_k"
+        android:animation="@animator/k_trim" />
+    <target
+        android:name="logo_dot"
+        android:animation="@animator/dot_trim" />
+</animated-vector>
