@@ -13,7 +13,7 @@ class AndroidAppConventionPlugin : Plugin<Project> {
 
             extensions.configure<ApplicationExtension> {
                 configureKotlinAndroid(this)
-                defaultConfig.targetSdk = 37
+                defaultConfig.targetSdk = 36
                 testOptions.animationsDisabled = true
             }
         }

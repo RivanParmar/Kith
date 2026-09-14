@@ -2,4 +2,11 @@
 <resources>
 
     <style name="Theme.Kith" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.Kith.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/kith_navy</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/kith_logo_animated</item>
+        <item name="windowSplashScreenAnimationDuration">2000</item>
+        <item name="postSplashScreenTheme">@style/Theme.Kith</item>
+    </style>
 </resources>
