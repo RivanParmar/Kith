@@ -19,7 +19,6 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.foundation.layout)
 
     implementation(libs.androidx.lifecycle.runtimeCompose)
     implementation(libs.androidx.hilt.lifecycle.viewModelCompose)

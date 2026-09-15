@@ -35,6 +35,7 @@ dependencies {
     implementation(projects.feature.auth.impl)
     implementation(projects.feature.onboarding.api)
     implementation(projects.feature.onboarding.impl)
+    implementation(projects.feature.profile.impl)
 
     implementation(projects.core.ui)
     implementation(projects.core.designsystem)
@@ -55,4 +56,5 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+    implementation("androidx.core:core-splashscreen:1.0.1")
 }
