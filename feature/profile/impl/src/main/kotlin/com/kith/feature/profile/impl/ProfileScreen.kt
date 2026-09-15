@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -35,6 +36,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +52,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kith.core.designsystem.component.LoadingWheel
 import com.kith.core.model.data.UserProfile
+import com.kith.feature.profile.impl.settings.SettingsDialog
 
 @Composable
 fun ProfileRoute(
@@ -97,10 +101,13 @@ fun ProfileScreen(
     onWalletClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var openSettingsDialog = remember { mutableStateOf(false) }
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFFF8F9FA))
+            .safeDrawingPadding()
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -109,7 +116,7 @@ fun ProfileScreen(
                 text = "Profile",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF0F172A),
+                color = Color.Black,
                 modifier = Modifier.padding(top = 16.dp, bottom = 24.dp)
             )
         }
@@ -145,12 +152,12 @@ fun ProfileScreen(
                             text = userProfile.name,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF0F172A)
+                            color = Color.Black
                         )
                         Text(
                             text = email,
                             fontSize = 14.sp,
-                            color = Color(0xFF64748B),
+                            color = Color.Black,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         OutlinedButton(
@@ -242,8 +249,9 @@ fun ProfileScreen(
                     ProfileMenuItem(
                         icon = Icons.Outlined.Settings,
                         label = "Settings",
-                        onClick = { /* TODO */ }
-                    )
+                        onClick = { 
+                            openSettingsDialog.value = true
+                        }                    )
 
                     HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
 
@@ -282,6 +290,12 @@ fun ProfileScreen(
                 )
             }
         }
+    }
+
+    if (openSettingsDialog.value == true) {
+        SettingsDialog(
+            onDismiss = { openSettingsDialog.value = false }
+        )
     }
 }
 

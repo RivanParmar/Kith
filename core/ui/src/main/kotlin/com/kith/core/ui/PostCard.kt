@@ -29,8 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kith.core.designsystem.icon.bolt
-import com.kith.core.designsystem.icon.star_rate
+import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.model.data.Community
 import com.kith.core.model.data.Post
 import com.kith.core.model.data.User
@@ -90,7 +89,7 @@ fun PostCard(
                     Spacer(modifier = Modifier.height(2.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = star_rate,
+                            imageVector = KithIcons.StarRate,
                             contentDescription = null,
                             tint = starColor,
                             modifier = Modifier.size(14.dp)
@@ -115,7 +114,7 @@ fun PostCard(
                 ) {
                     // Using a bolt-like icon, replace with the correct asset
                     Icon(
-                        imageVector = bolt, // Replace with lightning bolt asset
+                        imageVector = KithIcons.Bolt, // Replace with lightning bolt asset
                         contentDescription = null,
                         tint = brightBlueText,
                         modifier = Modifier.size(16.dp)
