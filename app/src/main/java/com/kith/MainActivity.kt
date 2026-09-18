@@ -5,14 +5,19 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.kith.core.data.util.NetworkMonitor
+import com.kith.core.designsystem.component.LoadingWheel
 import com.kith.core.designsystem.theme.KithTheme
 import com.kith.feature.home.api.navigation.HomeNavKey
 import com.kith.feature.onboarding.api.navigation.OnboardingNavKey
@@ -64,7 +69,12 @@ class MainActivity : ComponentActivity() {
             KithTheme {
                 when (val state = uiState) {
                     is MainActivityUiState.Loading -> {
-                        // Splash screen will be visible while the state loads
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            LoadingWheel(
+                                contentDesc = "Loading",
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
                     }
                     is MainActivityUiState.Success -> {
                         val startNavKey = if (state.userData.shouldHideOnboarding) {
