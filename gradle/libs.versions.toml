@@ -21,6 +21,7 @@ kotlin = "2.3.21"
 composeBom = "2026.08.00"
 hilt = "2.59"
 hiltExt = "1.2.0"
+kotlinxCoroutines = "1.11.0"
 kotlinxSerializationJson = "1.11.0"
 ktor = "3.5.2"
 ksp = "2.3.11"
@@ -80,6 +81,7 @@ hilt-ext-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.r
 hilt-ext-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltExt" }
 kotlin-metadata = { module = "org.jetbrains.kotlin:kotlin-metadata-jvm", version.ref = "kotlin" }
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlin" }
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
 ktor-android = { group = "io.ktor", name = "ktor-client-android", version.ref = "ktor" }
 protobuf-kotlin-lite = { group = "com.google.protobuf", name = "protobuf-kotlin-lite", version.ref = "protobuf" }
 protobuf-protoc = { group = "com.google.protobuf", name = "protoc", version.ref = "protobuf" }
