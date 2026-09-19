@@ -8,22 +8,8 @@ android {
 }
 
 dependencies {
-    // 2. Changed to match your root folder structure
-    implementation(project(":core:model"))
-    implementation(project(":core:ui"))
-    implementation(project(":core:data"))
-    implementation(project(":core:designsystem"))
+    implementation(projects.feature.home.api)
 
-    // Jetpack Compose libraries
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-
-    implementation(libs.androidx.lifecycle.runtimeCompose)
-    implementation(libs.androidx.hilt.lifecycle.viewModelCompose)
-
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
-
+    implementation(projects.core.model)
+    implementation(projects.core.data)
 }

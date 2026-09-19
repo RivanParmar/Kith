@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_onboarding_api_heading_page_one">Simplify Your Campus Life</string>
+    <string name="feature_onboarding_api_content_page_one">Trade small favors, tutor peers, exchange course notes, and earn XP rewards within your verified university network.</string>
+    <string name="feature_onboarding_api_heading_page_two">Explore Campus Requests</string>
+    <string name="feature_onboarding_api_content_page_two">Browse requests posted by peers nearby. Filter by academic help, note sharing, ride-shares, and general tasks waiting to be solved.</string>
+    <string name="feature_onboarding_api_heading_page_three">Earn XP &amp; Build Trust</string>
+    <string name="feature_onboarding_api_content_page_three">Receive XP bounties guaranteed upon completing favors. Level up your reputation tier, unlock exclusive campus perks, and gain verified trust.</string>
+    <string name="feature_onboarding_api_heading_page_four">Connect in Circles</string>
+    <string name="feature_onboarding_api_content_page_four">Join public and private circles of university clubs, sororities, dorms, and departments to coordinate tasks together.</string>
+
+    <string name="feature_onboarding_api_community_item_title_one">Computer Science Society</string>
+    <string name="feature_onboarding_api_community_item_supporting_one">1240 Members</string>
+    <string name="feature_onboarding_api_community_item_title_two">Economics Study Circle</string>
+    <string name="feature_onboarding_api_community_item_supporting_two">680 Members</string>
+</resources>

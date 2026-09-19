@@ -38,9 +38,26 @@
             <option value="$PROJECT_DIR$/feature/auth" />
             <option value="$PROJECT_DIR$/feature/auth/api" />
             <option value="$PROJECT_DIR$/feature/auth/impl" />
+            <option value="$PROJECT_DIR$/feature/browse" />
+            <option value="$PROJECT_DIR$/feature/browse/api" />
+            <option value="$PROJECT_DIR$/feature/browse/impl" />
+            <option value="$PROJECT_DIR$/feature/community" />
+            <option value="$PROJECT_DIR$/feature/community/api" />
+            <option value="$PROJECT_DIR$/feature/home" />
+            <option value="$PROJECT_DIR$/feature/home/api" />
+            <option value="$PROJECT_DIR$/feature/home/impl" />
+            <option value="$PROJECT_DIR$/feature/leaderboard" />
+            <option value="$PROJECT_DIR$/feature/leaderboard/api" />
+            <option value="$PROJECT_DIR$/feature/leaderboard/impl" />
             <option value="$PROJECT_DIR$/feature/onboarding" />
             <option value="$PROJECT_DIR$/feature/onboarding/api" />
             <option value="$PROJECT_DIR$/feature/onboarding/impl" />
+            <option value="$PROJECT_DIR$/feature/post" />
+            <option value="$PROJECT_DIR$/feature/post/api" />
+            <option value="$PROJECT_DIR$/feature/post/impl" />
+            <option value="$PROJECT_DIR$/feature/profile" />
+            <option value="$PROJECT_DIR$/feature/profile/api" />
+            <option value="$PROJECT_DIR$/feature/profile/impl" />
             <option value="$PROJECT_DIR$/sync" />
             <option value="$PROJECT_DIR$/sync/work" />
           </set>

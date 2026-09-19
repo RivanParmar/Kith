@@ -6,3 +6,7 @@ plugins {
 android {
     namespace = "com.kith.feature.leaderboard.impl"
 }
+
+dependencies {
+    implementation(projects.feature.leaderboard.api)
+}

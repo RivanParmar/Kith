@@ -8,5 +8,10 @@ android {
 }
 
 dependencies {
+    implementation(projects.feature.home.api)
     implementation(projects.feature.onboarding.api)
+
+    implementation(projects.core.data)
+
+    implementation(libs.androidx.graphics.shapes)
 }

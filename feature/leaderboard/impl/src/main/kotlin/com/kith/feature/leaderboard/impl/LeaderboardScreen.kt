@@ -1,41 +1,61 @@
-package com.example.leaderboard
+package com.kith.feature.leaderboard.impl
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ListAlt
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kith.core.designsystem.icon.KithIcons
+import com.kith.core.designsystem.theme.KithTheme
+
 //import coil.compose.AsyncImage
 
 
@@ -55,41 +75,6 @@ val GoldColor = Color(0xFFF59E0B)
 val SilverColor = Color(0xFF94A3B8)
 val BronzeColor = Color(0xFFB45309)
 
-// =============================================================================
-// DATA MODELS FOR DYNAMIC STATE
-// =============================================================================
-enum class LeaderboardTab(val title: String) {
-    BY_XP("By XP"),
-    BY_TASKS("By Tasks"),
-    BY_RATING("By Rating")
-}
-
-enum class Timeframe(val label: String, val multiplier: Float) {
-    WEEKLY("This Week", 1.0f),
-    MONTHLY("This Month", 3.8f),
-    ALL_TIME("All Time", 11.5f)
-}
-
-data class LeaderboardUser(
-    val id: String,
-    val name: String,
-    val department: String,
-    val avatarUrl: String,
-    val xp: Int,
-    val tasks: Int,
-    val rating: Float,
-    val streakDays: Int = 5,
-    val isCurrentUser: Boolean = false,
-    val bio: String = ""
-)
-
-enum class NavItem(val title: String, val icon: ImageVector) {
-    HOME("Home", Icons.Outlined.Home),
-    BROWSE("Browse", Icons.Outlined.Search),
-    TASKS("My Tasks", Icons.AutoMirrored.Filled.ListAlt),
-    LEADERBOARD("Leader Board", Icons.Filled.EmojiEvents),
-    PROFILE("Profile", Icons.Outlined.Person)
-}
 
 // Initial Baseline Users (Matching Reference Design)
 val initialLeaderboardUsers = listOf(
@@ -180,12 +165,10 @@ val initialLeaderboardUsers = listOf(
 @Composable
 fun LeaderboardScreen(
     modifier: Modifier = Modifier,
-    onNavigate: (NavItem) -> Unit = {}
 ) {
     // Dynamic State Holders
     var selectedTab by remember { mutableStateOf(LeaderboardTab.BY_XP) }
     var selectedTimeframe by remember { mutableStateOf(Timeframe.WEEKLY) }
-    var selectedNav by remember { mutableStateOf(NavItem.LEADERBOARD) }
     var searchQuery by remember { mutableStateOf("") }
     var isSearchActive by remember { mutableStateOf(false) }
     var usersList by remember { mutableStateOf(initialLeaderboardUsers) }
@@ -229,7 +212,9 @@ fun LeaderboardScreen(
         containerColor = Color.White,
 
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
@@ -251,13 +236,7 @@ fun LeaderboardScreen(
                             color = TextDark
                         )
 
-                        IconButton(onClick = { isSearchActive = !isSearchActive }) {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search",
-                                tint = if (isSearchActive) PrimaryBlue else TextMuted
-                            )
-                        }
+
                     }
                 }
 
@@ -274,12 +253,12 @@ fun LeaderboardScreen(
                                 .padding(bottom = 6.dp),
                             shape = RoundedCornerShape(14.dp),
                             leadingIcon = {
-                                Icon(Icons.Default.Search, contentDescription = null, tint = TextMuted)
+                                Icon(KithIcons.Add, contentDescription = null, tint = TextMuted)
                             },
                             trailingIcon = {
                                 if (searchQuery.isNotEmpty()) {
                                     IconButton(onClick = { searchQuery = "" }) {
-                                        Icon(Icons.Default.Close, contentDescription = "Clear", tint = TextMuted)
+                                        Icon(KithIcons.Bolt, contentDescription = "Clear", tint = TextMuted)
                                     }
                                 }
                             },
@@ -344,26 +323,8 @@ fun LeaderboardScreen(
                     }
                 }
 
-                // Interactive Dynamic XP Boost Simulator (At bottom of scroll)
-                item {
-                    SimulatorCard(
-                        onAddXP = { amount ->
-                            usersList = usersList.map {
-                                if (it.isCurrentUser) {
-                                    it.copy(
-                                        xp = it.xp + amount,
-                                        tasks = it.tasks + (amount / 50),
-                                        streakDays = it.streakDays + 1
-                                    )
-                                } else it
-                            }
-                        },
-                        onReset = {
-                            usersList = initialLeaderboardUsers
-                            searchQuery = ""
-                        }
-                    )
-                }
+
+
             }
 
             // User Detail Profile Bottom Sheet
@@ -453,6 +414,8 @@ fun DynamicPodiumSection(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.Bottom
     ) {
+        Spacer(modifier = Modifier.width(25.dp))
+
         // Rank 2 - Silver
         PodiumColumn(
             user = second,
@@ -469,7 +432,7 @@ fun DynamicPodiumSection(
             modifier = Modifier.weight(1f)
         )
 
-        Spacer(modifier = Modifier.width(30.dp))
+        Spacer(modifier = Modifier.width(45.dp))
 
         // Rank 1 - Gold (Elevated & Tallest)
         PodiumColumn(
@@ -487,7 +450,7 @@ fun DynamicPodiumSection(
             modifier = Modifier.weight(1.05f)
         )
 
-        Spacer(modifier = Modifier.width(30.dp))
+        Spacer(modifier = Modifier.width(45.dp))
 
         // Rank 3 - Bronze
         PodiumColumn(
@@ -504,6 +467,9 @@ fun DynamicPodiumSection(
             onClick = { onUserClick(third) },
             modifier = Modifier.weight(1f)
         )
+
+        Spacer(modifier = Modifier.width(25.dp))
+
     }
 }
 
@@ -704,66 +670,14 @@ fun ParticipantBottomSheet(
                 Text("• Rating Score: ${user.rating} ★", fontSize = 13.sp)
                 Text("• Streak: ${user.streakDays} days active 🔥", fontSize = 13.sp)
                 if (user.bio.isNotBlank()) {
-                    Text(user.bio, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, fontSize = 12.sp, color = TextMuted)
+                    Text(user.bio, fontStyle = FontStyle.Italic, fontSize = 12.sp, color = TextMuted)
                 }
             }
         }
     )
 }
 
-@Composable
-fun SimulatorCard(
-    onAddXP: (Int) -> Unit,
-    onReset: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth().padding(top = 10.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
-        shape = RoundedCornerShape(16.dp),
-        border = CardDefaults.outlinedCardBorder()
-    ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Text(
-                text = "⚡ Real-Time XP Simulator",
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
-                color = TextDark
-            )
-            Text(
-                text = "Add XP to Alex Rivera to trigger dynamic re-ranking animations!",
-                fontSize = 11.sp,
-                color = TextMuted,
-                modifier = Modifier.padding(vertical = 4.dp)
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = { onAddXP(150) },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
-                ) {
-                    Text("+150 XP", fontSize = 11.sp)
-                }
-                Button(
-                    onClick = { onAddXP(800) },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4F46E5))
-                ) {
-                    Text("+800 XP", fontSize = 11.sp)
-                }
-                OutlinedButton(
-                    onClick = onReset,
-                    modifier = Modifier.weight(0.8f)
-                ) {
-                    Text("Reset", fontSize = 11.sp)
-                }
-            }
-        }
-    }
-}
+
 
 
 
@@ -784,13 +698,10 @@ fun formatUserScore(user: LeaderboardUser, tab: LeaderboardTab, multiplier: Floa
     }
 }
 
-// =============================================================================
-// ANDROID STUDIO PREVIEW
-// =============================================================================
-@Preview(showBackground = true, widthDp = 390, heightDp = 844)
+@Preview
 @Composable
-fun LeaderboardScreenPreview() {
-    MaterialTheme {
+private fun LeaderboardPreview() {
+    KithTheme {
         LeaderboardScreen()
     }
 }

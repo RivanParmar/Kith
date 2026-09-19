@@ -7,3 +7,6 @@ android {
     namespace = "com.kith.feature.post.impl"
 }
 
+dependencies {
+    implementation(projects.feature.post.api)
+}
