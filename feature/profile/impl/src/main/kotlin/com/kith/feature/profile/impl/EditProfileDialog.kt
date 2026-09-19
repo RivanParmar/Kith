@@ -3,9 +3,6 @@ package com.kith.feature.profile.impl
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.kith.core.designsystem.icon.KithIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,7 +40,7 @@ fun EditProfileDialog(
                     title = { Text("Edit Profile", fontSize = 18.sp, fontWeight = FontWeight.Bold) },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, contentDescription = "Close")
+                            Icon(KithIcons.Add, contentDescription = "Close")
                         }
                     },
                     actions = {
@@ -75,7 +73,7 @@ fun EditProfileDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         // TODO: Use AsyncImage here when implementing real images
-                        Icon(Icons.Outlined.PhotoCamera, contentDescription = null, tint = Color(0xFF94A3B8))
+                        Icon(KithIcons.Add, contentDescription = null, tint = Color(0xFF94A3B8))
                     }
                     SmallFloatingActionButton(
                         onClick = { /* TODO: Launch Photo Picker */ },
@@ -83,7 +81,7 @@ fun EditProfileDialog(
                         containerColor = Color(0xFF3B82F6),
                         modifier = Modifier.size(32.dp)
                     ) {
-                        Icon(Icons.Outlined.PhotoCamera, contentDescription = "Edit Photo", tint = Color.White, modifier = Modifier.size(16.dp))
+                        Icon(KithIcons.Add, contentDescription = "Edit Photo", tint = Color.White, modifier = Modifier.size(16.dp))
                     }
                 }
 

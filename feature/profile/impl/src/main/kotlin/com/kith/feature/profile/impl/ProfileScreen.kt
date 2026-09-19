@@ -19,14 +19,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ExitToApp
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Group
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.StarBorder
-import androidx.compose.material.icons.outlined.Wallet
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -48,9 +40,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kith.core.designsystem.component.LoadingWheel
+import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.model.data.UserProfile
 import com.kith.feature.profile.impl.settings.SettingsDialog
 
@@ -74,9 +67,11 @@ fun ProfileRoute(
         is ProfileUiState.Success -> {
             ProfileScreen(
                 userProfile = state.userProfile,
-                email = state.email,
                 onEditClick = viewModel::showEditDialog,
                 onWalletClick = onWalletClick,
+                onLogoutClick = {
+                    // TODO: Hook this up to your AuthViewModel or App Navigator to handle logout
+                },
                 modifier = modifier
             )
 
@@ -96,12 +91,12 @@ fun ProfileRoute(
 @Composable
 fun ProfileScreen(
     userProfile: UserProfile,
-    email: String,
     onEditClick: () -> Unit,
     onWalletClick: () -> Unit,
+    onLogoutClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var openSettingsDialog = remember { mutableStateOf(false) }
+    val openSettingsDialog = remember { mutableStateOf(false) }
 
     LazyColumn(
         modifier = modifier
@@ -141,6 +136,7 @@ fun ProfileScreen(
                             .clip(CircleShape)
                             .background(Color(0xFFE2E8F0))
                     )
+                    // TODO: Replace Box with AsyncImage or Image when implementing image loading
 
                     Spacer(modifier = Modifier.width(16.dp))
 
@@ -154,12 +150,27 @@ fun ProfileScreen(
                             fontWeight = FontWeight.Bold,
                             color = Color.Black
                         )
-                        Text(
-                            text = email,
-                            fontSize = 14.sp,
-                            color = Color.Black,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
+
+                        // Rating moved here, replacing the email text
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
+                        ) {
+                            Icon(
+                                imageVector = KithIcons.Add,
+                                contentDescription = "Rating",
+                                tint = Color(0xFFF59E0B),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = userProfile.rating.toString(),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                        }
+
                         OutlinedButton(
                             onClick = onEditClick,
                             shape = RoundedCornerShape(50),
@@ -168,7 +179,7 @@ fun ProfileScreen(
                             modifier = Modifier.height(36.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Outlined.Edit,
+                                imageVector = KithIcons.Add,
                                 contentDescription = "Edit",
                                 tint = Color(0xFF3B82F6),
                                 modifier = Modifier.size(16.dp)
@@ -186,7 +197,7 @@ fun ProfileScreen(
             }
         }
 
-        // Stats Row
+        // Stats Row (Now only Solved and XP)
         item {
             Row(
                 modifier = Modifier
@@ -194,14 +205,6 @@ fun ProfileScreen(
                     .padding(vertical = 24.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                ProfileStatCard(
-                    value = userProfile.rating.toString(),
-                    label = "RATING",
-                    valueColor = Color(0xFFF59E0B),
-                    icon = Icons.Outlined.StarBorder,
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
                 ProfileStatCard(
                     value = userProfile.problemsSolved.toString(),
                     label = "SOLVED",
@@ -228,7 +231,7 @@ fun ProfileScreen(
             ) {
                 Column {
                     ProfileMenuItem(
-                        icon = Icons.Outlined.Wallet,
+                        icon = KithIcons.Add,
                         label = "Wallet",
                         onClick = onWalletClick
                     )
@@ -236,7 +239,7 @@ fun ProfileScreen(
                     HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
 
                     ProfileMenuItem(
-                        icon = Icons.Outlined.StarBorder,
+                        icon = KithIcons.Add,
                         label = "Upgrade to Premium",
                         labelColor = Color(0xFF3B82F6),
                         backgroundColor = Color(0xFFEFF6FF),
@@ -247,16 +250,17 @@ fun ProfileScreen(
                     HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
 
                     ProfileMenuItem(
-                        icon = Icons.Outlined.Settings,
+                        icon = KithIcons.Add,
                         label = "Settings",
-                        onClick = { 
+                        onClick = {
                             openSettingsDialog.value = true
-                        }                    )
+                        }
+                    )
 
                     HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
 
                     ProfileMenuItem(
-                        icon = Icons.Outlined.Group,
+                        icon = KithIcons.Add,
                         label = "Community Settings",
                         onClick = { /* TODO */ }
                     )
@@ -267,7 +271,7 @@ fun ProfileScreen(
         // Logout Button
         item {
             OutlinedButton(
-                onClick = {  },
+                onClick =onLogoutClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 48.dp, bottom = 24.dp)
@@ -277,7 +281,7 @@ fun ProfileScreen(
                 colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFFFEF2F2))
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.ExitToApp,
+                    imageVector = KithIcons.Add,
                     contentDescription = "Log Out",
                     tint = Color(0xFFEF4444)
                 )
@@ -292,7 +296,7 @@ fun ProfileScreen(
         }
     }
 
-    if (openSettingsDialog.value == true) {
+    if (openSettingsDialog.value) {
         SettingsDialog(
             onDismiss = { openSettingsDialog.value = false }
         )
@@ -395,7 +399,7 @@ fun ProfileMenuItem(
         }
 
         Icon(
-            imageVector = Icons.Default.ChevronRight,
+            imageVector = KithIcons.Add,
             contentDescription = "Navigate",
             tint = Color(0xFF94A3B8),
             modifier = Modifier.size(20.dp)
@@ -427,9 +431,9 @@ fun ProfileScreenPreview() {
                 problemsSolved = 42,
                 isPremium = true
             ),
-            email = "elena.rostova@university.edu",
             onEditClick = {},
-            onWalletClick = {}
+            onWalletClick = {} ,
+                    onLogoutClick = {}
         )
     }
 }

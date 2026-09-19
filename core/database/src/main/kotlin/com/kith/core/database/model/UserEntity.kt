@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.kith.core.model.data.User
+import com.kith.core.model.data.UserProfile
 import kotlin.time.Instant
 
 @Entity(
@@ -34,4 +35,16 @@ fun UserEntity.asExternalModel() = User(
     profileImageUrl = profileImageUrl,
     isPremium = isPremium,
     rating = rating,
+)
+
+fun UserEntity.asUserProfile() = UserProfile(
+    id = id,
+    name = name,
+    profileImageUrl = profileImageUrl,
+    bio = bio,
+    rating = rating,
+    problemsSolved = problemsSolved,
+    xp = xp,
+    isPremium = isPremium,
+    problemsAsked = problemsAsked
 )

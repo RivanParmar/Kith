@@ -7,10 +7,8 @@ sealed interface ProfileUiState {
 
     data class Success(
         val userProfile: UserProfile,
-        val email: String,
         val isEditDialogVisible: Boolean = false
     ) : ProfileUiState
 
     data class Error(val message: String) : ProfileUiState
 }
-

@@ -2,79 +2,99 @@ package com.kith.feature.profile.impl
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kith.core.data.repository.UserRepository
 import com.kith.core.model.data.UserProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ProfileViewModel @Inject constructor() : ViewModel() {
+class ProfileViewModel @Inject constructor(
+    private val userRepository: UserRepository // 1. Inject the repository
+) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
-    val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
+    // 2. Separate local UI state from Database state
+    private val _isEditDialogVisible = MutableStateFlow(false)
+
+    // 3. Combine the Database stream with the local UI state stream
+    val uiState: StateFlow<ProfileUiState> = combine(
+        userRepository.getUserProfileStream(),
+        _isEditDialogVisible
+    ) { profile, isEditVisible ->
+        if (profile != null) {
+            ProfileUiState.Success(
+                userProfile = profile,
+                isEditDialogVisible = isEditVisible
+            ) as ProfileUiState
+        } else {
+            ProfileUiState.Error("User profile not found") as ProfileUiState
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = ProfileUiState.Loading,
+    )
+
+//    val uiState: StateFlow<ProfileUiState> = flow {
+//        val profileFlow = userRepository.getUserProfileStream()
+//
+//        val combinedFlow = combine(profileFlow, _isEditDialogVisible) { profile, isVisible ->
+//            ProfileUiState.Success(profile!!, isVisible)
+//        }
+//
+//        emit(combinedFlow as ProfileUiState)
+//    }.stateIn(
+//        scope = viewModelScope,
+//        started = SharingStarted.WhileSubscribed(5_000),
+//        initialValue = ProfileUiState.Loading,
+//    )
 
     init {
-        loadProfile()
-    }
-
-    private fun loadProfile() {
+        // 4. Trigger network sync on initialization
         viewModelScope.launch {
-
-            _uiState.value = ProfileUiState.Success(
-                userProfile = UserProfile(
-                    id = "u_1",
-                    name = "Mr X",
-                    profileImageUrl = null,
-                    bio = "B.Tech CSE Student at Darshan University",
-                    xp = 2400,
-                    rating = 4.9f,
-                    problemsAsked = 12,
-                    problemsSolved = 42,
-                    isPremium = true
-                ),
-                email = "akshil@example.com",
-                isEditDialogVisible = false
-            )
+            try {
+                userRepository.syncCurrentUser()
+            } catch (e: Exception) {
+                e.printStackTrace() // Handled gracefully as local DB serves cached data
+            }
         }
     }
 
     fun showEditDialog() {
-        _uiState.update { currentState ->
-            if (currentState is ProfileUiState.Success) {
-                currentState.copy(isEditDialogVisible = true)
-            } else currentState
-        }
+        _isEditDialogVisible.value = true
     }
 
     fun hideEditDialog() {
-        _uiState.update { currentState ->
-            if (currentState is ProfileUiState.Success) {
-                currentState.copy(isEditDialogVisible = false)
-            } else currentState
-        }
+        _isEditDialogVisible.value = false
     }
 
     fun saveProfile(newName: String, newBio: String, newImageUrl: String?) {
-        _uiState.update { currentState ->
-            if (currentState is ProfileUiState.Success) {
-                // Update local state instantly.
-                // In production, call repository.updateProfile() here.
-                val updatedProfile = currentState.userProfile.copy(
+        viewModelScope.launch {
+            try {
+                // Call the repository to sync the changes
+                userRepository.updateProfile(
                     name = newName,
                     bio = newBio,
                     profileImageUrl = newImageUrl
                 )
-                currentState.copy(
-                    userProfile = updatedProfile,
-                    isEditDialogVisible = false
-                )
-            } else currentState
+
+                // Hide the dialog only if the network and database updates succeed
+                _isEditDialogVisible.value = false
+            } catch (e: Exception) {
+                // If offline or Supabase fails, the exception is caught here.
+                // The dialog stays open so the user can try again later.
+                e.printStackTrace()
+            }
         }
     }
 }
