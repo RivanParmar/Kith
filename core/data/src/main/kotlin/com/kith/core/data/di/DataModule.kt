@@ -1,10 +1,15 @@
 package com.kith.core.data.di
 
 import com.kith.core.data.repository.DefaultRecentSearchRepository
+import com.kith.core.data.repository.OfflineFirstPostRepository
 import com.kith.core.data.repository.OfflineFirstUserDataRepository
+import com.kith.core.data.repository.OfflineFirstUserRepository
 import com.kith.core.data.repository.PostRepository
 import com.kith.core.data.repository.RecentSearchRepository
+import com.kith.core.data.repository.TransactionRepository
+import com.kith.core.data.repository.TransactionRepositoryImpl
 import com.kith.core.data.repository.UserDataRepository
+import com.kith.core.data.repository.UserRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -23,4 +28,20 @@ abstract class DataModule {
     internal abstract fun bindsUserDataRepository(
         userDataRepository: OfflineFirstUserDataRepository,
     ): UserDataRepository
+
+    @Binds
+    internal abstract fun bindsPostRepository(
+        postRepository: OfflineFirstPostRepository,
+    ): PostRepository
+
+    @Binds
+    abstract fun bindUserRepository(
+        impl: OfflineFirstUserRepository
+    ): UserRepository
+
+
+    @Binds
+    internal abstract fun bindTransactionRepository(
+        impl: TransactionRepositoryImpl
+    ): TransactionRepository
 }
