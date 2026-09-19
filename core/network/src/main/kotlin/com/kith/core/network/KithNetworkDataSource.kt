@@ -1,5 +1,20 @@
 package com.kith.core.network
 
-interface KithNetworkDataSource {
+import com.kith.core.network.model.NetworkCommunity
+import com.kith.core.network.model.NetworkPost
+import com.kith.core.network.model.NetworkTransaction
+import com.kith.core.network.model.NetworkUser
 
+interface KithNetworkDataSource {
+    /** Fetches the most recent [limit] posts, with author and community embedded. */
+    suspend fun getPosts(limit: Int = 20): List<NetworkPost>
+
+    /** Fetches a single user row — used for the Wallet card once auth is wired up. */
+    suspend fun getUserById(userId: String): NetworkUser
+
+    suspend fun getCommunityById(communityId: String): NetworkCommunity
+
+    suspend fun updateUserProfile(userId: String, name: String, bio: String, profileImageUrl: String?)
+
+    suspend fun getTransactionsForUser(userId: String): List<NetworkTransaction>
 }
