@@ -17,15 +17,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SignInViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(AuthUiState())
-    val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
-
-    // One-off UI events (navigation, toasts)
-    private val _uiEvent = Channel<AuthUiEvent>()
-    val uiEvent = _uiEvent.receiveAsFlow()
+    private val _uiState = MutableStateFlow(SignInUiState())
+    val uiState: StateFlow<SignInUiState> = _uiState.asStateFlow()
 
     fun onEmailChange(newEmail: String) {
         _uiState.update {
@@ -69,16 +65,20 @@ class SignInViewModel @Inject constructor(
                 email = currentState.email,
                 password = currentState.password
             ).onSuccess {
-                _uiState.update { it.copy(isLoading = false) }
-//                _uiEvent.send(AuthUiEvent.NavigateToHome)
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isSuccess = true,
+                    )
+                }
                 Log.d("SIGN_IN", "Success!")
             }.onFailure { throwable ->
-//                _uiState.update {
-//                    it.copy(
-//                        isLoading = false,
-//                        errorMessage = throwable.localizedMessage ?: "Sign in failed"
-//                    )
-//                }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = throwable.localizedMessage ?: "Sign in failed"
+                    )
+                }
                 Log.d("SIGN_IN", "Failed!")
                 Log.d("SIGN_IN", throwable.stackTraceToString())
             }
@@ -101,18 +101,6 @@ class SignInViewModel @Inject constructor(
         }
     }
 
-    fun onForgotPasswordClicked() {
-        viewModelScope.launch {
-            _uiEvent.send(AuthUiEvent.NavigateToForgotPassword)
-        }
-    }
-
-    fun onCreateAccountClicked() {
-        viewModelScope.launch {
-            _uiEvent.send(AuthUiEvent.NavigateToSignUp)
-        }
-    }
-
     private fun validateEmail(email: String): Boolean {
         return email.isNotBlank() && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
@@ -121,3 +109,13 @@ class SignInViewModel @Inject constructor(
         return password.isNotBlank() && password.length >= 6
     }
 }
+
+data class SignInUiState(
+    val email: String = "",
+    val password: String = "",
+    val isLoading: Boolean = false,
+    val isSuccess: Boolean = false,
+    val passwordError: String? = null,
+    val emailError: String? = null,
+    val errorMessage: String = "",
+)
