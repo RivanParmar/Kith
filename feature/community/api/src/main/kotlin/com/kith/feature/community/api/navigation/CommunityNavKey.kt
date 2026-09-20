@@ -4,4 +4,13 @@ import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
 @Serializable
-object CommunityNavKey : NavKey
+data object JoinCommunityNavKey : NavKey
+
+@Serializable
+data object CreateCommunityNavKey : NavKey
+
+@Serializable
+data object CommunityListNavKey : NavKey
+
+@Serializable
+data object CommunityDetailNavKey : NavKey
