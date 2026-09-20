@@ -1,9 +1,16 @@
 package com.kith.core.ui
 
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.kith.core.model.data.Community
 import com.kith.core.model.data.Post
 import com.kith.core.model.data.User
-import kotlin.time.Clock // Adjust this import if you are using java.time.Instant instead
+import com.kith.core.ui.KithPreviewData.posts
+import kotlin.time.Clock
+
+class PostPreviewParameterProvider : PreviewParameterProvider<List<Post>> {
+
+    override val values: Sequence<List<Post>> = sequenceOf(posts)
+}
 
 object KithPreviewData {
 
