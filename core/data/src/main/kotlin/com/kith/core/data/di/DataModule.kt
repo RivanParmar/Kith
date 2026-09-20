@@ -2,6 +2,8 @@ package com.kith.core.data.di
 
 import com.kith.core.data.repository.AuthRepository
 import com.kith.core.data.repository.DefaultRecentSearchRepository
+import com.kith.core.data.repository.NotificationRepository
+import com.kith.core.data.repository.NotificationRepositoryImpl
 import com.kith.core.data.repository.OfflineFirstPostRepository
 import com.kith.core.data.repository.OfflineFirstUserDataRepository
 import com.kith.core.data.repository.OfflineFirstUserRepository
@@ -53,6 +55,11 @@ abstract class DataModule {
     internal abstract fun bindsAuthRepository(
         authRepository: OfflineFirstAuthRepository,
     ): AuthRepository
+
+    @Binds
+    internal abstract fun bindsNotificationRepository(
+        notificationRepository: NotificationRepositoryImpl,
+    ): NotificationRepository
 
     @Binds
     internal abstract fun bindsNetworkMonitor(
