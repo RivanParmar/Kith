@@ -49,14 +49,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.SpanStyle
@@ -84,14 +85,10 @@ import kotlin.math.abs
 fun OnboardingScreen(
     modifier: Modifier = Modifier,
     viewModel: OnboardingViewModel = hiltViewModel(),
-    navigateToHome: () -> Unit,
 ) {
     OnboardingScreen(
         modifier = modifier,
-        onOnboardingCompleted = {
-            viewModel.onCompleteOnboarding()
-            navigateToHome()
-        },
+        onOnboardingCompleted = viewModel::onCompleteOnboarding,
     )
 }
 
@@ -107,8 +104,8 @@ internal fun OnboardingScreen(
     val coroutineScope = rememberCoroutineScope()
 
     val xpFillProgress = remember { Animatable(0f) }
-    LaunchedEffect(pagerState.currentPage) {
-        if (pagerState.currentPage == 2) {
+    LaunchedEffect(pagerState.settledPage) {
+        if (pagerState.settledPage == 2) {
             xpFillProgress.animateTo(1f, tween(1200, easing = FastOutSlowInEasing))
         } else {
             xpFillProgress.snapTo(0f)
@@ -311,7 +308,7 @@ private fun AnimatedBackground(
     val androidPath = remember { Path() }
     val textMeasurer = rememberTextMeasurer()
     val androidPathMeasure = remember { android.graphics.PathMeasure() }
-    val animatedOutlineAndroidPath = remember { android.graphics.Path() }
+    val animatedOutlineAndroidPath = remember { Path() }
 
     val trackMorphs = remember(tracks) {
         tracks.map { track ->
@@ -379,6 +376,7 @@ private fun AnimatedBackground(
                         val outlineMatrix = Matrix().apply {
                             translate(trueCenter.x, trueCenter.y)
                             scale(1.15f, 1.15f)
+                            rotateZ(currentRotation)
                             translate(-trueCenter.x, -trueCenter.y)
                         }
 
@@ -387,20 +385,31 @@ private fun AnimatedBackground(
                             transform(outlineMatrix)
                         }
 
-                        androidPathMeasure.setPath(scaledOutline.asAndroidPath(), false)
-                        animatedOutlineAndroidPath.rewind()
-                        androidPathMeasure.getSegment(
-                            0f,
-                            androidPathMeasure.length * xpFillProgress,
-                            animatedOutlineAndroidPath,
-                            true
-                        )
+                        if (xpFillProgress > 0.001f) {
+                            val clipMask = androidx.compose.ui.graphics.Path().apply {
+                                moveTo(trueCenter.x, trueCenter.y)
+                                arcTo(
+                                    rect = Rect(
+                                        left = trueCenter.x - dynamicRadius * 2f,
+                                        top = trueCenter.y - dynamicRadius * 2f,
+                                        right = trueCenter.x + dynamicRadius * 2f,
+                                        bottom = trueCenter.y + dynamicRadius * 2f
+                                    ),
+                                    startAngleDegrees = -90f,
+                                    sweepAngleDegrees = (359.99f * xpFillProgress).coerceAtLeast(0.1f),
+                                    forceMoveTo = false
+                                )
+                                close()
+                            }
 
-                        drawPath(
-                            path = animatedOutlineAndroidPath.asComposePath(),
-                            color = Color.White.copy(alpha = 0.3f * page2Alpha),
-                            style = Stroke(width = 10.dp.toPx(), cap = StrokeCap.Round)
-                        )
+                            clipPath(path = clipMask) {
+                                drawPath(
+                                    path = scaledOutline,
+                                    color = Color.White.copy(alpha = 0.3f * page2Alpha),
+                                    style = Stroke(width = 10.dp.toPx(), cap = StrokeCap.Round)
+                                )
+                            }
+                        }
                     }
                 }
 
