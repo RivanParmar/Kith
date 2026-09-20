@@ -13,22 +13,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * ASSUMPTION (no strong preference was given, so this default was picked):
- * an [AuthRepository] already exists somewhere in the project with a
- * suspend function shaped like:
- *
- *     suspend fun sendPasswordResetEmail(email: String): Result<Unit>
- *
- * If your actual repository/use-case has a different name, package, or
- * signature (e.g. it throws instead of returning Result, or it's called
- * forgotPassword(...)), just swap the import below and the single call
- * site inside onSubmitClicked() -- nothing else needs to change.
- */
-
 @HiltViewModel
 class ForgotPasswordViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ForgotPasswordUiState())
@@ -39,7 +26,7 @@ class ForgotPasswordViewModel @Inject constructor(
             it.copy(
                 email = newEmail,
                 emailError = null,
-                errorMessage = ""
+                errorMessage = "",
             )
         }
     }
@@ -59,7 +46,7 @@ class ForgotPasswordViewModel @Inject constructor(
                 it.copy(
                     isLoading = true,
                     emailError = null,
-                    errorMessage = ""
+                    errorMessage = "",
                 )
             }
 
@@ -67,22 +54,22 @@ class ForgotPasswordViewModel @Inject constructor(
 
             result.fold(
                 onSuccess = {
-//                    _uiState.update {
-//                        it.copy(
-//                            isLoading = false,
-//                            isSuccess = true
-//                        )
-//                    }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isSuccess = true
+                        )
+                    }
                     Log.d("FORGOT_PASS", "Success!")
                 },
                 onFailure = { throwable ->
-//                    _uiState.update {
-//                        it.copy(
-//                            isLoading = false,
-//                            isSuccess = false,
-//                            errorMessage = throwable.message ?: "Something went wrong. Please try again."
-//                        )
-//                    }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isSuccess = false,
+                            errorMessage = throwable.message ?: "Something went wrong. Please try again."
+                        )
+                    }
                     Log.d("FORGOT_PASS", "Failed!")
                 }
             )
@@ -93,3 +80,11 @@ class ForgotPasswordViewModel @Inject constructor(
         return email.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 }
+
+data class ForgotPasswordUiState(
+    val email: String = "",
+    val isLoading: Boolean = false,
+    val emailError: String? = null,
+    val errorMessage: String = "",
+    val isSuccess: Boolean = false,
+)
