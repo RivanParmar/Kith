@@ -24,6 +24,7 @@ import com.kith.core.navigation.Navigator
 import com.kith.core.navigation.toEntries
 import com.kith.feature.auth.impl.navigation.authEntry
 import com.kith.feature.browse.impl.navigation.browseEntry
+import com.kith.feature.community.impl.navigation.communityEntry
 import com.kith.feature.home.impl.navigation.homeEntry
 import com.kith.feature.leaderboard.impl.navigation.leaderboardEntry
 import com.kith.feature.onboarding.impl.navigation.onboardingEntry
@@ -84,6 +85,7 @@ fun KithApp(
                 val entryProvider = entryProvider {
                     authEntry(navigator)
                     browseEntry(navigator)
+                    communityEntry(navigator)
                     homeEntry(navigator)
                     leaderboardEntry(navigator)
                     onboardingEntry(navigator)

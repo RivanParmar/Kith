@@ -36,6 +36,8 @@ dependencies {
     implementation(projects.feature.auth.impl)
     implementation(projects.feature.browse.api)
     implementation(projects.feature.browse.impl)
+    implementation(projects.feature.community.api)
+    implementation(projects.feature.community.impl)
     implementation(projects.feature.home.api)
     implementation(projects.feature.home.impl)
     implementation(projects.feature.leaderboard.api)
