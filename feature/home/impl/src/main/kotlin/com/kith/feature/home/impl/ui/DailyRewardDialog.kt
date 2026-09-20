@@ -6,10 +6,6 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.kith.core.designsystem.icon.KithIcons
 
 @Composable
 fun DailyRewardDialog(
@@ -93,7 +90,7 @@ fun DailyRewardScreen(
                     modifier = Modifier.padding(top = 8.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Close,
+                        imageVector = KithIcons.Add,
                         contentDescription = "Close",
                         tint = mainText,
                         modifier = Modifier.size(36.dp)
@@ -265,7 +262,7 @@ fun DayIndicator(
                 when {
                     isCompleted -> {
                         Icon(
-                            imageVector = Icons.Rounded.Check,
+                            imageVector = KithIcons.Search,
                             contentDescription = "Completed",
                             tint = iconTint,
                             modifier = Modifier.size(24.dp)
@@ -273,7 +270,7 @@ fun DayIndicator(
                     }
                     day == 7 -> {
                         Icon(
-                            imageVector = Icons.Rounded.Star,
+                            imageVector = KithIcons.StarRate,
                             contentDescription = "Day 7",
                             tint = iconTint,
                             modifier = Modifier.size(20.dp)

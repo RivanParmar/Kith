@@ -19,8 +19,6 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -39,17 +37,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.DarkNavy
 import com.kith.core.designsystem.theme.InterFontFamily
 import com.kith.core.designsystem.theme.OutfitFontFamily
 import com.kith.core.designsystem.theme.PrimaryBlue
-import com.kith.core.model.data.ConnectionState
 import com.kith.core.model.data.UserProfile
 
 @Composable
 fun OtherUserProfileScreen(
     userProfile: UserProfile,
-    connectionState: ConnectionState = ConnectionState.NOT_CONNECTED,
     onTagClick: () -> Unit = {},
     onRequestClick: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -108,7 +105,7 @@ fun OtherUserProfileScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.Person,
+                    imageVector = KithIcons.PersonOutlined,
                     contentDescription = "Default Profile",
                     tint = Color.White,
                     modifier = Modifier.size(56.dp)
@@ -209,24 +206,24 @@ fun OtherUserProfileScreen(
             
             Spacer(modifier = Modifier.weight(1f))
             
-            val requestButtonColor = when (connectionState) {
-                ConnectionState.NOT_CONNECTED -> if (isDark) PrimaryBlue else Color.Black
-                ConnectionState.PENDING_SENT -> Color.Gray
-                ConnectionState.PENDING_RECEIVED -> PrimaryBlue
-                ConnectionState.CONNECTED -> Color(0xFF10B981) // Green
-            }
+//            val requestButtonColor = when (connectionState) {
+//                ConnectionState.NOT_CONNECTED -> if (isDark) PrimaryBlue else Color.Black
+//                ConnectionState.PENDING_SENT -> Color.Gray
+//                ConnectionState.PENDING_RECEIVED -> PrimaryBlue
+//                ConnectionState.CONNECTED -> Color(0xFF10B981) // Green
+//            }
             val requestButtonTextColor = Color.White
-            val buttonText = when (connectionState) {
-                ConnectionState.NOT_CONNECTED -> "SEND REQUEST"
-                ConnectionState.PENDING_SENT -> "REQUEST SENT"
-                ConnectionState.PENDING_RECEIVED -> "ACCEPT REQUEST"
-                ConnectionState.CONNECTED -> "CONNECTED"
-            }
+//            val buttonText = when (connectionState) {
+//                ConnectionState.NOT_CONNECTED -> "SEND REQUEST"
+//                ConnectionState.PENDING_SENT -> "REQUEST SENT"
+//                ConnectionState.PENDING_RECEIVED -> "ACCEPT REQUEST"
+//                ConnectionState.CONNECTED -> "CONNECTED"
+//            }
             
             Button(
                 onClick = onRequestClick,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = requestButtonColor,
+                    containerColor = Color(0xFF10B981),
                     contentColor = requestButtonTextColor
                 ),
                 shape = RoundedCornerShape(50),
@@ -236,7 +233,7 @@ fun OtherUserProfileScreen(
                     .height(56.dp)
             ) {
                 Text(
-                    text = buttonText,
+                    text = "CONNECTED",
                     fontFamily = InterFontFamily,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,

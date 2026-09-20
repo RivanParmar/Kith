@@ -21,14 +21,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -46,23 +41,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.KithTheme
 
-//import coil.compose.AsyncImage
-
-
-
-// =============================================================================
-// COLOR PALETTE & DESIGN TOKENS
-// =============================================================================
 val PrimaryBlue = Color(0xFF2563EB)
 val LightBlueBg = Color(0xFFEFF6FF)
 val ActiveCardBorder = Color(0xFF3B82F6)
@@ -76,7 +62,6 @@ val SilverColor = Color(0xFF94A3B8)
 val BronzeColor = Color(0xFFB45309)
 
 
-// Initial Baseline Users (Matching Reference Design)
 val initialLeaderboardUsers = listOf(
     LeaderboardUser(
         id = "aris",
@@ -158,15 +143,11 @@ val initialLeaderboardUsers = listOf(
     )
 )
 
-// =============================================================================
-// MAIN DYNAMIC COMPOSABLE SCREEN
-// =============================================================================
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LeaderboardScreen(
     modifier: Modifier = Modifier,
 ) {
-    // Dynamic State Holders
     var selectedTab by remember { mutableStateOf(LeaderboardTab.BY_XP) }
     var selectedTimeframe by remember { mutableStateOf(Timeframe.WEEKLY) }
     var searchQuery by remember { mutableStateOf("") }
@@ -174,7 +155,6 @@ fun LeaderboardScreen(
     var usersList by remember { mutableStateOf(initialLeaderboardUsers) }
     var selectedUserForDetail by remember { mutableStateOf<LeaderboardUser?>(null) }
 
-    // Dynamic Re-ranking Logic
     val sortedUsers = remember(usersList, selectedTab, selectedTimeframe) {
         usersList.sortedByDescending { user ->
             when (selectedTab) {
@@ -185,7 +165,6 @@ fun LeaderboardScreen(
         }
     }
 
-    // Dynamic Search Filter
     val filteredUsers = remember(sortedUsers, searchQuery) {
         if (searchQuery.isBlank()) sortedUsers
         else sortedUsers.filter {
@@ -194,12 +173,10 @@ fun LeaderboardScreen(
         }
     }
 
-    // Extract Dynamic Top 3 for Podium
     val top1 = sortedUsers.getOrNull(0)
     val top2 = sortedUsers.getOrNull(1)
     val top3 = sortedUsers.getOrNull(2)
 
-    // Rest of participants (Rank 4+)
     val restUsers = filteredUsers.filter { user ->
         val rank = sortedUsers.indexOfFirst { it.id == user.id } + 1
         rank > 3
@@ -210,65 +187,17 @@ fun LeaderboardScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = Color.White,
-
     ) { paddingValues ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+        ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 1. Header with Title & Dynamic Search Toggle
-                item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp, bottom = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Leaderboard",
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = TextDark
-                        )
-
-
-                    }
-                }
-
-                // Dynamic Search Bar (Animated visibility)
-                if (isSearchActive) {
-                    item {
-                        OutlinedTextField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
-                            placeholder = { Text("Search by name or department...", fontSize = 13.sp) },
-                            singleLine = true,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 6.dp),
-                            shape = RoundedCornerShape(14.dp),
-                            leadingIcon = {
-                                Icon(KithIcons.Add, contentDescription = null, tint = TextMuted)
-                            },
-                            trailingIcon = {
-                                if (searchQuery.isNotEmpty()) {
-                                    IconButton(onClick = { searchQuery = "" }) {
-                                        Icon(KithIcons.Bolt, contentDescription = "Clear", tint = TextMuted)
-                                    }
-                                }
-                            },
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
-                        )
-                    }
-                }
-
-                // 2. Segmented Pill Tabs (By XP, By Tasks, By Rating)
                 item {
                     SegmentedTabs(
                         selectedTab = selectedTab,
@@ -276,7 +205,6 @@ fun LeaderboardScreen(
                     )
                 }
 
-                // 4. Dynamic Podium (Top 3 Users)
                 if (top1 != null && top2 != null && top3 != null) {
                     item {
                         DynamicPodiumSection(
@@ -293,7 +221,6 @@ fun LeaderboardScreen(
                     }
                 }
 
-                // 5. Dynamic Ranked List (Rank 4+)
                 items(restUsers, key = { it.id }) { user ->
                     val actualRank = sortedUsers.indexOfFirst { it.id == user.id } + 1
                     RankItemRow(
@@ -305,7 +232,6 @@ fun LeaderboardScreen(
                     )
                 }
 
-                // Empty State if search yields no result
                 if (restUsers.isEmpty() && searchQuery.isNotBlank()) {
                     item {
                         Box(
@@ -322,12 +248,8 @@ fun LeaderboardScreen(
                         }
                     }
                 }
-
-
-
             }
 
-            // User Detail Profile Bottom Sheet
             selectedUserForDetail?.let { user ->
                 val userRank = sortedUsers.indexOfFirst { it.id == user.id } + 1
                 ParticipantBottomSheet(
@@ -340,12 +262,8 @@ fun LeaderboardScreen(
     }
 }
 
-// =============================================================================
-// SUB-COMPONENTS
-// =============================================================================
-
 @Composable
-fun SegmentedTabs(
+private fun SegmentedTabs(
     selectedTab: LeaderboardTab,
     onTabSelected: (LeaderboardTab) -> Unit,
     modifier: Modifier = Modifier
@@ -358,7 +276,7 @@ fun SegmentedTabs(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        LeaderboardTab.values().forEach { tab ->
+        LeaderboardTab.entries.forEach { tab ->
             val isSelected = tab == selectedTab
             Box(
                 modifier = Modifier
@@ -398,16 +316,15 @@ fun SegmentedTabs(
 }
 
 
-
 @Composable
-fun DynamicPodiumSection(
+private fun DynamicPodiumSection(
     first: LeaderboardUser,
     second: LeaderboardUser,
     third: LeaderboardUser,
     selectedTab: LeaderboardTab,
     multiplier: Float,
     onUserClick: (LeaderboardUser) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -416,14 +333,17 @@ fun DynamicPodiumSection(
     ) {
         Spacer(modifier = Modifier.width(25.dp))
 
-        // Rank 2 - Silver
         PodiumColumn(
             user = second,
             rankNumber = 2,
             scoreText = formatUserScore(second, selectedTab, multiplier),
             pillarHeight = 145.dp,
             pillarGradient = Brush.verticalGradient(
-                colors = listOf(Color(0xFF94A3B8), Color(0xFFCBD5E1), Color(0xFFF1F5F9).copy(alpha = 0.2f))
+                colors = listOf(
+                    Color(0xFF94A3B8),
+                    Color(0xFFCBD5E1),
+                    Color(0xFFF1F5F9).copy(alpha = 0.2f)
+                )
             ),
             ringColor = SilverColor,
             medalBg = Color(0xFF94A3B8),
@@ -434,14 +354,17 @@ fun DynamicPodiumSection(
 
         Spacer(modifier = Modifier.width(45.dp))
 
-        // Rank 1 - Gold (Elevated & Tallest)
         PodiumColumn(
             user = first,
             rankNumber = 1,
             scoreText = formatUserScore(first, selectedTab, multiplier),
             pillarHeight = 195.dp,
             pillarGradient = Brush.verticalGradient(
-                colors = listOf(Color(0xFFF59E0B), Color(0xFFFBBF24), Color(0xFFFEF3C7).copy(alpha = 0.2f))
+                colors = listOf(
+                    Color(0xFFF59E0B),
+                    Color(0xFFFBBF24),
+                    Color(0xFFFEF3C7).copy(alpha = 0.2f)
+                )
             ),
             ringColor = GoldColor,
             medalBg = Color(0xFFF59E0B),
@@ -452,14 +375,17 @@ fun DynamicPodiumSection(
 
         Spacer(modifier = Modifier.width(45.dp))
 
-        // Rank 3 - Bronze
         PodiumColumn(
             user = third,
             rankNumber = 3,
             scoreText = formatUserScore(third, selectedTab, multiplier),
             pillarHeight = 110.dp,
             pillarGradient = Brush.verticalGradient(
-                colors = listOf(Color(0xFFB45309), Color(0xFFD97706), Color(0xFFFED7AA).copy(alpha = 0.2f))
+                colors = listOf(
+                    Color(0xFFB45309),
+                    Color(0xFFD97706),
+                    Color(0xFFFED7AA).copy(alpha = 0.2f)
+                )
             ),
             ringColor = BronzeColor,
             medalBg = Color(0xFFB45309),
@@ -469,12 +395,11 @@ fun DynamicPodiumSection(
         )
 
         Spacer(modifier = Modifier.width(25.dp))
-
     }
 }
 
 @Composable
-fun PodiumColumn(
+private fun PodiumColumn(
     user: LeaderboardUser,
     rankNumber: Int,
     scoreText: String,
@@ -568,7 +493,7 @@ fun PodiumColumn(
 }
 
 @Composable
-fun RankItemRow(
+private fun RankItemRow(
     user: LeaderboardUser,
     rank: Int,
     selectedTab: LeaderboardTab,
@@ -637,7 +562,7 @@ fun RankItemRow(
 }
 
 @Composable
-fun ParticipantBottomSheet(
+private fun ParticipantBottomSheet(
     user: LeaderboardUser,
     rank: Int,
     onDismiss: () -> Unit
@@ -670,15 +595,17 @@ fun ParticipantBottomSheet(
                 Text("• Rating Score: ${user.rating} ★", fontSize = 13.sp)
                 Text("• Streak: ${user.streakDays} days active 🔥", fontSize = 13.sp)
                 if (user.bio.isNotBlank()) {
-                    Text(user.bio, fontStyle = FontStyle.Italic, fontSize = 12.sp, color = TextMuted)
+                    Text(
+                        user.bio,
+                        fontStyle = FontStyle.Italic,
+                        fontSize = 12.sp,
+                        color = TextMuted
+                    )
                 }
             }
         }
     )
 }
-
-
-
 
 
 // Utility function to format scores based on tab & timeframe multiplier
@@ -688,10 +615,12 @@ fun formatUserScore(user: LeaderboardUser, tab: LeaderboardTab, multiplier: Floa
             val total = (user.xp * multiplier).toInt()
             "$total XP"
         }
+
         LeaderboardTab.BY_TASKS -> {
             val total = (user.tasks * multiplier).toInt()
             "$total Tasks"
         }
+
         LeaderboardTab.BY_RATING -> {
             "%.2f ★".format(user.rating)
         }

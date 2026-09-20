@@ -1,4 +1,4 @@
-package com.example.bountyapp.ui.postdetail
+package com.kith.feature.post.impl
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -11,10 +11,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kith.core.designsystem.icon.KithIcons
 
 // =============================================================================
 // 1. DATA MODELS (Dynamic Page State)
@@ -95,6 +92,13 @@ object PostDetailColors {
 // 3. MAIN COMPOSABLE: Dynamic Post Detail Screen (Single Screen)
 // =============================================================================
 
+@Composable
+fun PostDetailScreen() {
+    PostDetailScreen(
+        post = PostDetail("1", "Hello", Author("Someone", "Somewhere", "Something", 4.1, 5), listOf(), "World", BountyReward(), false),
+    )
+}
+
 /**
  * Dynamic Post Detail Screen in Kotlin (Jetpack Compose)
  * - Single-screen layout matching reference image.
@@ -108,7 +112,7 @@ object PostDetailColors {
  * @param onAuthorClick Callback when the author card is tapped.
  */
 @Composable
-fun PostDetailScreen(
+internal fun PostDetailScreen(
     post: PostDetail,
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {},
@@ -196,7 +200,7 @@ fun PostDetailTopBar(
             modifier = Modifier.size(40.dp)
         ) {
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                imageVector = KithIcons.ArrowForward,
                 contentDescription = "Back",
                 tint = PostDetailColors.TextPrimary
             )
@@ -264,7 +268,7 @@ fun AuthorProfileCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Star,
+                        imageVector = KithIcons.StarRate,
                         contentDescription = "Rating",
                         tint = PostDetailColors.RatingStar,
                         modifier = Modifier.size(15.dp)
@@ -447,7 +451,7 @@ fun AcceptRequestButton(
             AnimatedVisibility(visible = isAccepted) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Filled.Check,
+                        imageVector = KithIcons.Bolt,
                         contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(20.dp)
