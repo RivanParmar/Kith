@@ -4,8 +4,9 @@ import androidx.room.TypeConverter
 
 enum class PostStatus(val code: Int) {
     OPEN(0),
-    PENDING_REVIEW(1),
-    SOLVED(2)
+    ASSIGNED(1),
+    PENDING_REVIEW(2),
+    SOLVED(3)
 }
 
 internal class PostStatusConverter {
