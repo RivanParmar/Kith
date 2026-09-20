@@ -5,11 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kith.core.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -21,9 +19,6 @@ class SignUpViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(SignUpUiState())
     val uiState: StateFlow<SignUpUiState> = _uiState.asStateFlow()
-
-    private val _uiEvent = Channel<SignUpUiEvent>()
-    val uiEvent = _uiEvent.receiveAsFlow()
 
     fun onEmailChange(newEmail: String) {
         _uiState.update { it.copy(email = newEmail) }
@@ -41,15 +36,15 @@ class SignUpViewModel @Inject constructor(
         val currentState = _uiState.value
 
         if (currentState.email.isBlank() || currentState.password.isBlank()) {
-            viewModelScope.launch {
-//                _uiEvent.send(SignUpUiEvent.ShowError("Please fill in all fields"))
+            _uiState.update {
+                it.copy(errorMessage = "Please fill in all the fields")
             }
             return
         }
 
         if (currentState.password != currentState.confirmPassword) {
-            viewModelScope.launch {
-//                _uiEvent.send(SignUpUiEvent.ShowError("Passwords don't match"))
+            _uiState.update {
+                it.copy(confirmPasswordError = "Passwords don't match")
             }
             return
         }
@@ -62,16 +57,23 @@ class SignUpViewModel @Inject constructor(
                 password = currentState.password,null
             ).onSuccess {
                 _uiState.update { it.copy(isLoading = false) }
-//                _uiEvent.send(SignUpUiEvent.NavigateToHome)
                 Log.d("SIGN_UP", "Success!")
             }.onFailure { throwable ->
                 _uiState.update { it.copy(isLoading = false) }
-//                _uiEvent.send(
-//                    SignUpUiEvent.ShowError(throwable.message ?: "Sign up failed, try again")
-//                )
                 Log.d("SIGN_UP", "Failed!")
                 Log.d("SIGN_UP", throwable.stackTraceToString())
             }
         }
     }
 }
+
+data class SignUpUiState(
+    val email: String = "",
+    val emailError: String? = null,
+    val password: String = "",
+    val passwordError: String? = null,
+    val confirmPassword: String = "",
+    val confirmPasswordError: String? = null,
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
+)
