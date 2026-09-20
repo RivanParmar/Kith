@@ -4,4 +4,7 @@ import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
 @Serializable
-object ProfileNavKey : NavKey
+data object ProfileNavKey : NavKey
+
+@Serializable
+data object TransactionsNavKey : NavKey
