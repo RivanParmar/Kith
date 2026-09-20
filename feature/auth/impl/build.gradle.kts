@@ -9,6 +9,7 @@ android {
 
 dependencies {
     implementation(projects.feature.auth.api)
+    implementation(projects.feature.home.api)
 
     implementation(projects.core.data)
 }

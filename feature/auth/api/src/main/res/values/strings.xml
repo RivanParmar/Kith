@@ -1,4 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
+    <string name="feature_auth_api_sign_in_title">Sign In.</string>
+    <string name="feature_auth_api_email">Email</string>
+    <string name="feature_auth_api_email_placeholder">email@id.com</string>
+    <string name="feature_auth_api_password">Password</string>
+    <string name="feature_auth_api_enter_password">Enter password</string>
+    <string name="feature_auth_api_forgot_password_title">Forgot Password</string>
+    <string name="feature_auth_api_new_password">New Password</string>
+    <string name="feature_auth_api_enter_new_password">Enter new password</string>
+    <string name="feature_auth_api_confirm_new_password">Confirm New Password</string>
+    <string name="feature_auth_api_confirm_password">Confirm Password</string>
+    <string name="feature_auth_api_enter_new_password_again">Enter new password again</string>
+    <string name="feature_auth_api_enter_password_again">Enter password again</string>
+    <string name="feature_auth_api_hide_password">Hide password</string>
+    <string name="feature_auth_api_show_password">Show password</string>
+    <string name="feature_auth_api_error_password">Error</string>
+    <string name="feature_auth_api_reset_password">Reset password</string>
+    <string name="feature_auth_api_reset_password_title">Reset Your Password</string>
+    <string name="feature_auth_api_resetting_password">Resetting password…</string>
 </resources>
