@@ -41,7 +41,6 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun KithTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // We override dynamicColor default to false since we have a strict design system color palette
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
