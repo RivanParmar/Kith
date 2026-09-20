@@ -23,13 +23,12 @@ enum class DarkModePreference {
 }
 
 data class SettingsUiState(
-    val theme: AppTheme = AppTheme.DEFAULT,
     val dynamicColor: DynamicColorOption = DynamicColorOption.YES,
     val darkMode: DarkModePreference = DarkModePreference.SYSTEM_DEFAULT,
     val notificationsEnabled: Boolean = false // NOTIFICATION SETTING
 )
 
-@HiltViewModel // NOTIFICATION SETTING
+@HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val userDataRepository: UserDataRepository // NOTIFICATION SETTING
 ) : ViewModel() {
@@ -60,7 +59,6 @@ class SettingsViewModel @Inject constructor(
         )
     }
 
-    // NOTIFICATION SETTING
     fun setPushNotificationsEnabled(enabled: Boolean) {
         viewModelScope.launch {
             userDataRepository.setPushNotificationsEnabled(enabled)

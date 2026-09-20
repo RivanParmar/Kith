@@ -3,16 +3,14 @@ package com.kith.feature.profile.impl.settings
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.RadioButton
@@ -36,11 +34,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 fun SettingsDialog(
     onDismiss: () -> Unit,
-    viewModel: SettingsViewModel = hiltViewModel(), // NOTIFICATION SETTING
+    viewModel: SettingsViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle() // NOTIFICATION SETTING (lifecycle-safe)
-    
-    // NOTIFICATION SETTING: Handle Android 13+ Notification Permission
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     val context = LocalContext.current
     var hasNotificationPermission by remember {
         mutableStateOf(
@@ -55,14 +52,14 @@ fun SettingsDialog(
         )
     }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        hasNotificationPermission = isGranted
-        if (isGranted) {
-            viewModel.setPushNotificationsEnabled(true)
-        }
-    }
+//    val permissionLauncher = rememberLauncherForActivityResult(
+//        ActivityResultContracts.RequestPermission()
+//    ) { isGranted: Boolean ->
+//        hasNotificationPermission = isGranted
+//        if (isGranted) {
+//            viewModel.setPushNotificationsEnabled(true)
+//        }
+//    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -110,7 +107,7 @@ fun SettingsDialog(
                                         Manifest.permission.POST_NOTIFICATIONS
                                     ) == PackageManager.PERMISSION_GRANTED
                                     if (!isGranted) {
-                                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+//                                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                                     } else {
                                         hasNotificationPermission = true
                                         viewModel.setPushNotificationsEnabled(true)
@@ -206,8 +203,6 @@ fun SettingsDialog(
         }
     )
 }
-
-
 
 @Composable
 private fun SettingsSectionTitle(
