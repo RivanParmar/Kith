@@ -17,7 +17,7 @@ class OfflineFirstUserRepository @Inject constructor(
     private val authDataSource: KithAuthDataSource,
 ) : UserRepository {
 
-    override suspend fun getUserProfileStream(): Flow<UserProfile?> {
+    override fun getUserProfileStream(): Flow<UserProfile?> {
         // CHANGED: Use the new abstracted function to get the ID
         val userId = authDataSource.currentUserId() ?: return flowOf(null)
 

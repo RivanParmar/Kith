@@ -21,7 +21,7 @@ private val supabase: SupabaseClient
         status is SessionStatus.Authenticated
     }
 
-    override suspend fun currentUserId(): String? {
+    override fun currentUserId(): String? {
         return supabase.auth.currentUserOrNull()?.id
     }
 
