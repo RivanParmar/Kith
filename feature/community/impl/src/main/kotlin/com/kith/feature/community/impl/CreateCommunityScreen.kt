@@ -41,7 +41,7 @@ import kotlinx.coroutines.flow.collectLatest
  * Screen entry point — wires the ViewModel state/events to the stateless UI below.
  */
 @Composable
-fun CreateCommunityRoute(
+fun CreateCommunityScreen(
     viewModel: CreateCommunityViewModel = hiltViewModel(),
     onBack: () -> Unit,
     onCreated: () -> Unit,
@@ -49,23 +49,11 @@ fun CreateCommunityRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
-        viewModel.events.collectLatest { event ->
-            when (event) {
-                CreateCommunityEvent.NavigateBack -> onBack()
-                CreateCommunityEvent.NavigateToHome -> onCreated()
-                CreateCommunityEvent.OpenIconPicker -> onPickIcon()
-            }
-        }
-    }
-
     CreateCommunityScreen(
         uiState = uiState,
         onCommunityNameChanged = viewModel::onCommunityNameChanged,
         onPasswordChanged = viewModel::onPasswordChanged,
         onDescriptionChanged = viewModel::onDescriptionChanged,
-        onBackClicked = viewModel::onBackClicked,
-        onAddIconClicked = viewModel::onAddIconClicked,
         onCreateClicked = viewModel::onCreateClicked
     )
 }
@@ -74,14 +62,14 @@ fun CreateCommunityRoute(
  * Pure, stateless UI — easy to preview and test since it only depends on the state passed in.
  */
 @Composable
-fun CreateCommunityScreen(
+internal fun CreateCommunityScreen(
     uiState: CreateCommunityUiState,
     onCommunityNameChanged: (String) -> Unit,
     onPasswordChanged: (String) -> Unit,
     onDescriptionChanged: (String) -> Unit,
-    onBackClicked: () -> Unit,
-    onAddIconClicked: () -> Unit,
-    onCreateClicked: () -> Unit
+    onBackClicked: () -> Unit = {},
+    onAddIconClicked: () -> Unit = {},
+    onCreateClicked: () -> Unit = {},
 ) {
     MeshGradientBackgroundCreateCommunity {
         Column(

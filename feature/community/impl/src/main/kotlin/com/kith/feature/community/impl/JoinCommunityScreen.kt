@@ -36,11 +36,9 @@ import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.KithTheme
 import kotlinx.coroutines.flow.collectLatest
 
-/**
- * Screen entry point — wires the ViewModel state/events to the stateless UI below.
- */
 @Composable
-fun JoinCommunityRoute(
+fun JoinCommunityScreen(
+    modifier: Modifier = Modifier,
     viewModel: JoinCommunityViewModel = hiltViewModel(),
     onBack: () -> Unit,
     onCreateCommunity: () -> Unit,
@@ -49,40 +47,26 @@ fun JoinCommunityRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
-        viewModel.events.collectLatest { event ->
-            when (event) {
-                JoinCommunityEvent.NavigateBack -> onBack()
-                JoinCommunityEvent.NavigateToCreateCommunity -> onCreateCommunity()
-                JoinCommunityEvent.NavigateToFindCommunity -> onFindCommunity()
-                JoinCommunityEvent.NavigateToHome -> onJoined()
-            }
-        }
-    }
-
     JoinCommunityScreen(
         uiState = uiState,
         onCommunityNameChanged = viewModel::onCommunityNameChanged,
         onPasswordChanged = viewModel::onPasswordChanged,
-        onBackClicked = viewModel::onBackClicked,
+        onBackClicked = {},
         onJoinClicked = viewModel::onJoinClicked,
-        onCantFindClicked = viewModel::onCantFindCommunityClicked,
-        onCreateClicked = viewModel::onCreateCommunityClicked
+        onCantFindClicked = {},
+        onCreateClicked = {},
     )
 }
 
-/**
- * Pure, stateless UI — easy to preview and test since it only depends on the state passed in.
- */
 @Composable
-fun JoinCommunityScreen(
+internal fun JoinCommunityScreen(
     uiState: JoinCommunityUiState,
     onCommunityNameChanged: (String) -> Unit,
     onPasswordChanged: (String) -> Unit,
-    onBackClicked: () -> Unit,
-    onJoinClicked: () -> Unit,
-    onCantFindClicked: () -> Unit,
-    onCreateClicked: () -> Unit
+    onBackClicked: () -> Unit = {},
+    onJoinClicked: () -> Unit = {},
+    onCantFindClicked: () -> Unit = {},
+    onCreateClicked: () -> Unit = {},
 ) {
     MeshGradientBackground {
         Column(
