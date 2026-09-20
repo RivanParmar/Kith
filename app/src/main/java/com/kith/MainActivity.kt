@@ -5,6 +5,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
@@ -19,6 +24,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.kith.core.data.util.NetworkMonitor
 import com.kith.core.designsystem.component.LoadingWheel
 import com.kith.core.designsystem.theme.KithTheme
+import com.kith.feature.auth.api.navigation.SignInNavKey
 import com.kith.feature.home.api.navigation.HomeNavKey
 import com.kith.feature.onboarding.api.navigation.OnboardingNavKey
 import com.kith.ui.KithApp
@@ -71,23 +77,35 @@ class MainActivity : ComponentActivity() {
                     is MainActivityUiState.Loading -> {
                         Box(modifier = Modifier.fillMaxSize()) {
                             LoadingWheel(
-                                contentDesc = "Loading",
-                                modifier = Modifier.align(Alignment.Center)
+                                contentDesc = "Loading", modifier = Modifier.align(Alignment.Center)
                             )
                         }
                     }
+
                     is MainActivityUiState.Success -> {
-                        val startNavKey = if (state.userData.shouldHideOnboarding) {
-                            HomeNavKey
-                        } else {
+                        val startNavKey = if (!state.userData.shouldHideOnboarding) {
                             OnboardingNavKey
+                        } else if (!state.isSignedIn) {
+                            SignInNavKey
+                        } else {
+                            HomeNavKey
                         }
 
-                        val appState = rememberKithAppState(
-                            startNavKey = startNavKey,
-                            networkMonitor = networkMonitor,
-                        )
-                        KithApp(appState)
+                        AnimatedContent(
+                            targetState = startNavKey,
+                            transitionSpec = {
+                                fadeIn(animationSpec = tween(500)) togetherWith fadeOut(
+                                    animationSpec = tween(500)
+                                )
+                            },
+                            label = "RootGraphTransition",
+                        ) { targetKey ->
+                            val appState = rememberKithAppState(
+                                startNavKey = targetKey,
+                                networkMonitor = networkMonitor,
+                            )
+                            KithApp(appState)
+                        }
                     }
                 }
             }

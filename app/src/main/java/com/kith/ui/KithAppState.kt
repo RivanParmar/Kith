@@ -8,7 +8,6 @@ import androidx.navigation3.runtime.NavKey
 import com.kith.core.data.util.NetworkMonitor
 import com.kith.core.navigation.NavigationState
 import com.kith.core.navigation.rememberNavigationState
-import com.kith.feature.home.api.navigation.HomeNavKey
 import com.kith.navigation.TOP_LEVEL_NAV_ITEMS
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
