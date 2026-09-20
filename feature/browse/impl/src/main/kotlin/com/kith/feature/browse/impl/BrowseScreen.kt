@@ -1,77 +1,100 @@
 package com.kith.feature.browse.impl
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import com.kith.core.model.data.Community
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.kith.core.designsystem.component.KithMediumTopAppBar
+import com.kith.core.designsystem.component.KithSearchBar
+import com.kith.core.designsystem.icon.KithIcons
+import com.kith.core.designsystem.theme.KithTheme
 import com.kith.core.model.data.Post
-import com.kith.core.model.data.User
-import com.kith.core.ui.PostCard
-import kotlin.time.Clock
+import com.kith.core.ui.PostPreviewParameterProvider
+import com.kith.core.ui.PostsFeedUiState
+import com.kith.core.ui.postsFeed
+import com.kith.feature.browse.api.R
+import kotlinx.coroutines.launch
 
-@Preview
 @Composable
-private fun BrowsePreview() {
-    BrowseRequestsScreen(
-        posts = listOf(
-            Post(
-                "1", "Title", "Content", 5, User("1", "Preet patel", null, false, 4.5f),
-                Community("1", "Abc", null), Clock.System.now(), true
-            ),
-            Post(
-                "2", "Title", "Content", 5, User("1", "Preet patel", null, false, 4.5f),
-                Community("1", "Abc", null), Clock.System.now(), true
-            ),
-            Post(
-                "3", "Title", "Content", 5, User("1", "Preet patel", null, false, 4.5f),
-                Community("1", "Abc", null), Clock.System.now(), true
-            )
-        )
+fun BrowseScreen(
+    modifier: Modifier = Modifier,
+    viewModel: BrowseViewModel = hiltViewModel(),
+) {
+    val feedState by viewModel.feedState.collectAsStateWithLifecycle()
+
+    BrowseScreen(
+        feedState = feedState,
+        modifier = modifier,
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BrowseRequestsScreen(posts: List<Post>) {
-    var searchQuery by remember { mutableStateOf("") }
-    var isSearchActive by remember { mutableStateOf(false) }
+internal fun BrowseScreen(
+    feedState: PostsFeedUiState,
+    modifier: Modifier = Modifier,
+) {
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
+    val searchBarState = rememberSearchBarState()
+    val textFieldState = rememberTextFieldState()
+    val scope = rememberCoroutineScope()
+    val inputField =
+        @Composable {
+            SearchBarDefaults.InputField(
+                textFieldState = textFieldState,
+                searchBarState = searchBarState,
+                onSearch = { scope.launch { searchBarState.animateToCollapsed() } },
+                placeholder = {
+                    Text(modifier = Modifier.clearAndSetSemantics {}, text = "Search")
+                },
+                leadingIcon = {
+                    Icon(imageVector = KithIcons.Search, contentDescription = "Search")
+                }
+            )
+        }
 
     Scaffold(
-        containerColor = Color(0xFFFFFFFF),
+        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
-                title = { Text("Browse Request") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFFFFFFF)
-                )
+            KithMediumTopAppBar(
+                titleRes = R.string.feature_browse_api_title,
+                navigationIcon = null,
+                navigationIconContentDescription = null,
+                actionIcon = null,
+                actionIconContentDescription = null,
+                scrollBehavior = scrollBehavior,
             )
         }
     ) { innerPadding ->
@@ -81,68 +104,32 @@ fun BrowseRequestsScreen(posts: List<Post>) {
                 .padding(innerPadding),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            KithSearchBar(
+                searchBarState = searchBarState,
+                inputField = inputField,
+            ) {
+                // TODO
+            }
 
-            // Standard Filled TextField styled as a Search Pill
-            TextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .onFocusChanged { focusState ->
-                        // Triggers the dynamic search area below when clicked
-                        isSearchActive = focusState.isFocused
-                    },
-                placeholder = { Text("Search") },
-                singleLine = true,
-                shape = RoundedCornerShape(50), // Fully rounded corners
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFF3F4F6),
-                    unfocusedContainerColor = Color(0xFFF3F4F6),
-                    // Hide the default bottom lines
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent
-                )
-            )
-
-            // Dynamic area that opens when the user clicks the search bar
-            AnimatedVisibility(visible = isSearchActive) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .heightIn(max = 200.dp)
-                ) {
-                    Text(
-                        text = "Recent searches or suggestions go here...",
-                        color = Color.Gray,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                }
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                FilterChipItem()
+                FilterChipItem()
+                FilterChipItem()
             }
 
-            // Hide the main content when actively searching
-            if (!isSearchActive) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(7.dp)
-                ) {
-                    FilterChipItem()
-                    FilterChipItem()
-                    FilterChipItem()
-                }
-
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    items(posts, key = { post -> post.id }) { post ->
-                        PostCard(post)
-                    }
-                }
+            LazyVerticalGrid(
+                modifier = Modifier.fillMaxSize(),
+                columns = GridCells.Adaptive(300.dp),
+                contentPadding = PaddingValues(start = 10.dp, end = 10.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                postsFeed(feedState)
             }
         }
     }
@@ -159,4 +146,17 @@ fun FilterChipItem() {
         },
         selected = selected,
     )
+}
+
+@Preview
+@Composable
+private fun BrowseScreenPreview(
+    @PreviewParameter(PostPreviewParameterProvider::class)
+    posts: List<Post>
+) {
+    KithTheme {
+        BrowseScreen(
+            feedState = PostsFeedUiState.Success(posts)
+        )
+    }
 }

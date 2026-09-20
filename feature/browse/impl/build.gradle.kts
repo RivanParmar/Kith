@@ -9,4 +9,6 @@ android {
 
 dependencies {
     implementation(projects.feature.browse.api)
+
+    implementation(projects.core.data)
 }
