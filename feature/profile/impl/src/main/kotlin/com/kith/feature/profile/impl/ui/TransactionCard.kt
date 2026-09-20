@@ -1,4 +1,4 @@
-package com.kith.feature.profile.impl
+package com.kith.feature.profile.impl.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -23,9 +23,9 @@ import com.kith.core.model.data.Transaction
 import kotlin.math.abs
 
 @Composable
-fun TransactionCard(
+internal fun TransactionCard(
     transaction: Transaction,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val isPositive = transaction.xpAmount >= 0
     val backgroundColor = if (isPositive) Color(0xFFE6F4EA) else Color(0xFFFCE8E6)
@@ -37,27 +37,27 @@ fun TransactionCard(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, Color(0xFFF0F0F0))
+        border = BorderStroke(1.dp, Color(0xFFF0F0F0)),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = transaction.title,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1A1A)
+                    color = Color(0xFF1A1A1A),
                 )
                 Text(
                     text = transaction.timestamp,
                     fontSize = 12.sp,
                     color = Color.Gray,
-                    modifier = Modifier.padding(top = 4.dp)
+                    modifier = Modifier.padding(top = 4.dp),
                 )
             }
 
@@ -65,13 +65,13 @@ fun TransactionCard(
                 modifier = Modifier
                     .background(color = backgroundColor, shape = RoundedCornerShape(50))
                     .padding(horizontal = 12.dp, vertical = 6.dp),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = displayXp,
                     color = textColor,
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             }
         }
