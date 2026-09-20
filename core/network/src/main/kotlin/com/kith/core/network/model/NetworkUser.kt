@@ -8,7 +8,6 @@ import kotlin.time.Instant
 data class NetworkUser(
     val id: String,
     val name: String,
-    val email: String,
     @SerialName("profile_image_url")
     val profileImageUrl: String? = null,
     val bio: String? = null,
