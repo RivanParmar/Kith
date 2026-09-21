@@ -8,6 +8,7 @@ object KithIcons {
     val Bolt = bolt
     val Check = check
     val ChevronForward = chevron_forward
+    val Crown = crown
     val Edit = edit
     val Error = error
     val Groups = groups

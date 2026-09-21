@@ -227,7 +227,7 @@ internal fun ProfileScreen(
                         HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
 
                         ProfileMenuItem(
-                            icon = KithIcons.Add,
+                            icon = KithIcons.Crown,
                             label = "Upgrade to Premium",
                             labelColor = Color(0xFF3B82F6),
                             backgroundColor = Color(0xFFEFF6FF),
