@@ -292,7 +292,9 @@ internal fun ProfileScreen(
                     initialBio = uiState.userProfile.bio ?: "",
                     initialImageUrl = uiState.userProfile.profileImageUrl,
                     onDismiss = { openEditProfileDialog = false },
-                    onSave = onEditProfile,
+                    onSave = { name, bio, imageUrl ->
+                             onEditProfile(name, bio, imageUrl)
+                        openEditProfileDialog = false },
                 )
             }
         }
