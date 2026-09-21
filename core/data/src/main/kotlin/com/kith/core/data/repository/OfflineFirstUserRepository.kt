@@ -18,7 +18,6 @@ class OfflineFirstUserRepository @Inject constructor(
 ) : UserRepository {
 
     override fun getUserProfileStream(): Flow<UserProfile?> {
-        // CHANGED: Use the new abstracted function to get the ID
         val userId = authDataSource.currentUserId() ?: return flowOf(null)
 
         return userDao.getUserStream(userId).map { entity ->
@@ -27,7 +26,6 @@ class OfflineFirstUserRepository @Inject constructor(
     }
 
     override suspend fun syncCurrentUser() {
-        // CHANGED: Use the new abstracted function to get the ID
         val userId = authDataSource.currentUserId() ?: return
 
         val networkUser = networkDataSource.getUserById(userId)

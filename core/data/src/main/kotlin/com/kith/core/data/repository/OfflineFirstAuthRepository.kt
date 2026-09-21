@@ -1,16 +1,17 @@
 package com.kith.core.data.repository
 
+import com.kith.core.data.model.asUserEntity
 import com.kith.core.database.dao.UserDao
 import com.kith.core.network.KithAuthDataSource
+import com.kith.core.network.KithNetworkDataSource
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class OfflineFirstAuthRepository @Inject constructor(
     private val authDataSource: KithAuthDataSource,
-    private val userDao: UserDao // Your Room database DAO
+    private val networkDataSource: KithNetworkDataSource,
+    private val userDao: UserDao,
 ) : AuthRepository {
-
-    // Pass-through the session flow directly from the remote source
     override val sessionStatus: Flow<Boolean> = authDataSource.sessionStatus
 
     override suspend fun currentUserId(): String? {
@@ -19,26 +20,22 @@ class OfflineFirstAuthRepository @Inject constructor(
 
     override suspend fun signUp(email: String, password: String, displayName: String?): Result<Unit> {
         return authDataSource.signUp(email, password, displayName).onSuccess {
-            // Once signed up, fetch the newly created user ID
             val userId = authDataSource.currentUserId() ?: return@onSuccess
-
-            // Cache the basic user profile into the local Room database immediately
-
+            val user = networkDataSource.getUserById(userId)
+            userDao.upsertUser(user.asUserEntity())
         }
     }
 
     override suspend fun signIn(email: String, password: String): Result<Unit> {
         return authDataSource.signIn(email, password).onSuccess {
-            // NOTE: In a complete offline-first app, you would also trigger a
-            // "SyncWorker" here to pull down the user's full profile from Supabase
-            // (e.g., current XP, avatar URL) and upsert it into the UserDao.
+            val userId = authDataSource.currentUserId() ?: return@onSuccess
+            val user = networkDataSource.getUserById(userId)
+            userDao.upsertUser(user.asUserEntity())
         }
     }
 
     override suspend fun signOut(): Result<Unit> {
         return authDataSource.signOut().onSuccess {
-            // CRITICAL: When the user logs out, we must wipe the local database
-            // so the next person who logs into this device doesn't see their data.
         }
     }
 

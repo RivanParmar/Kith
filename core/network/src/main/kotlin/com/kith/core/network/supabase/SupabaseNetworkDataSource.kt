@@ -3,12 +3,11 @@ package com.kith.core.network.supabase
 import com.kith.core.network.KithNetworkDataSource
 import com.kith.core.network.model.NetworkCommunity
 import com.kith.core.network.model.NetworkPost
-import com.kith.core.network.model.NetworkUser
 import com.kith.core.network.model.NetworkTransaction
+import com.kith.core.network.model.NetworkUser
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Columns
 import javax.inject.Inject
 
 class SupabaseNetworkDataSource @Inject constructor(
