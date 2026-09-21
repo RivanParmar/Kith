@@ -64,6 +64,7 @@ internal fun SignUpScreen(
 ) {
     val passwordTextFieldState = rememberTextFieldState()
     val confirmPasswordTextFieldState = rememberTextFieldState()
+    var submitAttempted by remember { mutableStateOf(false) }
 
     LaunchedEffect(passwordTextFieldState) {
         snapshotFlow { passwordTextFieldState.text }
@@ -73,6 +74,16 @@ internal fun SignUpScreen(
     LaunchedEffect(confirmPasswordTextFieldState) {
         snapshotFlow { confirmPasswordTextFieldState.text }
             .collect { onConfirmPasswordChange(it.toString()) }
+    }
+
+    val confirmPasswordMismatchError = if (
+        submitAttempted &&
+        confirmPasswordTextFieldState.text.isNotBlank() &&
+        confirmPasswordTextFieldState.text.toString() != passwordTextFieldState.text.toString()
+    ) {
+        "Passwords do not match"
+    } else {
+        null
     }
 
     AuthLayout(modifier = modifier) {
@@ -87,97 +98,20 @@ internal fun SignUpScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-//        OutlinedTextField(
-//            value = uiState.email,
-//            onValueChange = onEmailChange,
-//            placeholder = {
-//                Text(
-//                    "email@id.com",
-//                    color = KithSignUpColors.Placeholder,
-//                    fontSize = 14.sp
-//                )
-//            },
-//            label = {
-//                Text(
-//                    "Email",
-//                    color = KithSignUpColors.TextLight,
-//                    fontSize = 12.sp
-//                )
-//            },
-//            leadingIcon = {
-//                Icon(
-//                    imageVector = KithIcons.Bolt,
-//                    contentDescription = "Email",
-//                    tint = KithSignUpColors.TextLight,
-//                    modifier = Modifier.size(20.dp)
-//                )
-//            },
-//            singleLine = true,
-//            shape = RoundedCornerShape(12.dp),
-//            colors = OutlinedTextFieldDefaults.colors(
-//                focusedBorderColor = KithSignUpColors.BorderLight,
-//                unfocusedBorderColor = KithSignUpColors.BorderLight,
-//                focusedLabelColor = KithSignUpColors.TextLight,
-//                unfocusedLabelColor = KithSignUpColors.BorderLight,
-//                cursorColor = KithSignUpColors.TextLight,
-//                focusedTextColor = KithSignUpColors.TextLight,
-//                unfocusedTextColor = KithSignUpColors.TextLight
-//            ),
-//            modifier = Modifier.fillMaxWidth()
-//        )
-
         EmailField(
             email = uiState.email,
             onEmailChange = onEmailChange,
+            attemptedSubmit = submitAttempted,
         )
 
         Spacer(modifier = Modifier.height(14.dp))
-
-//        OutlinedTextField(
-//            value = uiState.password,
-//            onValueChange = onPasswordChange,
-//            placeholder = {
-//                Text(
-//                    "*****",
-//                    color = KithSignUpColors.Placeholder,
-//                    fontSize = 14.sp
-//                )
-//            },
-//            label = {
-//                Text(
-//                    "Password",
-//                    color = KithSignUpColors.TextLight,
-//                    fontSize = 12.sp
-//                )
-//            },
-//            leadingIcon = {
-//                Icon(
-//                    imageVector = KithIcons.Search,
-//                    contentDescription = "Password",
-//                    tint = KithSignUpColors.TextLight,
-//                    modifier = Modifier.size(20.dp)
-//                )
-//            },
-//            singleLine = true,
-//            visualTransformation = PasswordVisualTransformation(),
-//            shape = RoundedCornerShape(12.dp),
-//            colors = OutlinedTextFieldDefaults.colors(
-//                focusedBorderColor = KithSignUpColors.BorderLight,
-//                unfocusedBorderColor = KithSignUpColors.BorderLight,
-//                focusedLabelColor = KithSignUpColors.TextLight,
-//                unfocusedLabelColor = KithSignUpColors.BorderLight,
-//                cursorColor = KithSignUpColors.TextLight,
-//                focusedTextColor = KithSignUpColors.TextLight,
-//                unfocusedTextColor = KithSignUpColors.TextLight
-//            ),
-//            modifier = Modifier.fillMaxWidth()
-//        )
 
         PasswordField(
             labelRes = R.string.feature_auth_api_password,
             placeholderRes = R.string.feature_auth_api_enter_password,
             error = uiState.passwordError,
             textFieldState = passwordTextFieldState,
+            attemptedSubmit = submitAttempted,
         )
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -225,14 +159,18 @@ internal fun SignUpScreen(
         PasswordField(
             labelRes = R.string.feature_auth_api_confirm_password,
             placeholderRes = R.string.feature_auth_api_enter_password_again,
-            error = uiState.confirmPasswordError,
+            error = uiState.confirmPasswordError ?: confirmPasswordMismatchError,
             textFieldState = confirmPasswordTextFieldState,
+            attemptedSubmit = submitAttempted,
         )
 
         Spacer(modifier = Modifier.height(50.dp))
 
         Button(
-            onClick = onSignUpClicked,
+            onClick = {
+                submitAttempted = true
+                onSignUpClicked()
+            },
             colors = ButtonDefaults.buttonColors(containerColor = Color.White),
             modifier = Modifier
                 .fillMaxWidth()

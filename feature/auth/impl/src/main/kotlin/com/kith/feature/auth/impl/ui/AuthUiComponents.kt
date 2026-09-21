@@ -1,7 +1,9 @@
 package com.kith.feature.auth.impl.ui
 
+import android.util.Patterns
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -9,28 +11,38 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.TextObfuscationMode
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedSecureTextField
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.GugiFontFamily
 import com.kith.core.designsystem.theme.LightBlue
-import com.kith.feature.auth.api.R
+import com.kith.feature.auth.api.R as apiR
+import com.kith.feature.auth.impl.R
 
 @Composable
 internal fun WaveHeader(
@@ -41,13 +53,12 @@ internal fun WaveHeader(
             .fillMaxWidth()
             .background(Color.White),
     ) {
-        // Drop your topographic pattern here:
-        // Image(
-        //     painter = painterResource(R.drawable.topo_pattern),
-        //     contentDescription = null,
-        //     contentScale = ContentScale.Crop,
-        //     modifier = Modifier.matchParentSize()
-        // )
+         Image(
+             painter = painterResource(R.drawable.wave_backgroundimage),
+             contentDescription = null,
+             contentScale = ContentScale.Fit,
+             modifier = Modifier.matchParentSize(),
+         )
 
         Text(
             text = "KITH",
@@ -93,44 +104,76 @@ internal fun EmailField(
     onEmailChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    attemptedSubmit: Boolean = false,
 ) {
+    var touched by remember { mutableStateOf(false) }
+    var hasBeenFocused by remember { mutableStateOf(false) }
+    val showErrors = touched || attemptedSubmit
+
+    val errorMessage = when {
+        !showErrors -> null
+        email.isBlank() -> "Email is required"
+        !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> "Enter a valid email address"
+        else -> null
+    }
+
     OutlinedTextField(
         value = email,
         onValueChange = onEmailChange,
         enabled = enabled,
+        isError = errorMessage != null,
+        supportingText = {
+            errorMessage?.let {
+                Text(
+                    text = it,
+                    color = Color(0xFFFF6B6B),
+                    fontSize = 12.sp,
+                )
+            }
+        },
         placeholder = {
             Text(
-                text = stringResource(R.string.feature_auth_api_email_placeholder),
+                text = stringResource(apiR.string.feature_auth_api_email_placeholder),
                 fontSize = 14.sp,
             )
         },
         label = {
             Text(
-                text = stringResource(R.string.feature_auth_api_email),
-                color = Color.White,
+                text = stringResource(apiR.string.feature_auth_api_email),
                 fontSize = 12.sp,
             )
         },
         leadingIcon = {
             Icon(
                 imageVector = KithIcons.Mail,
-                contentDescription = stringResource(R.string.feature_auth_api_email),
-                tint = Color.White,
+                contentDescription = stringResource(apiR.string.feature_auth_api_email),
+                tint = if (errorMessage != null) Color(0xFFFF6B6B) else Color.White,
                 modifier = Modifier.size(20.dp),
             )
         },
         singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
         shape = RoundedCornerShape(12.dp),
-//        colors = OutlinedTextFieldDefaults.colors(
-//            focusedBorderColor = KithColors.BorderLight,
-//            unfocusedBorderColor = KithColors.BorderLight,
-//            focusedLabelColor = KithColors.TextLight,
-//            unfocusedLabelColor = KithColors.BorderLight,
-//            cursorColor = KithColors.TextLight,
-//            focusedTextColor = KithColors.TextLight,
-//            unfocusedTextColor = KithColors.TextLight
-//        ),
-        modifier = modifier.fillMaxWidth(),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = Color.White,
+            unfocusedBorderColor = Color.White,
+            errorBorderColor = Color(0xFFFF6B6B),
+            focusedLabelColor = Color.White,
+            unfocusedLabelColor = Color.White,
+            errorLabelColor = Color(0xFFFF6B6B),
+            cursorColor = Color.White,
+            focusedTextColor = Color.White,
+            unfocusedTextColor = Color.White,
+        ),
+        modifier = modifier
+            .fillMaxWidth()
+            .onFocusChanged { focusState ->
+                if (focusState.isFocused) {
+                    hasBeenFocused = true
+                } else if (hasBeenFocused) {
+                    touched = true
+                }
+            },
     )
 }
 
@@ -142,60 +185,81 @@ internal fun PasswordField(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     textFieldState: TextFieldState = rememberTextFieldState(),
+    attemptedSubmit: Boolean = false,
 ) {
-    val passwordVisible = remember { mutableStateOf(false) }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var touched by remember { mutableStateOf(false) }
+    var hasBeenFocused by remember { mutableStateOf(false) }
+    val showErrors = touched || attemptedSubmit
+
+    val passwordRegex = remember {
+        Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@#\$%^&+=!]).{8,}$")
+    }
+    val text = textFieldState.text.toString()
+
+    val validationError = when {
+        text.isBlank() -> "Password is required"
+        !passwordRegex.matches(text) -> "8+ characters with uppercase, lowercase, number & special character"
+        else -> null
+    }
+    val displayError = if (showErrors) (error ?: validationError) else null
 
     OutlinedSecureTextField(
         state = textFieldState,
         enabled = enabled,
         label = { Text(stringResource(labelRes)) },
         placeholder = { Text(stringResource(placeholderRes)) },
-        isError = error != null,
-        supportingText = error?.let { { Text(it, /*color = ErrorPink*/) } },
-        leadingIcon = { Icon(KithIcons.Password, contentDescription = null) },
+        isError = displayError != null,
+        supportingText = displayError?.let { { Text(it, color = Color(0xFFFF6B6B)) } },
+        leadingIcon = { Icon(KithIcons.Password, contentDescription = null, tint = Color.White) },
         trailingIcon = {
             IconButton(onClick = {
-                passwordVisible.value = !passwordVisible.value
+                passwordVisible = !passwordVisible
             }) {
                 Icon(
                     imageVector =
-                        if (error != null)
+                        if (displayError != null)
                             KithIcons.Error
-                        else if (passwordVisible.value)
+                        else if (passwordVisible)
                             KithIcons.VisibilityOff
                         else
                             KithIcons.Visibility,
                     contentDescription =
-                        if (error != null)
-                            stringResource(R.string.feature_auth_api_error_password)
-                        else if (passwordVisible.value)
-                            stringResource(R.string.feature_auth_api_hide_password)
+                        if (displayError != null)
+                            stringResource(apiR.string.feature_auth_api_error_password)
+                        else if (passwordVisible)
+                            stringResource(apiR.string.feature_auth_api_hide_password)
                         else
-                            stringResource(R.string.feature_auth_api_show_password)
+                            stringResource(apiR.string.feature_auth_api_show_password),
+                    tint = if (displayError != null) Color(0xFFFF6B6B) else Color.White,
                 )
             }
         },
+        textObfuscationMode = if (passwordVisible) {
+            TextObfuscationMode.Visible
+        } else {
+            TextObfuscationMode.Hidden
+        },
         shape = RoundedCornerShape(12.dp),
-//        colors = OutlinedTextFieldDefaults.colors(
-//            focusedTextColor = Color.White,
-//            unfocusedTextColor = Color.White,
-//            focusedBorderColor = Color.White,
-//            unfocusedBorderColor = FieldOutline,
-//            errorBorderColor = ErrorPink,
-//            focusedLabelColor = Color.White,
-//            unfocusedLabelColor = FieldOutline,
-//            errorLabelColor = ErrorPink,
-//            focusedPlaceholderColor = FieldOutline,
-//            unfocusedPlaceholderColor = FieldOutline,
-//            focusedLeadingIconColor = Color.White,
-//            unfocusedLeadingIconColor = FieldOutline,
-//            focusedTrailingIconColor = Color.White,
-//            unfocusedTrailingIconColor = FieldOutline,
-//            cursorColor = Color.White,
-//            focusedContainerColor = Color.Transparent,
-//            unfocusedContainerColor = Color.Transparent,
-//            errorContainerColor = Color.Transparent
-//        ),
-        modifier = modifier.fillMaxWidth(),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = Color.White,
+            unfocusedBorderColor = Color.White,
+            errorBorderColor = Color(0xFFFF6B6B),
+            focusedLabelColor = Color.White,
+            unfocusedLabelColor = Color.White,
+            errorLabelColor = Color(0xFFFF6B6B),
+            cursorColor = Color.White,
+            focusedTextColor = Color.White,
+            unfocusedTextColor = Color.White,
+        ),
+        modifier = modifier
+            .fillMaxWidth()
+            .onFocusChanged { focusState ->
+                if (focusState.isFocused) {
+                    hasBeenFocused = true
+                } else if (hasBeenFocused) {
+                    touched = true
+                }
+            },
     )
 }

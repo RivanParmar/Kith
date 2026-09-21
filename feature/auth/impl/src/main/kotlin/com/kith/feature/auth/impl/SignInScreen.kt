@@ -78,6 +78,7 @@ internal fun SignInScreen(
     onSignInComplete: () -> Unit = {},
 ) {
     val passwordTextFieldState = rememberTextFieldState()
+    var submitAttempted by remember { mutableStateOf(false) }
 
     LaunchedEffect(passwordTextFieldState) {
         snapshotFlow { passwordTextFieldState.text }
@@ -102,97 +103,20 @@ internal fun SignInScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-//        OutlinedTextField(
-//            value = uiState.email,
-//            onValueChange = onEmailChange,
-//            placeholder = {
-//                Text(
-//                    "email@id.com",
-//                    color = KithColors.Placeholder,
-//                    fontSize = 14.sp,
-//                )
-//            },
-//            label = {
-//                Text(
-//                    "Email",
-//                    color = KithColors.TextLight,
-//                    fontSize = 12.sp,
-//                )
-//            },
-//            leadingIcon = {
-//                Icon(
-//                    imageVector = KithIcons.Bolt,
-//                    contentDescription = "Email",
-//                    tint = KithColors.TextLight,
-//                    modifier = Modifier.size(20.dp),
-//                )
-//            },
-//            singleLine = true,
-//            shape = RoundedCornerShape(12.dp),
-//            colors = OutlinedTextFieldDefaults.colors(
-//                focusedBorderColor = KithColors.BorderLight,
-//                unfocusedBorderColor = KithColors.BorderLight,
-//                focusedLabelColor = KithColors.TextLight,
-//                unfocusedLabelColor = KithColors.BorderLight,
-//                cursorColor = KithColors.TextLight,
-//                focusedTextColor = KithColors.TextLight,
-//                unfocusedTextColor = KithColors.TextLight,
-//            ),
-//            modifier = Modifier.fillMaxWidth(),
-//        )
-
         EmailField(
             email = uiState.email,
             onEmailChange = onEmailChange,
+            attemptedSubmit = submitAttempted,
         )
 
         Spacer(modifier = Modifier.height(14.dp))
-
-//            OutlinedTextField(
-//                value = uiState.password,
-//                onValueChange = onPasswordChange,
-//                placeholder = {
-//                    Text(
-//                        "*****",
-//                        color = KithColors.Placeholder,
-//                        fontSize = 14.sp,
-//                    )
-//                },
-//                label = {
-//                    Text(
-//                        "Password",
-//                        color = KithColors.TextLight,
-//                        fontSize = 12.sp,
-//                    )
-//                },
-//                leadingIcon = {
-//                    Icon(
-//                        imageVector = KithIcons.Search,
-//                        contentDescription = "Password",
-//                        tint = KithColors.TextLight,
-//                        modifier = Modifier.size(20.dp),
-//                    )
-//                },
-//                singleLine = true,
-//                visualTransformation = PasswordVisualTransformation(),
-//                shape = RoundedCornerShape(12.dp),
-//                colors = OutlinedTextFieldDefaults.colors(
-//                    focusedBorderColor = KithColors.BorderLight,
-//                    unfocusedBorderColor = KithColors.BorderLight,
-//                    focusedLabelColor = KithColors.TextLight,
-//                    unfocusedLabelColor = KithColors.BorderLight,
-//                    cursorColor = KithColors.TextLight,
-//                    focusedTextColor = KithColors.TextLight,
-//                    unfocusedTextColor = KithColors.TextLight,
-//                ),
-//                modifier = Modifier.fillMaxWidth(),
-//            )
 
         PasswordField(
             labelRes = R.string.feature_auth_api_password,
             placeholderRes = R.string.feature_auth_api_enter_password,
             error = null,
             textFieldState = passwordTextFieldState,
+            attemptedSubmit = submitAttempted,
         )
 
         TextButton(
@@ -210,7 +134,10 @@ internal fun SignInScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Button(
-            onClick = onSignInClicked,
+            onClick = {
+                submitAttempted = true
+                onSignInClicked()
+            },
             shape = RoundedCornerShape(24.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.White),
             modifier = Modifier
