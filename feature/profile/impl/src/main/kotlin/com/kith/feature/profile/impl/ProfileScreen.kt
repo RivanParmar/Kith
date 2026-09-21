@@ -217,7 +217,7 @@ internal fun ProfileScreen(
                     Column {
                         ProfileMenuItem(
                             icon = KithIcons.AccountBalanceWallet,
-                            label = "Wallet",
+                            label = "Transactions",
                             onClick = onWalletClick,
                         )
 

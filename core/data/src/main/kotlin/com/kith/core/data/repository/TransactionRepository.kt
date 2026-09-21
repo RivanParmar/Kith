@@ -1,8 +1,9 @@
 package com.kith.core.data.repository
 
 import com.kith.core.model.data.Transaction
+import kotlinx.coroutines.flow.Flow
 
 interface TransactionRepository {
-    suspend fun getTransactions(): List<Transaction>
+    fun getTransactions(): Flow<List<Transaction>>
 }
 

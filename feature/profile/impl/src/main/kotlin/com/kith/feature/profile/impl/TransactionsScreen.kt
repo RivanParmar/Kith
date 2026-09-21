@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -40,21 +41,26 @@ fun TransactionsScreen(
     modifier: Modifier = Modifier,
     viewModel: TransactionsViewModel = hiltViewModel(),
 ) {
-    val walletUiState by viewModel.walletUiState.collectAsStateWithLifecycle()
+    val walletUiState by viewModel.walletState.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isSyncing by viewModel.isSyncing.collectAsStateWithLifecycle()
 
     TransactionsScreen(
+        isSyncing = isSyncing,
         walletUiState = walletUiState,
         uiState = uiState,
         modifier = modifier,
+        onSync = viewModel::sync,
     )
 }
 
 @Composable
 internal fun TransactionsScreen(
+    isSyncing: Boolean,
     walletUiState: WalletUiState,
     uiState: TransactionsUiState,
     modifier: Modifier = Modifier,
+    onSync: () -> Unit = {},
 ) {
     when (uiState) {
         TransactionsUiState.Loading -> {
@@ -81,11 +87,18 @@ internal fun TransactionsScreen(
                     )
                 }
             ) { padding ->
-                Column(
-                    modifier = modifier
+                PullToRefreshBox(
+                    isRefreshing = isSyncing,
+                    onRefresh = onSync,
+                    modifier = Modifier
                         .fillMaxSize()
                         .padding(padding),
                 ) {
+                    Column(
+                        modifier = modifier
+                            .fillMaxSize()
+//                            .padding(padding),
+                    ) {
 //                    Text(
 //                        text = "Wallet",
 //                        fontSize = 32.sp,
@@ -94,38 +107,39 @@ internal fun TransactionsScreen(
 //                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
 //                    )
 
-                    WalletCard(
-                        walletUiState = walletUiState,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp)
-                            .padding(bottom = 24.dp),
-                    )
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = "Transaction History",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF0F172A),
+                        WalletCard(
+                            walletUiState = walletUiState,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp)
+                                .padding(bottom = 24.dp),
                         )
-                    }
 
-                    LazyColumn(
-                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        items(
-                            items = uiState.transactions,
-                            key = { it.id },
-                        ) { transaction ->
-                            TransactionCard(transaction = transaction)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = "Transaction History",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF0F172A),
+                            )
+                        }
+
+                        LazyColumn(
+                            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            items(
+                                items = uiState.transactions,
+                                key = { it.id },
+                            ) { transaction ->
+                                TransactionCard(transaction = transaction)
+                            }
                         }
                     }
                 }
@@ -176,7 +190,8 @@ fun TransactionsScreenPreview() {
             ),
             uiState = TransactionsUiState.Success(
                 transactions = mockTransactions,
-            )
+            ),
+            isSyncing = false,
         )
     }
 }
