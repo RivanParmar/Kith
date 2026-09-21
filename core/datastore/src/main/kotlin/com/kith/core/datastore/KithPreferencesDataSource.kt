@@ -1,10 +1,8 @@
 package com.kith.core.datastore
 import androidx.datastore.core.DataStore
 import com.kith.core.model.data.DarkThemeConfig
-import com.kith.core.model.data.ProfileVisibility
 import com.kith.core.model.data.UserData
 import com.kith.data.DarkThemeConfigProto
-import com.kith.data.ProfileVisibilityProto
 import com.kith.data.UserPreferences
 import com.kith.data.copy
 import kotlinx.coroutines.flow.Flow
@@ -26,15 +24,6 @@ class KithPreferencesDataSource @Inject constructor(
                     DarkThemeConfigProto.DARK_THEME_CONFIG_LIGHT -> DarkThemeConfig.LIGHT
                     DarkThemeConfigProto.DARK_THEME_CONFIG_DARK -> DarkThemeConfig.DARK
                 },
-                profileVisibility = when (preferences.profileVisibility) {
-                    null,
-                    ProfileVisibilityProto.PROFILE_VISIBILITY_UNSPECIFIED,
-                    ProfileVisibilityProto.UNRECOGNIZED,
-                    ProfileVisibilityProto.PROFILE_VISIBILITY_PUBLIC,
-                        -> ProfileVisibility.PUBLIC
-                    ProfileVisibilityProto.PROFILE_VISIBILITY_FRIENDS -> ProfileVisibility.FRIENDS
-                    ProfileVisibilityProto.PROFILE_VISIBILITY_PRIVATE -> ProfileVisibility.PRIVATE
-                },
                 pushNotificationsEnabled = preferences.pushNotificationsEnabled,
                 shouldHideOnboarding = preferences.hasDoneOnboarding,
                 lastLoginTimestamp = preferences.lastLoginTimestamp
@@ -49,21 +38,6 @@ class KithPreferencesDataSource @Inject constructor(
                         DarkThemeConfigProto.DARK_THEME_CONFIG_FOLLOW_SYSTEM
                     DarkThemeConfig.LIGHT -> DarkThemeConfigProto.DARK_THEME_CONFIG_LIGHT
                     DarkThemeConfig.DARK -> DarkThemeConfigProto.DARK_THEME_CONFIG_DARK
-                }
-            }
-        }
-    }
-
-    suspend fun setProfileVisibility(profileVisibility: ProfileVisibility) {
-        userPreferences.updateData {
-            it.copy {
-                this.profileVisibility = when (profileVisibility) {
-                    ProfileVisibility.PUBLIC ->
-                        ProfileVisibilityProto.PROFILE_VISIBILITY_PUBLIC
-                    ProfileVisibility.FRIENDS ->
-                        ProfileVisibilityProto.PROFILE_VISIBILITY_FRIENDS
-                    ProfileVisibility.PRIVATE ->
-                        ProfileVisibilityProto.PROFILE_VISIBILITY_PRIVATE
                 }
             }
         }
