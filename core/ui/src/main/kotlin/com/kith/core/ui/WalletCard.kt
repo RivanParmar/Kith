@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kith.core.designsystem.component.LoadingWheel
+import com.kith.core.model.data.WalletData
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -66,7 +67,7 @@ fun WalletCard(
 
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
-                            text = numberFormat.format(walletUiState.currentBalance),
+                            text = numberFormat.format(walletUiState.walletData.balance),
                             color = Color.White,
                             fontSize = 40.sp,
                             fontWeight = FontWeight.Bold,
@@ -98,14 +99,14 @@ fun WalletCard(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "Wallet Level ${walletUiState.currentLevel}",
+                            text = "Wallet Level ${walletUiState.walletData.level}",
                             color = Color.White,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
                         )
 
                         Text(
-                            text = "Next tier: ${numberFormat.format(walletUiState.nextTierXp)} XP",
+                            text = "Next tier: ${numberFormat.format(walletUiState.walletData.nextTierXp)} XP",
                             color = Color.White,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
@@ -134,9 +135,7 @@ sealed interface WalletUiState {
     data object Loading : WalletUiState
 
     data class Success(
-        val currentBalance: Int,
-        val currentLevel: Int,
-        val nextTierXp: Int,
+        val walletData: WalletData,
     ) : WalletUiState
 }
 
@@ -147,9 +146,11 @@ fun WalletCardPreview() {
         Box(modifier = Modifier.padding(16.dp)) {
             WalletCard(
                 walletUiState = WalletUiState.Success(
-                    currentBalance = 1450,
-                    currentLevel = 3,
-                    nextTierXp = 2000,
+                    WalletData(
+                        balance = 1450,
+                        level = 3,
+                        nextTierXp = 2000,
+                    )
                 ),
             )
         }
