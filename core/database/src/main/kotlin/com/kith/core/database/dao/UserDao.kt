@@ -44,4 +44,10 @@ interface UserDao {
         bio: String,
         profileImageUrl: String?
     )
+
+    // ─── Wallet Queries ──────────────────────────────────────────────────────
+
+    @Query("SELECT xp FROM users WHERE id = :userId")
+    fun getUserWalletStream(userId: String): Flow<Int?>
+
 }

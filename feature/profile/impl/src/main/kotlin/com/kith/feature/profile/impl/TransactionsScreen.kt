@@ -29,6 +29,7 @@ import com.kith.core.designsystem.component.KithMediumTopAppBar
 import com.kith.core.designsystem.component.LoadingWheel
 import com.kith.core.designsystem.theme.KithTheme
 import com.kith.core.model.data.Transaction
+import com.kith.core.model.data.WalletData
 import com.kith.core.ui.WalletCard
 import com.kith.core.ui.WalletUiState
 import com.kith.feature.profile.api.R
@@ -169,9 +170,9 @@ fun TransactionsScreenPreview() {
     KithTheme {
         TransactionsScreen(
             walletUiState = WalletUiState.Success(
-                currentBalance = 1450,
-                currentLevel = 3,
-                nextTierXp = 2000,
+                WalletData(balance = 1450,
+                level = 3,
+                nextTierXp = 2000,)
             ),
             uiState = TransactionsUiState.Success(
                 transactions = mockTransactions,

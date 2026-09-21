@@ -27,6 +27,7 @@ import com.kith.core.designsystem.component.KithMediumTopAppBar
 import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.KithTheme
 import com.kith.core.model.data.Post
+import com.kith.core.model.data.WalletData
 import com.kith.core.ui.PostPreviewParameterProvider
 import com.kith.core.ui.PostsFeedUiState
 import com.kith.core.ui.WalletCard
@@ -136,9 +137,9 @@ private fun HomeScreenPreview(
                 feed = posts,
             ),
             walletUiState = WalletUiState.Success(
-                currentBalance = 1450,
-                currentLevel = 3,
-                nextTierXp = 2000,
+                WalletData(balance = 1450,
+                    level = 3,
+                    nextTierXp = 2000,)
             ),
             onSync = {},
         )
