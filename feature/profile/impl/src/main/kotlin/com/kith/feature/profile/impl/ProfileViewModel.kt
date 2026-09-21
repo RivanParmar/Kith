@@ -2,6 +2,7 @@ package com.kith.feature.profile.impl
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kith.core.data.repository.AuthRepository
 import com.kith.core.data.repository.UserRepository
 import com.kith.core.model.data.UserProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,20 +16,21 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val userRepository: UserRepository,
+    private val authRepository: AuthRepository, // Injected AuthRepository
 ) : ViewModel() {
 
     val uiState: StateFlow<ProfileUiState> = userRepository.getUserProfileStream()
         .map {
-        if (it != null) {
-            ProfileUiState.Success(userProfile = it)
-        } else {
-            ProfileUiState.Error("User profile not found")
-        }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = ProfileUiState.Loading,
-    )
+            if (it != null) {
+                ProfileUiState.Success(userProfile = it)
+            } else {
+                ProfileUiState.Error("User profile not found")
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = ProfileUiState.Loading,
+        )
 
     fun saveProfile(newName: String, newBio: String, newImageUrl: String?) {
         viewModelScope.launch {
@@ -40,6 +42,19 @@ class ProfileViewModel @Inject constructor(
                 )
             } catch (e: Exception) {
                 e.printStackTrace()
+            }
+        }
+    }
+
+    // Added Logout Functionality
+    fun logout(onSuccess: () -> Unit = {}) {
+        viewModelScope.launch {
+            val result = authRepository.signOut()
+            if (result.isSuccess) {
+                onSuccess()
+            } else {
+                val exception = result.exceptionOrNull()
+                exception?.printStackTrace()
             }
         }
     }

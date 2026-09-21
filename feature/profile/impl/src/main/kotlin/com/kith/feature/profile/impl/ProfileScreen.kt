@@ -55,6 +55,7 @@ fun ProfileScreen(
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel = hiltViewModel(),
     onWalletClick: () -> Unit = {},
+    onNavigateToLogin: () -> Unit = {}, // Added navigation callback
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -62,7 +63,9 @@ fun ProfileScreen(
         uiState = uiState,
         modifier = modifier,
         onWalletClick = onWalletClick,
-        onLogoutClick = {},
+        onLogoutClick = {
+            viewModel.logout(onSuccess = onNavigateToLogin)
+        },
         onEditProfile = viewModel::saveProfile,
     )
 }
