@@ -21,25 +21,27 @@ class TransactionRepositoryImpl @Inject constructor(
         }
 
         try {
-            // Fetch directly from Supabase (allowed here because flow {} builder provides coroutine context)
             val networkTransactions = networkDataSource.getTransactionsForUser(userId)
 
-            // Map the network payload directly to your UI model
             val domainTransactions = networkTransactions.map { network ->
+                // CRITICAL FIX: If post_id is null, it's a Daily Reward from our Supabase RPC
+                val transactionTitle = network.posts?.title ?: "Daily Reward"
+
                 Transaction(
                     id = network.id,
-                    title = network.posts?.title ?: "Unknown Transaction",
+                    title = transactionTitle,
                     xpAmount = network.amount,
                     timestamp = network.time
                 )
             }
-
-            // Emit the final list to the UI
             emit(domainTransactions)
 
         } catch (e: Exception) {
-            // If the network fails, emit an empty list (or handle the error state)
             emit(emptyList())
         }
+    }
+
+    override suspend fun claimDailyReward(): Boolean {
+        return networkDataSource.claimDailyRewardViaRpc()
     }
 }

@@ -38,7 +38,6 @@ class SupabaseNetworkDataSource @Inject constructor(
             .decodeSingle<NetworkCommunity>()
     }
 
-    // --- Using the Supabase DSL for a partial update! ---
     override suspend fun updateUserProfile(userId: String, name: String, bio: String, profileImageUrl: String?) {
         supabaseClient.postgrest["users"].update(
             {
@@ -51,14 +50,21 @@ class SupabaseNetworkDataSource @Inject constructor(
         }
     }
 
-
-
     override suspend fun getTransactionsForUser(userId: String): List<NetworkTransaction> {
         return supabaseClient.postgrest["transactions"]
-            // Pass the columns here as a parameter!
             .select(Columns.raw("id, user_id, amount, time, posts(title)")) {
                 filter { eq("user_id", userId) }
             }
             .decodeList<NetworkTransaction>()
+    }
+
+    override suspend fun claimDailyRewardViaRpc(): Boolean {
+        return try {
+            val result = supabaseClient.postgrest.rpc("claim_daily_reward")
+            result.decodeAs<Boolean>()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
     }
 }
