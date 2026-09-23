@@ -1,20 +1,50 @@
 package com.kith.feature.community.impl
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
@@ -31,11 +61,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.kith.app.features.createcommunity.CreateCommunityEvent
-import com.kith.app.features.createcommunity.CreateCommunityViewModel
 import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.KithTheme
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 /**
  * Screen entry point — wires the ViewModel state/events to the stateless UI below.
@@ -54,7 +82,9 @@ fun CreateCommunityScreen(
         onCommunityNameChanged = viewModel::onCommunityNameChanged,
         onPasswordChanged = viewModel::onPasswordChanged,
         onDescriptionChanged = viewModel::onDescriptionChanged,
-        onCreateClicked = viewModel::onCreateClicked
+        onBackClicked = onBack,
+        onAddIconClicked = onPickIcon,
+        onCreateClicked = viewModel::onCreateClicked,
     )
 }
 
@@ -71,10 +101,19 @@ internal fun CreateCommunityScreen(
     onAddIconClicked: () -> Unit = {},
     onCreateClicked: () -> Unit = {},
 ) {
+    var nameError by rememberSaveable { mutableStateOf<String?>(null) }
+    var passwordError by rememberSaveable { mutableStateOf<String?>(null) }
+    var descriptionError by rememberSaveable { mutableStateOf<String?>(null) }
+
+    val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+
     MeshGradientBackgroundCreateCommunity {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .imePadding() // Adapts smoothly for the soft keyboard
+                .verticalScroll(scrollState) // Full page scrollable while typing
                 .padding(horizontal = 24.dp)
         ) {
             Spacer(modifier = Modifier.height(48.dp))
@@ -99,8 +138,7 @@ internal fun CreateCommunityScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Avatar/icon picker — the pill-shaped placeholder plus a floating
-            // "+" button sitting on its bottom-right corner.
+            // Avatar/icon picker
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -118,38 +156,56 @@ internal fun CreateCommunityScreen(
                     onClick = onAddIconClicked,
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .offset(x = 95.dp, y = 80.dp) // Adjusted y from 55.dp to 80.dp to position it lower
+                        .offset(x = 95.dp, y = 80.dp)
                 )
             }
 
             Spacer(modifier = Modifier.height(28.dp))
 
+            // Community Name Field
             FieldLabel(text = "Community Name")
             MeshTextField(
                 value = uiState.communityName,
-                onValueChange = onCommunityNameChanged,
-                placeholder = "Enter Your Community Name"
+                onValueChange = {
+                    nameError = null
+                    onCommunityNameChanged(it)
+                },
+                placeholder = "Enter Your Community Name",
+                isError = nameError != null,
+                errorMessage = nameError
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Password Field
             FieldLabel(text = "Password")
             MeshTextField(
                 value = uiState.communityPassword,
-                onValueChange = onPasswordChanged,
+                onValueChange = {
+                    passwordError = null
+                    onPasswordChanged(it)
+                },
                 placeholder = "Enter Community Password",
-                isPassword = true
+                isPassword = true,
+                isError = passwordError != null,
+                errorMessage = passwordError
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Community Description Field
             FieldLabel(text = "Community Description")
             MeshTextField(
                 value = uiState.communityDescription,
-                onValueChange = onDescriptionChanged,
+                onValueChange = {
+                    descriptionError = null
+                    onDescriptionChanged(it)
+                },
                 placeholder = "Describe your community...",
                 singleLine = false,
-                minLines = 3
+                minLines = 3,
+                isError = descriptionError != null,
+                errorMessage = descriptionError
             )
 
             uiState.errorMessage?.let { message ->
@@ -159,9 +215,34 @@ internal fun CreateCommunityScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
 
+            // Create Button
             InteractiveButton(
-                onClick = onCreateClicked,
-                enabled = uiState.isCreateEnabled,
+                onClick = {
+                    var isValid = true
+
+                    if (uiState.communityName.trim().isEmpty()) {
+                        nameError = "Community name is required"
+                        isValid = false
+                    }
+                    if (uiState.communityPassword.trim().isEmpty()) {
+                        passwordError = "Password is required"
+                        isValid = false
+                    }
+                    if (uiState.communityDescription.trim().isEmpty()) {
+                        descriptionError = "Community description is required"
+                        isValid = false
+                    }
+
+                    if (isValid) {
+                        onCreateClicked()
+                    } else {
+                        // Automatically scroll UP so the user immediately sees the first missing field & error
+                        coroutineScope.launch {
+                            scrollState.animateScrollTo(0)
+                        }
+                    }
+                },
+                enabled = !uiState.isCreating,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
@@ -178,6 +259,7 @@ internal fun CreateCommunityScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.navigationBarsPadding())
         }
     }
 }
@@ -193,8 +275,7 @@ private fun FieldLabel(text: String) {
 }
 
 /**
- * Main CTA button with a press-scale "squish" — shrinks slightly on press and
- * springs back on release, on top of the standard ripple.
+ * Main CTA button with press scale effect.
  */
 @Composable
 private fun InteractiveButton(
@@ -262,10 +343,6 @@ private fun InteractiveIconButton(
     }
 }
 
-/**
- * The small floating "+" circle sitting on the avatar's corner — opens the
- * icon/photo picker. Gets the same press-scale treatment as everything else.
- */
 @Composable
 private fun InteractiveAddIconButton(
     onClick: () -> Unit,
@@ -304,9 +381,6 @@ private fun InteractiveAddIconButton(
     }
 }
 
-/**
- * Small compat helper — collects "is pressed" from a MutableInteractionSource.
- */
 @Composable
 private fun MutableInteractionSource.collectIsPressedAsStateCompat() =
     produceState(initialValue = false, this) {
@@ -319,8 +393,7 @@ private fun MutableInteractionSource.collectIsPressedAsStateCompat() =
     }
 
 /**
- * Text field with an animated glow border on focus, an optional eye-toggle
- * for password fields, and optional multiline support for the description box.
+ * Text field with animated glow border, error states, and working password visibility toggle.
  */
 @Composable
 private fun MeshTextField(
@@ -329,74 +402,84 @@ private fun MeshTextField(
     placeholder: String,
     isPassword: Boolean = false,
     singleLine: Boolean = true,
-    minLines: Int = 1
+    minLines: Int = 1,
+    isError: Boolean = false,
+    errorMessage: String? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
+    var isPasswordVisible by rememberSaveable { mutableStateOf(false) }
 
-    val borderWidth by animateDpAsState(
-        targetValue = if (isFocused) 2.dp else 1.dp,
-        animationSpec = spring(stiffness = Spring.StiffnessMedium),
-        label = "fieldBorderWidth"
-    )
-
-    var isPasswordVisible by remember { mutableStateOf(false) }
-
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = { Text(text = placeholder, color = Color.White.copy(alpha = 0.6f)) },
-        singleLine = singleLine,
-        minLines = minLines,
-        interactionSource = interactionSource,
-        visualTransformation = when {
-            !isPassword -> VisualTransformation.None
-            isPasswordVisible -> VisualTransformation.None
-            else -> PasswordVisualTransformation()
-        },
-        keyboardOptions = KeyboardOptions(
-            keyboardType = if (isPassword) KeyboardType.Password else KeyboardType.Text
-        ),
-        trailingIcon = if (isPassword) {
-            {
-                IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
-                    Icon(
-                        imageVector = if (isPasswordVisible) KithIcons.VisibilityOff else KithIcons.VisibilityOn,
-                        contentDescription = if (isPasswordVisible) "Hide password" else "Show password",
-                        tint = Color.White.copy(alpha = 0.75f)
-                    )
+    Column(modifier = Modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = { Text(text = placeholder, color = Color.White.copy(alpha = 0.6f)) },
+            singleLine = singleLine,
+            minLines = minLines,
+            isError = isError,
+            interactionSource = interactionSource,
+            visualTransformation = when {
+                !isPassword -> VisualTransformation.None
+                isPasswordVisible -> VisualTransformation.None
+                else -> PasswordVisualTransformation()
+            },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = if (isPassword && !isPasswordVisible) {
+                    KeyboardType.Password
+                } else {
+                    KeyboardType.Text
                 }
-            }
-        } else null,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Color.White,
-            unfocusedTextColor = Color.White,
-            focusedBorderColor = Color.White.copy(alpha = 0.9f),
-            unfocusedBorderColor = Color.White.copy(alpha = 0.4f),
-            cursorColor = Color.White,
-            focusedContainerColor = Color.White.copy(alpha = 0.1f),
-            unfocusedContainerColor = Color.White.copy(alpha = 0.06f)
+            ),
+            trailingIcon = if (isPassword) {
+                {
+                    IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                        Icon(
+                            imageVector = if (isPasswordVisible) KithIcons.VisibilityOff else KithIcons.Visibility,
+                            contentDescription = if (isPasswordVisible) "Hide password" else "Show password",
+                            tint = Color.White.copy(alpha = 0.85f)
+                        )
+                    }
+                }
+            } else null,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedBorderColor = if (isError) Color(0xFFFF6B6B) else Color.White.copy(alpha = 0.9f),
+                unfocusedBorderColor = if (isError) Color(0xFFFF6B6B) else Color.White.copy(alpha = 0.4f),
+                cursorColor = Color.White,
+                focusedContainerColor = Color.White.copy(alpha = 0.1f),
+                unfocusedContainerColor = Color.White.copy(alpha = 0.06f),
+                errorBorderColor = Color(0xFFFF6B6B),
+                errorContainerColor = Color.White.copy(alpha = 0.08f),
+                errorTextColor = Color.White,
+                errorCursorColor = Color.White,
+                errorTrailingIconColor = Color.White.copy(alpha = 0.85f)
+            )
         )
-    )
+
+        AnimatedVisibility(
+            visible = isError && !errorMessage.isNullOrBlank(),
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            errorMessage?.let { msg ->
+                Spacer(modifier = Modifier.height(4.dp))
+                ShakingErrorText(message = msg)
+            }
+        }
+    }
 }
 
 /**
- * Error text that shakes side to side once when it first appears.
+ * Error text with subtle horizontal shake.
  */
 @Composable
 private fun ShakingErrorText(message: String) {
     val offsetX = remember { Animatable(0f) }
 
     LaunchedEffect(message) {
-        offsetX.animateTo(
-            targetValue = 0f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessHigh
-            )
-        )
         val shakeSequence = listOf(-10f, 10f, -8f, 8f, -4f, 4f, 0f)
         for (target in shakeSequence) {
             offsetX.animateTo(
@@ -409,16 +492,17 @@ private fun ShakingErrorText(message: String) {
     Text(
         text = message,
         color = Color(0xFFFFD2D2),
-        fontSize = 13.sp,
-        modifier = Modifier.graphicsLayer {
-            translationX = offsetX.value
-        }
+        fontSize = 12.sp,
+        modifier = Modifier
+            .padding(start = 6.dp)
+            .graphicsLayer {
+                translationX = offsetX.value
+            }
     )
 }
 
 /**
- * Same mesh gradient background as the Join Community screen — kept
- * byte-for-byte identical so both screens feel like one continuous flow.
+ * Mesh gradient background.
  */
 @Composable
 fun MeshGradientBackgroundCreateCommunity(content: @Composable BoxScope.() -> Unit) {
