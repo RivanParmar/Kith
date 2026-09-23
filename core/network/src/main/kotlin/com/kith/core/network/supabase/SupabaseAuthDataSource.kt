@@ -12,7 +12,7 @@ import kotlinx.serialization.json.put
 import javax.inject.Inject
 
 class SupabaseAuthDataSource @Inject constructor(
-private val supabase: SupabaseClient
+    private val supabase: SupabaseClient
 ) : KithAuthDataSource {
 
     // Maps the internal Supabase state to a clean, decoupled Boolean flow
@@ -25,7 +25,11 @@ private val supabase: SupabaseClient
         return supabase.auth.currentUserOrNull()?.id
     }
 
-    override suspend fun signUp(email: String, password: String, displayName: String?): Result<Unit> = runCatching {
+    override suspend fun signUp(
+        email: String,
+        password: String,
+        displayName: String?,
+    ): Result<Unit> = runCatching {
         supabase.auth.signUpWith(Email) {
             this.email = email
             this.password = password
@@ -51,7 +55,7 @@ private val supabase: SupabaseClient
         supabase.auth.signOut()
     }
 
-    override suspend fun updateUser(newPassword: String): Result<Unit> = runCatching{
+    override suspend fun updateUser(newPassword: String): Result<Unit> = runCatching {
         supabase.auth.updateUser {
             password = newPassword
         }

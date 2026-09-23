@@ -17,4 +17,6 @@ interface KithNetworkDataSource {
     suspend fun updateUserProfile(userId: String, name: String, bio: String, profileImageUrl: String?)
 
     suspend fun getTransactionsForUser(userId: String): List<NetworkTransaction>
+
+    suspend fun getTopUsers(sortByColumn: String): List<NetworkUser>
 }

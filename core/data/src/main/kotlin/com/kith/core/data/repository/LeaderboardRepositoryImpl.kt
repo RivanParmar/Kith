@@ -12,7 +12,7 @@ class LeaderboardRepositoryImpl @Inject constructor(
 
     override fun getTopUsers(sortByColumn: String): Flow<List<UserProfile>> = flow {
         try {
-            val networkUsers = networkDataSource.getTopUser(sortByColumn)
+            val networkUsers = networkDataSource.getTopUsers(sortByColumn)
 
             val domainUsers = networkUsers.map { user ->
                 UserProfile(
