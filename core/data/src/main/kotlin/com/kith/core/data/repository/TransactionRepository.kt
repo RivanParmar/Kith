@@ -5,5 +5,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface TransactionRepository {
     fun getTransactions(): Flow<List<Transaction>>
-}
 
+    suspend fun claimDailyReward(): Boolean
+}

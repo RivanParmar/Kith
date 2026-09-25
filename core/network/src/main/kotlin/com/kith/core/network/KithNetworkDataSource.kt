@@ -18,5 +18,7 @@ interface KithNetworkDataSource {
 
     suspend fun getTransactionsForUser(userId: String): List<NetworkTransaction>
 
+    /** Calls the Supabase SQL RPC function to claim the daily reward */
+    suspend fun claimDailyRewardViaRpc(): Boolean
     suspend fun getTopUsers(sortByColumn: String): List<NetworkUser>
 }
