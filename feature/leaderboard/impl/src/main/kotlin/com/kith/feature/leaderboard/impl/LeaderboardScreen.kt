@@ -1,5 +1,6 @@
 package com.kith.feature.leaderboard.impl
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,245 +19,160 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.kith.core.designsystem.component.KithMediumTopAppBar
 import com.kith.core.designsystem.theme.KithTheme
+import com.kith.core.model.data.UserProfile
 
-val PrimaryBlue = Color(0xFF2563EB)
-val LightBlueBg = Color(0xFFEFF6FF)
-val ActiveCardBorder = Color(0xFF3B82F6)
-val TextDark = Color(0xFF0F172A)
-val TextMuted = Color(0xFF64748B)
-val TabBackground = Color(0xFFF1F5F9)
-val DividerColor = Color(0xFFE2E8F0)
+private object LeaderboardColors {
+    val primary = Color(0xFF2563EB)
+    val primaryBg = Color(0xFFEFF6FF)
+    val textDark = Color(0xFF0F172A)
+    val textMuted = Color(0xFF64748B)
+    val tabBg = Color(0xFFF1F5F9)
+    val gold = Color(0xFFF59E0B)
+    val silver = Color(0xFF94A3B8)
+    val bronze = Color(0xFFB45309)
+}
 
-val GoldColor = Color(0xFFF59E0B)
-val SilverColor = Color(0xFF94A3B8)
-val BronzeColor = Color(0xFFB45309)
-
-
-val initialLeaderboardUsers = listOf(
-    LeaderboardUser(
-        id = "aris",
-        name = "Aris Thorne",
-        department = "Software Engineering",
-        avatarUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
-        xp = 3450,
-        tasks = 58,
-        rating = 4.95f,
-        streakDays = 14,
-        bio = "Senior algorithm specialist and systems architect."
-    ),
-    LeaderboardUser(
-        id = "maya",
-        name = "Maya Lin",
-        department = "Data Science",
-        avatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
-        xp = 2900,
-        tasks = 45,
-        rating = 4.88f,
-        streakDays = 9,
-        bio = "Neural network modeling and statistical learning."
-    ),
-    LeaderboardUser(
-        id = "emily",
-        name = "Emily Watson",
-        department = "Product Design",
-        avatarUrl = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
-        xp = 2750,
-        tasks = 41,
-        rating = 4.91f,
-        streakDays = 12,
-        bio = "Lead product designer crafting accessible user systems."
-    ),
-    LeaderboardUser(
-        id = "brandon",
-        name = "Brandon Miller",
-        department = "Computer Science",
-        avatarUrl = "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
-        xp = 2400,
-        tasks = 36,
-        rating = 4.79f,
-        streakDays = 7,
-        bio = "Distributed systems researcher and compiler enthusiast."
-    ),
-    LeaderboardUser(
-        id = "alex",
-        name = "Alex Rivera",
-        department = "Mobile & Cloud",
-        avatarUrl = "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80",
-        xp = 1450,
-        tasks = 25,
-        rating = 4.72f,
-        streakDays = 5,
-        isCurrentUser = true,
-        bio = "Building Kotlin Android & Jetpack Compose native experiences."
-    ),
-    LeaderboardUser(
-        id = "sophia",
-        name = "Sophia Chen",
-        department = "Biochemistry • •",
-        avatarUrl = "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80",
-        xp = 1380,
-        tasks = 22,
-        rating = 4.65f,
-        streakDays = 4,
-        bio = "Computational biology, genetics, and molecular dynamics."
-    ),
-    LeaderboardUser(
-        id = "jordan",
-        name = "Jordan Taylor",
-        department = "Economics",
-        avatarUrl = "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80",
-        xp = 1290,
-        tasks = 19,
-        rating = 4.58f,
-        streakDays = 3,
-        bio = "Quantitative finance and macro econometric models."
-    )
+private data class PodiumStyle(
+    val rank: Int,
+    val height: Dp,
+    val avatarSize: Dp,
+    val accent: Color,
+    val gradient: Brush,
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
+private val podiumStyles = listOf(
+    PodiumStyle(
+        rank = 2, height = 145.dp, avatarSize = 66.dp, accent = LeaderboardColors.silver,
+        gradient = Brush.verticalGradient(listOf(Color(0xFF94A3B8), Color(0xFFCBD5E1), Color(0xFFF1F5F9).copy(alpha = 0.2f))),
+    ),
+    PodiumStyle(
+        rank = 1, height = 195.dp, avatarSize = 74.dp, accent = LeaderboardColors.gold,
+        gradient = Brush.verticalGradient(listOf(Color(0xFFF59E0B), Color(0xFFFBBF24), Color(0xFFFEF3C7).copy(alpha = 0.2f))),
+    ),
+    PodiumStyle(
+        rank = 3, height = 110.dp, avatarSize = 66.dp, accent = LeaderboardColors.bronze,
+        gradient = Brush.verticalGradient(listOf(Color(0xFFB45309), Color(0xFFD97706), Color(0xFFFED7AA).copy(alpha = 0.2f))),
+    ),
+)
+
+private fun UserProfile.getFormattedScore(tab: LeaderboardTab): String {
+    return when (tab) {
+        LeaderboardTab.BY_XP -> "$xp XP"
+        LeaderboardTab.BY_TASKS -> "$problemsSolved Solved"
+        LeaderboardTab.BY_RATING -> "$rating ★"
+    }
+}
+
 @Composable
 fun LeaderboardScreen(
     modifier: Modifier = Modifier,
+    viewModel: LeaderboardViewModel = hiltViewModel(),
 ) {
-    var selectedTab by remember { mutableStateOf(LeaderboardTab.BY_XP) }
-    var selectedTimeframe by remember { mutableStateOf(Timeframe.WEEKLY) }
-    var searchQuery by remember { mutableStateOf("") }
-    var isSearchActive by remember { mutableStateOf(false) }
-    var usersList by remember { mutableStateOf(initialLeaderboardUsers) }
-    var selectedUserForDetail by remember { mutableStateOf<LeaderboardUser?>(null) }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val currentTab by viewModel.selectedSortBy.collectAsStateWithLifecycle()
+    LeaderboardContent(
+        uiState = uiState,
+        currentTab = currentTab,
+        onTabChanged = viewModel::onTabChanged,
+        modifier = modifier,
+    )
+}
 
-    val sortedUsers = remember(usersList, selectedTab, selectedTimeframe) {
-        usersList.sortedByDescending { user ->
-            when (selectedTab) {
-                LeaderboardTab.BY_XP -> (user.xp * selectedTimeframe.multiplier)
-                LeaderboardTab.BY_TASKS -> (user.tasks * selectedTimeframe.multiplier)
-                LeaderboardTab.BY_RATING -> user.rating
-            }
-        }
-    }
-
-    val filteredUsers = remember(sortedUsers, searchQuery) {
-        if (searchQuery.isBlank()) sortedUsers
-        else sortedUsers.filter {
-            it.name.contains(searchQuery, ignoreCase = true) ||
-                    it.department.contains(searchQuery, ignoreCase = true)
-        }
-    }
-
-    val top1 = sortedUsers.getOrNull(0)
-    val top2 = sortedUsers.getOrNull(1)
-    val top3 = sortedUsers.getOrNull(2)
-
-    val restUsers = filteredUsers.filter { user ->
-        val rank = sortedUsers.indexOfFirst { it.id == user.id } + 1
-        rank > 3
-    }
-
-    val focusManager = LocalFocusManager.current
-
+@Composable
+private fun LeaderboardContent(
+    uiState: LeaderboardUiState,
+    modifier: Modifier = Modifier,
+    currentTab: LeaderboardTab = LeaderboardTab.BY_XP,
+    onTabChanged: (LeaderboardTab) -> Unit = {},
+) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = Color.White,
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-        ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                item {
-                    SegmentedTabs(
-                        selectedTab = selectedTab,
-                        onTabSelected = { selectedTab = it }
-                    )
+        topBar = {
+            KithMediumTopAppBar(
+                titleRes = com.kith.feature.leaderboard.api.R.string.feature_leaderboard_api_title,
+                navigationIcon = null,
+                navigationIconContentDescription = null,
+                actionIcon = null,
+                actionIconContentDescription = null,
+            )
+        }
+    ) { padding ->
+        when (uiState) {
+            is LeaderboardUiState.Loading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(color = LeaderboardColors.primary)
                 }
+            }
+            is LeaderboardUiState.Success -> {
+                val podium = remember(uiState.users) { uiState.users.take(3) }
+                val rows = remember(uiState.users) { uiState.users.drop(3) }
 
-                if (top1 != null && top2 != null && top3 != null) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
                     item {
-                        DynamicPodiumSection(
-                            first = top1,
-                            second = top2,
-                            third = top3,
-                            selectedTab = selectedTab,
-                            multiplier = selectedTimeframe.multiplier,
-                            onUserClick = { selectedUserForDetail = it },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 10.dp, bottom = 12.dp)
+                        SegmentedTabs(
+                            selectedTab = currentTab,
+                            onTabSelected = onTabChanged,
                         )
                     }
-                }
 
-                items(restUsers, key = { it.id }) { user ->
-                    val actualRank = sortedUsers.indexOfFirst { it.id == user.id } + 1
-                    RankItemRow(
-                        user = user,
-                        rank = actualRank,
-                        selectedTab = selectedTab,
-                        multiplier = selectedTimeframe.multiplier,
-                        onClick = { selectedUserForDetail = user }
-                    )
-                }
-
-                if (restUsers.isEmpty() && searchQuery.isNotBlank()) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 32.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "No participants found matching \"$searchQuery\"",
-                                color = TextMuted,
-                                fontSize = 13.sp
+                    if (podium.isNotEmpty()) {
+                        item {
+                            PodiumRow(
+                                podium = podium,
+                                currentTab = currentTab,
+                                onUserClick = { },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 10.dp, bottom = 12.dp),
                             )
                         }
                     }
-                }
-            }
 
-            selectedUserForDetail?.let { user ->
-                val userRank = sortedUsers.indexOfFirst { it.id == user.id } + 1
-                ParticipantBottomSheet(
-                    user = user,
-                    rank = userRank,
-                    onDismiss = { selectedUserForDetail = null }
-                )
+                    itemsIndexed(rows, key = { _, user -> user.id }) { index, user ->
+                        RankItemRow(
+                            user = user,
+                            rank = index + 4,
+                            currentTab = currentTab,
+                            onClick = { },
+                        )
+                    }
+                }
             }
         }
     }
@@ -266,371 +182,320 @@ fun LeaderboardScreen(
 private fun SegmentedTabs(
     selectedTab: LeaderboardTab,
     onTabSelected: (LeaderboardTab) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(TabBackground, CircleShape)
+            .background(LeaderboardColors.tabBg, CircleShape)
             .padding(4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         LeaderboardTab.entries.forEach { tab ->
             val isSelected = tab == selectedTab
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .then(
-                        if (isSelected) {
-                            Modifier
-                                .shadow(
-                                    elevation = 2.dp,
-                                    shape = CircleShape,
-                                    clip = false
-                                )
-                                .background(Color.White, CircleShape)
-                        } else {
-                            // Explicitly transparent for unselected tabs
-                            Modifier.background(Color.Transparent, CircleShape)
-                        }
-                    )
+                    .background(if (isSelected) Color.White else Color.Transparent, CircleShape)
                     .clip(CircleShape)
                     .clickable(
-                        // Removes the grey ripple / hover / focus overlay completely:
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
-                    ) { onTabSelected(tab) }
+                    ) {
+                        onTabSelected(tab)
+                    }
                     .padding(vertical = 10.dp),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = tab.title,
                     fontSize = 14.sp,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                    color = if (isSelected) PrimaryBlue else TextMuted
+                    color = if (isSelected) LeaderboardColors.primary else LeaderboardColors.textMuted,
                 )
             }
         }
     }
 }
 
-
 @Composable
-private fun DynamicPodiumSection(
-    first: LeaderboardUser,
-    second: LeaderboardUser,
-    third: LeaderboardUser,
-    selectedTab: LeaderboardTab,
-    multiplier: Float,
-    onUserClick: (LeaderboardUser) -> Unit,
+private fun PodiumRow(
+    podium: List<UserProfile>,
+    currentTab: LeaderboardTab,
+    onUserClick: (UserProfile) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val ordered = podiumStyles.mapNotNull { style ->
+        podium.getOrNull(style.rank - 1)?.let { user -> style to user }
+    }
+
     Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.Bottom
+        modifier = modifier.fillMaxWidth().padding(horizontal = 25.dp),
+        horizontalArrangement = Arrangement.spacedBy(45.dp),
+        verticalAlignment = Alignment.Bottom,
     ) {
-        Spacer(modifier = Modifier.width(25.dp))
-
-        PodiumColumn(
-            user = second,
-            rankNumber = 2,
-            scoreText = formatUserScore(second, selectedTab, multiplier),
-            pillarHeight = 145.dp,
-            pillarGradient = Brush.verticalGradient(
-                colors = listOf(
-                    Color(0xFF94A3B8),
-                    Color(0xFFCBD5E1),
-                    Color(0xFFF1F5F9).copy(alpha = 0.2f)
-                )
-            ),
-            ringColor = SilverColor,
-            medalBg = Color(0xFF94A3B8),
-            avatarSize = 66.dp,
-            onClick = { onUserClick(second) },
-            modifier = Modifier.weight(1f)
-        )
-
-        Spacer(modifier = Modifier.width(45.dp))
-
-        PodiumColumn(
-            user = first,
-            rankNumber = 1,
-            scoreText = formatUserScore(first, selectedTab, multiplier),
-            pillarHeight = 195.dp,
-            pillarGradient = Brush.verticalGradient(
-                colors = listOf(
-                    Color(0xFFF59E0B),
-                    Color(0xFFFBBF24),
-                    Color(0xFFFEF3C7).copy(alpha = 0.2f)
-                )
-            ),
-            ringColor = GoldColor,
-            medalBg = Color(0xFFF59E0B),
-            avatarSize = 74.dp,
-            onClick = { onUserClick(first) },
-            modifier = Modifier.weight(1.05f)
-        )
-
-        Spacer(modifier = Modifier.width(45.dp))
-
-        PodiumColumn(
-            user = third,
-            rankNumber = 3,
-            scoreText = formatUserScore(third, selectedTab, multiplier),
-            pillarHeight = 110.dp,
-            pillarGradient = Brush.verticalGradient(
-                colors = listOf(
-                    Color(0xFFB45309),
-                    Color(0xFFD97706),
-                    Color(0xFFFED7AA).copy(alpha = 0.2f)
-                )
-            ),
-            ringColor = BronzeColor,
-            medalBg = Color(0xFFB45309),
-            avatarSize = 66.dp,
-            onClick = { onUserClick(third) },
-            modifier = Modifier.weight(1f)
-        )
-
-        Spacer(modifier = Modifier.width(25.dp))
+        ordered.forEach { (style, user) ->
+            PodiumColumn(
+                user = user,
+                style = style,
+                currentTab = currentTab,
+                onClick = { onUserClick(user) },
+                modifier = Modifier.weight(if (style.rank == 1) 1.05f else 1f),
+            )
+        }
     }
 }
 
 @Composable
 private fun PodiumColumn(
-    user: LeaderboardUser,
-    rankNumber: Int,
-    scoreText: String,
-    pillarHeight: Dp,
-    pillarGradient: Brush,
-    ringColor: Color,
-    medalBg: Color,
-    avatarSize: Dp,
+    user: UserProfile,
+    style: PodiumStyle,
+    currentTab: LeaderboardTab,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier.clickable { onClick() },
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Bottom
+        verticalArrangement = Arrangement.Bottom,
     ) {
-        // Avatar with colored ring & Ribbon Medal
-        Box(
-            contentAlignment = Alignment.BottomCenter,
-            modifier = Modifier.padding(bottom = 6.dp)
-        ) {
+        Box(contentAlignment = Alignment.BottomCenter, modifier = Modifier.padding(bottom = 6.dp)) {
             Box(
                 modifier = Modifier
-                    .size(avatarSize)
-                    .border(
-                        3.5.dp,
-                        if (user.isCurrentUser) PrimaryBlue else ringColor,
-                        CircleShape
-                    )
+                    .size(style.avatarSize)
+                    .border(3.5.dp, style.accent, CircleShape)
                     .padding(3.dp)
                     .clip(CircleShape)
+                    .background(LeaderboardColors.tabBg),
+                contentAlignment = Alignment.Center,
             ) {
+                if (!user.profileImageUrl.isNullOrEmpty()) {
+                    Image(
+                        painter = painterResource(android.R.drawable.ic_menu_camera),
+                        contentDescription = user.name,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                } else {
+                    Text(
+                        text = user.name.take(1).uppercase(),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = LeaderboardColors.textDark,
+                    )
+                }
             }
-
-            // Ribbon Medal badge
             Box(
                 modifier = Modifier
                     .offset(y = 6.dp)
                     .size(20.dp)
-                    .background(medalBg, CircleShape)
+                    .background(style.accent, CircleShape)
                     .border(1.5.dp, Color.White, CircleShape),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    text = rankNumber.toString(),
-                    color = Color.White,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Text(style.rank.toString(), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
         }
 
-        Spacer(modifier = Modifier.height(6.dp))
-
-        Text(
-            text = user.name,
-            fontWeight = FontWeight.Bold,
-            fontSize = 13.5.sp,
-            color = TextDark,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(3.dp))
-
+        Spacer(Modifier.height(6.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 4.dp),
+        ) {
+            Text(
+                text = user.name,
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.5.sp,
+                color = LeaderboardColors.textDark,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            if (user.isPremium) {
+                Spacer(Modifier.width(2.dp))
+                Text(
+                    text = "★",
+                    fontSize = 11.sp,
+                    color = LeaderboardColors.gold,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+        }
+        Spacer(Modifier.height(3.dp))
         Box(
-            modifier = Modifier
-                .background(LightBlueBg, RoundedCornerShape(50))
+            Modifier
+                .background(LeaderboardColors.primaryBg, RoundedCornerShape(50))
                 .padding(horizontal = 10.dp, vertical = 3.dp)
         ) {
             Text(
-                text = scoreText,
+                text = user.getFormattedScore(currentTab),
                 fontSize = 11.5.sp,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryBlue
+                color = LeaderboardColors.primary,
             )
         }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Pedestal with smooth height animation
+        Spacer(Modifier.height(10.dp))
         Box(
-            modifier = Modifier
+            Modifier
                 .fillMaxWidth()
-                .height(pillarHeight)
+                .height(style.height)
                 .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
-                .background(pillarGradient)
+                .background(style.gradient)
         )
     }
 }
 
 @Composable
 private fun RankItemRow(
-    user: LeaderboardUser,
+    user: UserProfile,
     rank: Int,
-    selectedTab: LeaderboardTab,
-    multiplier: Float,
+    currentTab: LeaderboardTab,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    val isHighlighted = user.isCurrentUser
-
     Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .clickable { onClick() }
-            .then(
-                if (isHighlighted) {
-                    Modifier
-                        .border(1.8.dp, ActiveCardBorder, RoundedCornerShape(16.dp))
-                        .background(Color(0xFFF6FAFF))
-                        .padding(horizontal = 14.dp, vertical = 12.dp)
-                } else {
-                    Modifier.padding(horizontal = 10.dp, vertical = 8.dp)
-                }
-            )
+            .padding(horizontal = 10.dp, vertical = 8.dp),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = rank.toString(),
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
-                color = if (isHighlighted) PrimaryBlue else TextDark,
+                color = LeaderboardColors.textDark,
                 modifier = Modifier.width(28.dp),
-                textAlign = TextAlign.Start
             )
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = user.name,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    color = TextDark
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = if (isHighlighted) "You (Tap for details)" else user.department,
-                    fontSize = 12.sp,
-                    color = if (isHighlighted) PrimaryBlue else TextMuted,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Text(
-                text = formatUserScore(user, selectedTab, multiplier),
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp,
-                color = PrimaryBlue
-            )
-        }
-    }
-}
-
-@Composable
-private fun ParticipantBottomSheet(
-    user: LeaderboardUser,
-    rank: Int,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Close", color = PrimaryBlue, fontWeight = FontWeight.Bold)
-            }
-        },
-        title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Rank #$rank Profile", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            }
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(user.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        Text(user.department, color = TextMuted, fontSize = 13.sp)
-                    }
-                }
-                HorizontalDivider(color = DividerColor)
-                Text("• Total XP: ${user.xp.toString()} XP", fontSize = 13.sp)
-                Text("• Tasks Completed: ${user.tasks}", fontSize = 13.sp)
-                Text("• Rating Score: ${user.rating} ★", fontSize = 13.sp)
-                Text("• Streak: ${user.streakDays} days active 🔥", fontSize = 13.sp)
-                if (user.bio.isNotBlank()) {
+            Spacer(Modifier.width(8.dp))
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(LeaderboardColors.tabBg),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (!user.profileImageUrl.isNullOrEmpty()) {
+                    Image(
+                        painter = painterResource(android.R.drawable.ic_menu_camera),
+                        contentDescription = user.name,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                } else {
                     Text(
-                        user.bio,
-                        fontStyle = FontStyle.Italic,
-                        fontSize = 12.sp,
-                        color = TextMuted
+                        text = user.name.take(1).uppercase(),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = LeaderboardColors.textDark,
                     )
                 }
             }
-        }
-    )
-}
-
-
-// Utility function to format scores based on tab & timeframe multiplier
-fun formatUserScore(user: LeaderboardUser, tab: LeaderboardTab, multiplier: Float): String {
-    return when (tab) {
-        LeaderboardTab.BY_XP -> {
-            val total = (user.xp * multiplier).toInt()
-            "$total XP"
-        }
-
-        LeaderboardTab.BY_TASKS -> {
-            val total = (user.tasks * multiplier).toInt()
-            "$total Tasks"
-        }
-
-        LeaderboardTab.BY_RATING -> {
-            "%.2f ★".format(user.rating)
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = user.name,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = LeaderboardColors.textDark,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    if (user.isPremium) {
+                        Spacer(Modifier.width(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .background(LeaderboardColors.gold.copy(alpha = 0.15f), RoundedCornerShape(4.dp))
+                                .padding(horizontal = 5.dp, vertical = 1.dp)
+                        ) {
+                            Text(
+                                text = "PRO",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = LeaderboardColors.gold,
+                            )
+                        }
+                    }
+                }
+            }
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = user.getFormattedScore(currentTab),
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                color = LeaderboardColors.primary,
+            )
         }
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 private fun LeaderboardPreview() {
+    val sampleUsers = listOf(
+        UserProfile(
+            id = "1",
+            name = "Alex",
+            profileImageUrl = null,
+            bio = "Senior Android Engineer.",
+            xp = 12500,
+            rating = 4.9f,
+            problemsAsked = 12,
+            problemsSolved = 145,
+            isPremium = true
+        ),
+        UserProfile(
+            id = "2",
+            name = "Sarah",
+            profileImageUrl = null,
+            bio = "Backend developer.",
+            xp = 8400,
+            rating = 4.7f,
+            problemsAsked = 24,
+            problemsSolved = 82,
+            isPremium = false
+        ),
+        UserProfile(
+            id = "3",
+            name = "John",
+            profileImageUrl = null,
+            bio = null,
+            xp = 3200,
+            rating = 4.5f,
+            problemsAsked = 45,
+            problemsSolved = 15,
+            isPremium = false
+        ),
+        UserProfile(
+            id = "4",
+            name = "Emily",
+            profileImageUrl = null,
+            bio = "UI/UX Designer.",
+            xp = 15600,
+            rating = 4.2f,
+            problemsAsked = 8,
+            problemsSolved = 210,
+            isPremium = true
+        ),
+        UserProfile(
+            id = "5",
+            name = "Michael",
+            profileImageUrl = null,
+            bio = "Getting started!",
+            xp = 450,
+            rating = 4.0f,
+            problemsAsked = 3,
+            problemsSolved = 2,
+            isPremium = false
+        ),
+    )
     KithTheme {
-        LeaderboardScreen()
+        LeaderboardContent(
+            uiState = LeaderboardUiState.Success(users = sampleUsers),
+            currentTab = LeaderboardTab.BY_XP,
+        )
     }
 }

@@ -9,4 +9,6 @@ android {
 
 dependencies {
     implementation(projects.feature.leaderboard.api)
+
+    implementation(projects.core.data)
 }

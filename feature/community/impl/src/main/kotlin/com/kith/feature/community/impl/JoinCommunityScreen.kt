@@ -1,19 +1,51 @@
 package com.kith.feature.community.impl
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
@@ -30,11 +62,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.kith.app.features.joincommunity.JoinCommunityEvent
-import com.kith.app.features.joincommunity.JoinCommunityViewModel
 import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.KithTheme
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @Composable
 fun JoinCommunityScreen(
@@ -51,10 +81,10 @@ fun JoinCommunityScreen(
         uiState = uiState,
         onCommunityNameChanged = viewModel::onCommunityNameChanged,
         onPasswordChanged = viewModel::onPasswordChanged,
-        onBackClicked = {},
+        onBackClicked = onBack,
         onJoinClicked = viewModel::onJoinClicked,
-        onCantFindClicked = {},
-        onCreateClicked = {},
+        onCantFindClicked = onFindCommunity,
+        onCreateClicked = onCreateCommunity,
     )
 }
 
@@ -68,10 +98,18 @@ internal fun JoinCommunityScreen(
     onCantFindClicked: () -> Unit = {},
     onCreateClicked: () -> Unit = {},
 ) {
+    var nameError by rememberSaveable { mutableStateOf<String?>(null) }
+    var passwordError by rememberSaveable { mutableStateOf<String?>(null) }
+
+    val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+
     MeshGradientBackground {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .imePadding() // Adjusts scrollable viewport when keyboard opens
+                .verticalScroll(scrollState) // Full page scrollable while typing
                 .padding(horizontal = 24.dp)
         ) {
             Spacer(modifier = Modifier.height(48.dp))
@@ -96,8 +134,7 @@ internal fun JoinCommunityScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Soft rounded "avatar" shape holding the placeholder shapes,
-            // matching the pill-shaped icon container in the design.
+            // Soft rounded avatar placeholder
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -114,21 +151,33 @@ internal fun JoinCommunityScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
 
+            // Community Name Field
             FieldLabel(text = "Community Name")
             MeshTextField(
                 value = uiState.communityName,
-                onValueChange = onCommunityNameChanged,
-                placeholder = "Enter Community Name"
+                onValueChange = {
+                    nameError = null
+                    onCommunityNameChanged(it)
+                },
+                placeholder = "Enter Community Name",
+                isError = nameError != null,
+                errorMessage = nameError
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Password Field
             FieldLabel(text = "Password")
             MeshTextField(
                 value = uiState.communityPassword,
-                onValueChange = onPasswordChanged,
+                onValueChange = {
+                    passwordError = null
+                    onPasswordChanged(it)
+                },
                 placeholder = "Enter Community Password",
-                isPassword = true
+                isPassword = true,
+                isError = passwordError != null,
+                errorMessage = passwordError
             )
 
             uiState.errorMessage?.let { message ->
@@ -139,8 +188,28 @@ internal fun JoinCommunityScreen(
             Spacer(modifier = Modifier.height(28.dp))
 
             InteractiveButton(
-                onClick = onJoinClicked,
-                enabled = uiState.isJoinEnabled,
+                onClick = {
+                    var isValid = true
+
+                    if (uiState.communityName.trim().isEmpty()) {
+                        nameError = "Community name is required"
+                        isValid = false
+                    }
+                    if (uiState.communityPassword.trim().isEmpty()) {
+                        passwordError = "Password is required"
+                        isValid = false
+                    }
+
+                    if (isValid) {
+                        onJoinClicked()
+                    } else {
+                        // Automatically scroll UP so the user immediately sees the top missing fields & errors
+                        coroutineScope.launch {
+                            scrollState.animateScrollTo(0)
+                        }
+                    }
+                },
+                enabled = !uiState.isJoining,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
@@ -180,6 +249,7 @@ internal fun JoinCommunityScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.navigationBarsPadding())
         }
     }
 }
@@ -194,11 +264,6 @@ private fun FieldLabel(text: String) {
     )
 }
 
-/**
- * Main CTA button with a press-scale "squish" — shrinks slightly on press and
- * springs back on release, on top of the standard ripple, so it feels tactile
- * rather than just a flat click target.
- */
 @Composable
 private fun InteractiveButton(
     onClick: () -> Unit,
@@ -236,10 +301,6 @@ private fun InteractiveButton(
     )
 }
 
-/**
- * Text buttons ("Can't find a community?" / "Create One") get the same
- * subtle press-scale so the whole screen feels consistently tactile.
- */
 @Composable
 private fun InteractiveTextButton(
     onClick: () -> Unit,
@@ -297,10 +358,6 @@ private fun InteractiveIconButton(
     }
 }
 
-/**
- * Small compat helper — collects "is pressed" from a MutableInteractionSource
- * without pulling in an extra foundation import name clash.
- */
 @Composable
 private fun MutableInteractionSource.collectIsPressedAsStateCompat() =
     produceState(initialValue = false, this) {
@@ -312,89 +369,88 @@ private fun MutableInteractionSource.collectIsPressedAsStateCompat() =
         }
     }
 
-/**
- * Text field with an animated glow border — the border brightens and thickens
- * smoothly when the field gains focus, instead of just snapping to a new color,
- * so typing into it feels responsive rather than static.
- */
 @Composable
 private fun MeshTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
-    isPassword: Boolean = false
+    isPassword: Boolean = false,
+    isError: Boolean = false,
+    errorMessage: String? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
 
-    val borderWidth by animateDpAsState(
-        targetValue = if (isFocused) 2.dp else 1.dp,
-        animationSpec = spring(stiffness = Spring.StiffnessMedium),
-        label = "fieldBorderWidth"
-    )
+    // rememberSaveable ensures the visibility state isn't lost on keyboard display or recomposition
+    var isPasswordVisible by rememberSaveable { mutableStateOf(false) }
 
-    // Only relevant for the password field — toggled by the eye icon below.
-    var isPasswordVisible by remember { mutableStateOf(false) }
-
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = { Text(text = placeholder, color = Color.White.copy(alpha = 0.6f)) },
-        singleLine = true,
-        interactionSource = interactionSource,
-        visualTransformation = when {
-            !isPassword -> VisualTransformation.None
-            isPasswordVisible -> VisualTransformation.None
-            else -> PasswordVisualTransformation()
-        },
-        keyboardOptions = KeyboardOptions(
-            keyboardType = if (isPassword) KeyboardType.Password else KeyboardType.Text
-        ),
-        trailingIcon = if (isPassword) {
-            {
-                IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
-                    Icon(
-                        imageVector = if (isPasswordVisible) KithIcons.VisibilityOff else KithIcons.VisibilityOn,
-                        contentDescription = if (isPasswordVisible) "Hide password" else "Show password",
-                        tint = Color.White.copy(alpha = 0.75f)
-                    )
+    Column(modifier = Modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = { Text(text = placeholder, color = Color.White.copy(alpha = 0.6f)) },
+            singleLine = true,
+            isError = isError,
+            interactionSource = interactionSource,
+            visualTransformation = when {
+                !isPassword -> VisualTransformation.None
+                isPasswordVisible -> VisualTransformation.None
+                else -> PasswordVisualTransformation()
+            },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = if (isPassword && !isPasswordVisible) {
+                    KeyboardType.Password
+                } else {
+                    KeyboardType.Text
                 }
-            }
-        } else null,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Color.White,
-            unfocusedTextColor = Color.White,
-            focusedBorderColor = Color.White.copy(alpha = 0.9f),
-            unfocusedBorderColor = Color.White.copy(alpha = 0.4f),
-            cursorColor = Color.White,
-            focusedContainerColor = Color.White.copy(alpha = 0.1f),
-            unfocusedContainerColor = Color.White.copy(alpha = 0.06f)
+            ),
+            trailingIcon = if (isPassword) {
+                {
+                    IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                        Icon(
+                            imageVector = if (isPasswordVisible) KithIcons.VisibilityOff else KithIcons.Visibility,
+                            contentDescription = if (isPasswordVisible) "Hide password" else "Show password",
+                            tint = Color.White.copy(alpha = 0.85f)
+                        )
+                    }
+                }
+            } else null,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedBorderColor = if (isError) Color(0xFFFF6B6B) else Color.White.copy(alpha = 0.9f),
+                unfocusedBorderColor = if (isError) Color(0xFFFF6B6B) else Color.White.copy(alpha = 0.4f),
+                cursorColor = Color.White,
+                focusedContainerColor = Color.White.copy(alpha = 0.1f),
+                unfocusedContainerColor = Color.White.copy(alpha = 0.06f),
+                errorBorderColor = Color(0xFFFF6B6B),
+                errorContainerColor = Color.White.copy(alpha = 0.08f),
+                errorTextColor = Color.White,
+                errorCursorColor = Color.White,
+                errorTrailingIconColor = Color.White.copy(alpha = 0.85f)
+            )
         )
-    )
-    // Note: OutlinedTextField doesn't expose border width directly, so if you
-    // want the thickening effect too (not just the color animation Material3
-    // already gives you for free), wrap this in a Box with Modifier.border(
-    // borderWidth, ...) and drop the built-in outline via a transparent shape.
+
+        // Shaking error message directly below the field
+        AnimatedVisibility(
+            visible = isError && !errorMessage.isNullOrBlank(),
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            errorMessage?.let { msg ->
+                Spacer(modifier = Modifier.height(4.dp))
+                ShakingErrorText(message = msg)
+            }
+        }
+    }
 }
 
-/**
- * Error text that shakes side to side once when it first appears, so a failed
- * join attempt actually catches your eye instead of quietly fading in.
- */
 @Composable
 private fun ShakingErrorText(message: String) {
     val offsetX = remember { Animatable(0f) }
 
     LaunchedEffect(message) {
-        offsetX.animateTo(
-            targetValue = 0f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessHigh
-            )
-        )
         val shakeSequence = listOf(-10f, 10f, -8f, 8f, -4f, 4f, 0f)
         for (target in shakeSequence) {
             offsetX.animateTo(
@@ -407,20 +463,15 @@ private fun ShakingErrorText(message: String) {
     Text(
         text = message,
         color = Color(0xFFFFD2D2),
-        fontSize = 13.sp,
-        modifier = Modifier.graphicsLayer {
-            translationX = offsetX.value
-        }
+        fontSize = 12.sp,
+        modifier = Modifier
+            .padding(start = 6.dp)
+            .graphicsLayer {
+                translationX = offsetX.value
+            }
     )
 }
 
-/**
- * The mesh gradient background, tuned to match the reference screenshot:
- * a soft, bright pool of light sitting in the upper-left/center that blends
- * smoothly down into a deep, saturated blue at the bottom of the screen.
- * We layer a base diagonal gradient with a few large, heavily-blurred radial
- * "blobs" so the transitions are soft rather than banded, like a real mesh gradient.
- */
 @Composable
 fun MeshGradientBackground(content: @Composable BoxScope.() -> Unit) {
     val meshGradientPainter = remember {
@@ -458,9 +509,6 @@ fun MeshGradientBackground(content: @Composable BoxScope.() -> Unit) {
 @Preview
 @Composable
 private fun JoinCommunityPreview() {
-    // Interactive Mode has no real ViewModel behind it, so we hold local
-    // state here and feed typed input straight back into uiState — otherwise
-    // onCommunityNameChanged/onPasswordChanged do nothing and typing appears dead.
     var previewState by remember { mutableStateOf(JoinCommunityUiState()) }
 
     KithTheme {

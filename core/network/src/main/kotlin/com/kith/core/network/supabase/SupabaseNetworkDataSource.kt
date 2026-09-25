@@ -8,6 +8,7 @@ import com.kith.core.network.model.NetworkUser
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.postgrest.query.Order
 import javax.inject.Inject
 
 class SupabaseNetworkDataSource @Inject constructor(
@@ -66,5 +67,11 @@ class SupabaseNetworkDataSource @Inject constructor(
             e.printStackTrace()
             false
         }
+    override suspend fun getTopUsers(sortByColumn: String): List<NetworkUser> {
+        return supabaseClient.postgrest["users"]
+            .select {
+                order(column = sortByColumn, order = Order.DESCENDING)
+            }
+            .decodeList<NetworkUser>()
     }
 }

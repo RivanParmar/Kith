@@ -1,16 +1,20 @@
 package com.kith.core.data.repository
 
+import com.kith.core.common.network.di.ApplicationScope
 import com.kith.core.data.model.asUserEntity
 import com.kith.core.database.dao.UserDao
 import com.kith.core.network.KithAuthDataSource
 import com.kith.core.network.KithNetworkDataSource
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class OfflineFirstAuthRepository @Inject constructor(
     private val authDataSource: KithAuthDataSource,
     private val networkDataSource: KithNetworkDataSource,
     private val userDao: UserDao,
+    @ApplicationScope private val appScope: CoroutineScope,
 ) : AuthRepository {
     override val sessionStatus: Flow<Boolean> = authDataSource.sessionStatus
 
@@ -20,17 +24,21 @@ class OfflineFirstAuthRepository @Inject constructor(
 
     override suspend fun signUp(email: String, password: String, displayName: String?): Result<Unit> {
         return authDataSource.signUp(email, password, displayName).onSuccess {
-            val userId = authDataSource.currentUserId() ?: return@onSuccess
-            val user = networkDataSource.getUserById(userId)
-            userDao.upsertUser(user.asUserEntity())
+            appScope.launch {
+                val userId = authDataSource.currentUserId() ?: return@launch
+                val user = networkDataSource.getUserById(userId)
+                userDao.upsertUser(user.asUserEntity())
+            }
         }
     }
 
     override suspend fun signIn(email: String, password: String): Result<Unit> {
         return authDataSource.signIn(email, password).onSuccess {
-            val userId = authDataSource.currentUserId() ?: return@onSuccess
-            val user = networkDataSource.getUserById(userId)
-            userDao.upsertUser(user.asUserEntity())
+            appScope.launch {
+                val userId = authDataSource.currentUserId() ?: return@launch
+                val user = networkDataSource.getUserById(userId)
+                userDao.upsertUser(user.asUserEntity())
+            }
         }
     }
 
