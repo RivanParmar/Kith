@@ -28,9 +28,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -57,13 +60,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.KithTheme
+import com.kith.feature.community.impl.ui.MeshGradientBackground
 import kotlinx.coroutines.launch
 
 @Composable
@@ -76,6 +83,12 @@ fun JoinCommunityScreen(
     onJoined: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(uiState.joinSuccessful) {
+        if (uiState.joinSuccessful) {
+            onJoined()
+        }
+    }
 
     JoinCommunityScreen(
         uiState = uiState,
@@ -108,8 +121,8 @@ internal fun JoinCommunityScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .imePadding() // Adjusts scrollable viewport when keyboard opens
-                .verticalScroll(scrollState) // Full page scrollable while typing
+                .imePadding()
+                .verticalScroll(scrollState)
                 .padding(horizontal = 24.dp)
         ) {
             Spacer(modifier = Modifier.height(48.dp))
@@ -151,15 +164,16 @@ internal fun JoinCommunityScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            // Community Name Field
+            // Community Name Dropdown Field
             FieldLabel(text = "Community Name")
-            MeshTextField(
+            MeshDropdownTextField(
                 value = uiState.communityName,
                 onValueChange = {
                     nameError = null
                     onCommunityNameChanged(it)
                 },
-                placeholder = "Enter Community Name",
+                options = uiState.availableCommunities,
+                placeholder = "Select or type community name",
                 isError = nameError != null,
                 errorMessage = nameError
             )
@@ -203,7 +217,6 @@ internal fun JoinCommunityScreen(
                     if (isValid) {
                         onJoinClicked()
                     } else {
-                        // Automatically scroll UP so the user immediately sees the top missing fields & errors
                         coroutineScope.launch {
                             scrollState.animateScrollTo(0)
                         }
@@ -250,6 +263,114 @@ internal fun JoinCommunityScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
             Spacer(modifier = Modifier.navigationBarsPadding())
+        }
+    }
+}
+
+@Composable
+private fun MeshDropdownTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    options: List<String>,
+    placeholder: String,
+    isError: Boolean = false,
+    errorMessage: String? = null
+) {
+    var expanded by remember { mutableStateOf(false) }
+    var textFieldSize by remember { mutableStateOf(IntSize.Zero) }
+
+    // Filters options as user types, or shows all when blank
+    val filteredOptions = remember(value, options) {
+        if (value.isBlank()) {
+            options
+        } else {
+            options.filter { it.contains(value, ignoreCase = true) }
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = value,
+                onValueChange = {
+                    onValueChange(it)
+                    expanded = true
+                },
+                placeholder = { Text(text = placeholder, color = Color.White.copy(alpha = 0.6f)) },
+                singleLine = true,
+                isError = isError,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onGloballyPositioned { coordinates ->
+                        textFieldSize = coordinates.size
+                    },
+                shape = RoundedCornerShape(14.dp),
+                trailingIcon = {
+                    IconButton(onClick = { expanded = !expanded }) {
+                        Icon(
+                            imageVector = KithIcons.ChevronForward,
+                            contentDescription = if (expanded) "Close options" else "Show options",
+                            tint = Color.White.copy(alpha = 0.85f),
+                            modifier = Modifier.graphicsLayer {
+                                rotationZ = if (expanded) 270f else 90f
+                            }
+                        )
+                    }
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    focusedBorderColor = if (isError) Color(0xFFFF6B6B) else Color.White.copy(alpha = 0.9f),
+                    unfocusedBorderColor = if (isError) Color(0xFFFF6B6B) else Color.White.copy(alpha = 0.4f),
+                    cursorColor = Color.White,
+                    focusedContainerColor = Color.White.copy(alpha = 0.1f),
+                    unfocusedContainerColor = Color.White.copy(alpha = 0.06f),
+                    errorBorderColor = Color(0xFFFF6B6B),
+                    errorContainerColor = Color.White.copy(alpha = 0.08f),
+                    errorTextColor = Color.White,
+                    errorCursorColor = Color.White,
+                    focusedTrailingIconColor = Color.White,
+                    unfocusedTrailingIconColor = Color.White.copy(alpha = 0.85f)
+                )
+            )
+
+            if (filteredOptions.isNotEmpty()) {
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier
+                        .width(with(LocalDensity.current) { textFieldSize.width.toDp() })
+                        .background(Color(0xFF0F2F7D).copy(alpha = 0.96f), RoundedCornerShape(12.dp))
+                ) {
+                    filteredOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = option,
+                                    color = Color.White,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            },
+                            onClick = {
+                                onValueChange(option)
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        AnimatedVisibility(
+            visible = isError && !errorMessage.isNullOrBlank(),
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            errorMessage?.let { msg ->
+                Spacer(modifier = Modifier.height(4.dp))
+                ShakingErrorText(message = msg)
+            }
         }
     }
 }
@@ -379,8 +500,6 @@ private fun MeshTextField(
     errorMessage: String? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-
-    // rememberSaveable ensures the visibility state isn't lost on keyboard display or recomposition
     var isPasswordVisible by rememberSaveable { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -432,7 +551,6 @@ private fun MeshTextField(
             )
         )
 
-        // Shaking error message directly below the field
         AnimatedVisibility(
             visible = isError && !errorMessage.isNullOrBlank(),
             enter = fadeIn(),
@@ -472,44 +590,16 @@ private fun ShakingErrorText(message: String) {
     )
 }
 
-@Composable
-fun MeshGradientBackground(content: @Composable BoxScope.() -> Unit) {
-    val meshGradientPainter = remember {
-        MeshGradientPainter(4, 4) {
-            setVertex(0, 0, Offset(0f, 0f), Color(0xFF5B8DF9))
-            setVertex(0, 1, Offset(0.33f, 0f), Color(0xFF5B8DF9))
-            setVertex(0, 2, Offset(0.66f, 0f), Color(0xFF0841BE))
-            setVertex(0, 3, Offset(1f, 0f), Color(0xFF002A88))
-
-            setVertex(1, 0, Offset(0f, 0.33f), Color(0xFF003ABA))
-            setVertex(1, 1, Offset(0.33f, 0.33f), Color(0xFF5B8DF9))
-            setVertex(1, 2, Offset(0.66f, 0.33f), Color(0xFF5B8DF9))
-            setVertex(1, 3, Offset(1f, 0.33f), Color(0xFF5B8DF9))
-
-            setVertex(2, 0, Offset(0f, 0.66f), Color(0xFF2563EB))
-            setVertex(2, 1, Offset(0.33f, 0.66f), Color(0xFF608DEF))
-            setVertex(2, 2, Offset(0.66f, 0.66f), Color(0xFF2E60CC))
-            setVertex(2, 3, Offset(1f, 0.66f), Color(0xFF608DEF))
-
-            setVertex(3, 0, Offset(0f, 1f), Color(0xFF5B8DF9))
-            setVertex(3, 1, Offset(0.33f, 1f), Color(0xFF4D75CC))
-            setVertex(3, 2, Offset(0.66f, 1f), Color(0xFF1243AE))
-            setVertex(3, 3, Offset(1f, 1f), Color(0xFF0036AD))
-        }
-    }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .paint(painter = meshGradientPainter),
-    ) {
-        content()
-    }
-}
-
 @Preview
 @Composable
 private fun JoinCommunityPreview() {
-    var previewState by remember { mutableStateOf(JoinCommunityUiState()) }
+    var previewState by remember {
+        mutableStateOf(
+            JoinCommunityUiState(
+                availableCommunities = listOf("Android Developers", "Kotlin Hub", "Kith Community", "Open Source")
+            )
+        )
+    }
 
     KithTheme {
         JoinCommunityScreen(

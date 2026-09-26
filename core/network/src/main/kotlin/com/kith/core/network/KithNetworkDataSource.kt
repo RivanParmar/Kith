@@ -21,4 +21,12 @@ interface KithNetworkDataSource {
     /** Calls the Supabase SQL RPC function to claim the daily reward */
     suspend fun claimDailyRewardViaRpc(): Boolean
     suspend fun getTopUsers(sortByColumn: String): List<NetworkUser>
+
+    suspend fun getCommunities(): List<NetworkCommunity>
+
+    suspend fun joinCommunity(communityId: String, password: String): Boolean
+
+    suspend fun createCommunity(
+        community: NetworkCommunity,
+    ): NetworkCommunity
 }

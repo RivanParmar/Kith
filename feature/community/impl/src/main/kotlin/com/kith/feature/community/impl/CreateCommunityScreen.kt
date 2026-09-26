@@ -65,17 +65,20 @@ import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.KithTheme
 import kotlinx.coroutines.launch
 
-/**
- * Screen entry point — wires the ViewModel state/events to the stateless UI below.
- */
 @Composable
 fun CreateCommunityScreen(
     viewModel: CreateCommunityViewModel = hiltViewModel(),
     onBack: () -> Unit,
     onCreated: () -> Unit,
-    onPickIcon: () -> Unit
+    onPickIcon: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(uiState.createSuccessful) {
+        if (uiState.createSuccessful) {
+            onCreated()
+        }
+    }
 
     CreateCommunityScreen(
         uiState = uiState,
@@ -88,9 +91,6 @@ fun CreateCommunityScreen(
     )
 }
 
-/**
- * Pure, stateless UI — easy to preview and test since it only depends on the state passed in.
- */
 @Composable
 internal fun CreateCommunityScreen(
     uiState: CreateCommunityUiState,

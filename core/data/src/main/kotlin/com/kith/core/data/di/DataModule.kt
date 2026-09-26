@@ -1,6 +1,7 @@
 package com.kith.core.data.di
 
 import com.kith.core.data.repository.AuthRepository
+import com.kith.core.data.repository.CommunityRepository
 import com.kith.core.data.repository.DefaultRecentSearchRepository
 import com.kith.core.data.repository.LeaderboardRepository
 import com.kith.core.data.repository.NotificationRepository
@@ -11,6 +12,7 @@ import com.kith.core.data.repository.OfflineFirstUserRepository
 import com.kith.core.data.repository.PostRepository
 import com.kith.core.data.repository.OfflineFirstAuthRepository
 import com.kith.core.data.repository.LeaderboardRepositoryImpl
+import com.kith.core.data.repository.OfflineFirstCommunityRepository
 import com.kith.core.data.repository.OfflineFirstWalletRepository
 import com.kith.core.data.repository.RecentSearchRepository
 import com.kith.core.data.repository.TransactionRepository
@@ -78,4 +80,9 @@ abstract class DataModule {
     abstract fun bindLeaderboardRepository(
         leaderboardRepository: LeaderboardRepositoryImpl,
     ): LeaderboardRepository
+
+    @Binds
+    abstract fun bindCommunityRepository(
+        impl: OfflineFirstCommunityRepository
+    ): CommunityRepository
 }

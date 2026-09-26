@@ -9,10 +9,12 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import javax.inject.Inject
 
 class SupabaseNetworkDataSource @Inject constructor(
-    private val supabaseClient: SupabaseClient
+    private val supabaseClient: SupabaseClient,
 ) : KithNetworkDataSource {
 
     override suspend fun getPosts(limit: Int): List<NetworkPost> {
@@ -39,7 +41,18 @@ class SupabaseNetworkDataSource @Inject constructor(
             .decodeSingle<NetworkCommunity>()
     }
 
-    override suspend fun updateUserProfile(userId: String, name: String, bio: String, profileImageUrl: String?) {
+    override suspend fun getCommunities(): List<NetworkCommunity> {
+        return supabaseClient.postgrest["communities"]
+            .select()
+            .decodeList<NetworkCommunity>()
+    }
+
+    override suspend fun updateUserProfile(
+        userId: String,
+        name: String,
+        bio: String,
+        profileImageUrl: String?
+    ) {
         supabaseClient.postgrest["users"].update(
             {
                 set("name", name)
@@ -67,11 +80,33 @@ class SupabaseNetworkDataSource @Inject constructor(
             e.printStackTrace()
             false
         }
+    }
+
     override suspend fun getTopUsers(sortByColumn: String): List<NetworkUser> {
         return supabaseClient.postgrest["users"]
             .select {
                 order(column = sortByColumn, order = Order.DESCENDING)
             }
             .decodeList<NetworkUser>()
+    }
+
+    override suspend fun joinCommunity(communityId: String, password: String): Boolean {
+        return supabaseClient.postgrest.rpc(
+            function = "join_community",
+            parameters = buildJsonObject {
+                put("p_community_id", communityId)
+                put("p_password", password)
+            }
+        ).decodeAs<Boolean>()
+    }
+
+    override suspend fun createCommunity(
+        community: NetworkCommunity,
+    ): NetworkCommunity {
+        return supabaseClient.postgrest["communities"]
+            .insert(community) {
+                select()
+            }
+            .decodeSingle<NetworkCommunity>()
     }
 }

@@ -1,5 +1,6 @@
 package com.kith.core.network.di
 
+import com.kith.core.network.BuildConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,8 +22,8 @@ internal object NetworkModule {
     @Singleton
     fun provideSupabaseClient(): SupabaseClient {
         return createSupabaseClient(
-            supabaseUrl = "",
-            supabaseKey = "",
+            supabaseUrl = BuildConfig.SUPABASE_URL,
+            supabaseKey = BuildConfig.SUPABASE_PUBLISHABLE_KEY,
         ) {
             install(Postgrest)
             install(Auth)

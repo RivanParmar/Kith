@@ -9,4 +9,6 @@ android {
 
 dependencies {
     implementation(projects.feature.community.api)
+
+    implementation(projects.core.data)
 }
