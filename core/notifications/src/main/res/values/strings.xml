@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- TODO: Add proper name and descriptions -->
+    <string name="core_notifications_post_notification_channel_name">Post updates</string>
+    <string name="core_notifications_post_notification_channel_description">The latest updates on Kith</string>
+</resources>
