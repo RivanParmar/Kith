@@ -8,5 +8,5 @@ data class Notification(
     val body: String,
     val postId: String,
     val timestamp: Instant,
-    val isRead: Boolean
+    val isRead: Boolean,
 )

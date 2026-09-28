@@ -15,5 +15,5 @@ interface NotificationDao {
     suspend fun insert(notification: NotificationEntity): Long
 
     @Query("UPDATE notifications SET is_read = 1 WHERE id = :notificationId")
-    suspend fun markAsRead(notificationId: Int)
+    suspend fun markAsRead(notificationId: Long)
 }
