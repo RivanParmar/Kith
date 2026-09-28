@@ -34,13 +34,13 @@ internal fun AuthLayout(
             .verticalScroll(rememberScrollState()),
     ) {
         WaveHeader(
-            modifier = Modifier.height(screenHeight * 0.324f)
+            modifier = Modifier.height(screenHeight * 0.35f)
         )
 
         Column(
             modifier = Modifier
 //                .weight(1f)
-                .heightIn(min = screenHeight * 0.676f)
+                .heightIn(min = screenHeight * 0.65f)
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.tertiary)
                 .padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
