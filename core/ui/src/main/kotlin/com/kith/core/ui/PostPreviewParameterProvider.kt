@@ -61,7 +61,8 @@ object KithPreviewData {
             author = users[0],
             community = communities[0],
             createdAt = Clock.System.now(),
-            isInPerson = false
+            isInPerson = false,
+            status = TODO(),
         ),
         Post(
             id = "p2",
@@ -71,7 +72,8 @@ object KithPreviewData {
             author = users[1],
             community = communities[1],
             createdAt = Clock.System.now(),
-            isInPerson = true
+            isInPerson = true,
+            status = TODO(),
         ),
         Post(
             id = "p3",
@@ -81,7 +83,8 @@ object KithPreviewData {
             author = users[2],
             community = communities[1],
             createdAt = Clock.System.now(),
-            isInPerson = true
+            isInPerson = true,
+            status = TODO(),
         ),
 
     )

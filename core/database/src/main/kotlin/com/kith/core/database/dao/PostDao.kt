@@ -16,6 +16,9 @@ interface PostDao {
     @Transaction
     @Query(value = "SELECT * FROM posts ORDER BY created_at DESC")
     fun getAllPostsStream(): Flow<List<PopulatedPostEntity>>
+    @Transaction
+    @Query(value = "SELECT * FROM posts WHERE user_id = :userId OR solver_id = :userId ORDER BY created_at DESC")
+    fun getPostsByUserIdStream(userId: String): Flow<List<PopulatedPostEntity>>
 
     @Upsert
     suspend fun insertPost(post: PostEntity)

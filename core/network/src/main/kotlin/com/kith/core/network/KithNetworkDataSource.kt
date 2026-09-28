@@ -29,4 +29,6 @@ interface KithNetworkDataSource {
     suspend fun createCommunity(
         community: NetworkCommunity,
     ): NetworkCommunity
+
+    suspend fun getPostsForUser(userId: String): List<NetworkPost>
 }
