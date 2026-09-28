@@ -16,6 +16,13 @@ import javax.inject.Inject
 class SupabaseNetworkDataSource @Inject constructor(
     private val supabaseClient: SupabaseClient,
 ) : KithNetworkDataSource {
+    override suspend fun getPostById(postId: String): NetworkPost {
+        return supabaseClient.postgrest["posts"]
+            .select {
+                filter { eq("id", postId) }
+            }
+            .decodeSingle<NetworkPost>()
+    }
 
     override suspend fun getPosts(limit: Int): List<NetworkPost> {
         return supabaseClient.postgrest["posts"]
@@ -157,6 +164,51 @@ class SupabaseNetworkDataSource @Inject constructor(
             { set("description", description) }
         ) {
             filter { eq("id", communityId) }
+        }
+    }
+
+    override suspend fun getTopUser(sortByColumn: String): List<NetworkUser> {
+        return supabaseClient.postgrest["users"]
+            .select {
+                order(sortByColumn, Order.DESCENDING)
+                limit(count = 50)
+            }
+            .decodeList<NetworkUser>()
+    }
+
+    override suspend fun submitAnswer(postId: String, answer: String) {
+        supabaseClient.postgrest["posts"].update(
+            {
+                set("answer", answer)
+            }
+        ) {
+            filter { eq("id", postId) }
+        }
+    }
+
+    override suspend fun updatePostSolutionStatus(postId: String, isAccepted: Boolean) {
+        supabaseClient.postgrest["posts"].update(
+            {
+                set("is_accepted", isAccepted)
+            }
+        ) {
+            filter { eq("id", postId) }
+        }
+    }
+
+    override suspend fun deletePost(postId: String) {
+        supabaseClient.postgrest["posts"].delete {
+            filter { eq("id", postId) }
+        }
+    }
+
+    override suspend fun rateSolution(postId: String, rating: Int) {
+        supabaseClient.postgrest["posts"].update(
+            {
+                set("rating", rating)
+            }
+        ) {
+            filter { eq("id", postId) }
         }
     }
 }

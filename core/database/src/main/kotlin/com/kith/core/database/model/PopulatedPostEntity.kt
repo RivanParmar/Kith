@@ -2,7 +2,9 @@ package com.kith.core.database.model
 
 import androidx.room.Embedded
 import androidx.room.Relation
+import com.kith.core.database.util.PostStatus
 import com.kith.core.model.data.Post
+import com.kith.core.model.data.PostDetail
 
 data class PopulatedPostEntity(
     @Embedded
@@ -37,4 +39,18 @@ fun PopulatedPostEntity.asExternalModel() = Post(
     createdAt = post.createdAt,
     isInPerson = post.isInPerson,
     status = post.status.name,
+)
+
+fun PopulatedPostEntity.asPostDetail() = PostDetail(
+    id = post.id,
+    title = post.title,
+    content = post.content,
+    reward = post.reward,
+    author = author.asExternalModel(),
+    community = community.asExternalModel(),
+    createdAt = post.createdAt,
+    isInPerson = post.isInPerson,
+    isAccepted = post.status == PostStatus.ASSIGNED,
+    answer = post.answer,
+    solver = solver?.asExternalModel(),
 )

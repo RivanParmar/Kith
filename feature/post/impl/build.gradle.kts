@@ -10,5 +10,7 @@ android {
 dependencies {
     implementation(projects.feature.post.api)
 
+    implementation(projects.core.data)
+
     implementation(projects.core.domain)
 }

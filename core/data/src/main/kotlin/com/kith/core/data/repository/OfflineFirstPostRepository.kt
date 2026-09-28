@@ -10,11 +10,13 @@ import com.kith.core.database.dao.PostDao
 import com.kith.core.database.dao.UserDao
 import com.kith.core.database.model.PostEntity
 import com.kith.core.database.model.asExternalModel
+import com.kith.core.database.model.asPostDetail
 import com.kith.core.database.util.PostStatus
 import com.kith.core.database.util.SyncStatus
 import com.kith.core.model.data.NewPostRequest
 import com.kith.core.model.data.Post
-import com.kith.core.network.supabase.SupabaseNetworkDataSource
+import com.kith.core.model.data.PostDetail
+import com.kith.core.network.KithNetworkDataSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -24,12 +26,18 @@ class OfflineFirstPostRepository @Inject constructor(
     private val postDao: PostDao,
     private val userDao: UserDao,
     private val communityDao: CommunityDao,
-    private val networkDataSource: SupabaseNetworkDataSource
+    private val networkDataSource: KithNetworkDataSource
 ) : PostRepository {
 
     override fun getAllPostsStream(): Flow<List<Post>> {
         return postDao.getAllPostsStream().map { entities ->
             entities.map { it.asExternalModel() }
+        }
+    }
+
+    override fun getPostDetailStream(postId: String): Flow<PostDetail> {
+        return postDao.getPostDetailStream(postId).map { populatedPostEntity ->
+            populatedPostEntity.asPostDetail()
         }
     }
 
@@ -58,6 +66,35 @@ class OfflineFirstPostRepository @Inject constructor(
         networkPosts.forEach { networkPost ->
             postDao.insertPost(networkPost.asEntity())
         }
+    }
+
+    override suspend fun syncPostById(postId: String) {
+        val networkPost = networkDataSource.getPostById(postId)
+        val user = networkDataSource.getUserById(networkPost.userId)
+        val community = networkDataSource.getCommunityById(networkPost.communityId)
+
+        userDao.upsertUser(user.asUserEntity())
+        communityDao.upsertCommunity(community.asCommunityEntity())
+        postDao.insertPost(networkPost.asEntity())
+    }
+
+    override suspend fun submitAnswer(postId: String, answer: String) {
+        networkDataSource.submitAnswer(postId, answer)
+        syncPostById(postId)
+    }
+
+    override suspend fun acceptSolution(postId: String) {
+        networkDataSource.updatePostSolutionStatus(postId, true)
+        syncPostById(postId)
+    }
+
+    override suspend fun rejectSolution(postId: String) {
+        networkDataSource.updatePostSolutionStatus(postId, false)
+        syncPostById(postId)
+    }
+
+    override suspend fun rateSolution(postId: String, rating: Int) {
+        networkDataSource.rateSolution(postId, rating)
     }
 
     override suspend fun syncUserPosts(userId: String) {
@@ -129,5 +166,11 @@ class OfflineFirstPostRepository @Inject constructor(
             Log.d("CREATE", "Failed!")
             Log.d("CREATE", e.toString())
         }
+    }
+
+    override suspend fun deletePost(postId: String) {
+        networkDataSource.deletePost(postId)
+//        postDao.deletePostById(postId)
+        // TODO
     }
 }
