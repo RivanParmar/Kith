@@ -12,7 +12,9 @@ import com.kith.core.data.repository.OfflineFirstUserRepository
 import com.kith.core.data.repository.PostRepository
 import com.kith.core.data.repository.OfflineFirstAuthRepository
 import com.kith.core.data.repository.LeaderboardRepositoryImpl
+import com.kith.core.data.repository.MediaRepository
 import com.kith.core.data.repository.OfflineFirstCommunityRepository
+import com.kith.core.data.repository.OfflineFirstMediaRepository
 import com.kith.core.data.repository.OfflineFirstWalletRepository
 import com.kith.core.data.repository.RecentSearchRepository
 import com.kith.core.data.repository.TransactionRepository
@@ -85,4 +87,9 @@ abstract class DataModule {
     abstract fun bindCommunityRepository(
         impl: OfflineFirstCommunityRepository
     ): CommunityRepository
+
+    @Binds
+    abstract fun bindMediaRepository(
+        mediaRepository: OfflineFirstMediaRepository,
+    ): MediaRepository
 }
