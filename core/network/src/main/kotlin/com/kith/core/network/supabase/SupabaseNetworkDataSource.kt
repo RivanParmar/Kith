@@ -127,4 +127,36 @@ class SupabaseNetworkDataSource @Inject constructor(
             }
             .decodeList<NetworkPost>()
     }
+
+    override suspend fun leaveCommunity(communityId: String): Boolean {
+        return try {
+            supabaseClient.postgrest.rpc(
+                function = "leave_community",
+                parameters = buildJsonObject { put("p_community_id", communityId) }
+            ).decodeAs<Boolean>()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    override suspend fun deleteCommunity(communityId: String): Boolean {
+        return try {
+            supabaseClient.postgrest["communities"].delete {
+                filter { eq("id", communityId) }
+            }
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    override suspend fun updateCommunityDescription(communityId: String, description: String) {
+        supabaseClient.postgrest["communities"].update(
+            { set("description", description) }
+        ) {
+            filter { eq("id", communityId) }
+        }
+    }
 }

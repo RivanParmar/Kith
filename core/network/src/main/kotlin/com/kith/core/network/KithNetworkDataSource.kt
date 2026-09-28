@@ -33,4 +33,8 @@ interface KithNetworkDataSource {
     ): NetworkCommunity
 
     suspend fun getPostsForUser(userId: String): List<NetworkPost>
+
+    suspend fun leaveCommunity(communityId: String): Boolean
+    suspend fun deleteCommunity(communityId: String): Boolean
+    suspend fun updateCommunityDescription(communityId: String, description: String)
 }

@@ -43,12 +43,18 @@ object KithPreviewData {
         Community(
             id = "c1",
             name = "CS 101",
-            imageUrl = null
+            imageUrl = null,
+            description = TODO(),
+            creatorId = TODO(),
+            memberCount = TODO(),
         ),
         Community(
             id = "c2",
             name = "General",
-            imageUrl = null
+            imageUrl = null,
+            description = TODO(),
+            creatorId = TODO(),
+            memberCount = TODO()
         )
     )
 
