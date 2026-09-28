@@ -3,6 +3,6 @@
     <item
         android:width="66dp"
         android:height="66dp"
-        android:drawable="@drawable/kith_launcher_icon_1790533883731"
+        android:drawable="@drawable/kith_logo_icon_1790623299455"
         android:gravity="center" />
 </layer-list>

@@ -22,12 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Public
+import com.kith.core.designsystem.icon.KithIcons
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
@@ -117,7 +112,7 @@ fun CreatePostScreen(
                         .testTag("create_post_back_button")
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        imageVector = KithIcons.ArrowBack,
                         contentDescription = "Back",
                         tint = MaterialTheme.colorScheme.onBackground
                     )
@@ -185,7 +180,7 @@ fun CreatePostScreen(
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Add,
+                                imageVector = KithIcons.Add,
                                 contentDescription = null,
                                 tint = Color.White,
                                 modifier = Modifier.size(20.dp)
@@ -263,7 +258,7 @@ fun CreatePostScreen(
                             leadingIcon = if (selectedCommunityIndex == index) {
                                 {
                                     Icon(
-                                        imageVector = Icons.Default.Check,
+                                        imageVector = KithIcons.Check,
                                         contentDescription = "Selected",
                                         modifier = Modifier.size(16.dp)
                                     )
@@ -397,7 +392,7 @@ fun CreatePostScreen(
                         label = { Text("Remote / Online") },
                         leadingIcon = {
                             Icon(
-                                imageVector = Icons.Default.Public,
+                                imageVector = KithIcons.Groups,
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp)
                             )
@@ -416,7 +411,7 @@ fun CreatePostScreen(
                         label = { Text("In-Person") },
                         leadingIcon = {
                             Icon(
-                                imageVector = Icons.Default.LocationOn,
+                                imageVector = KithIcons.Person,
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp)
                             )

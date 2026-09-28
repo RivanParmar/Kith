@@ -6,12 +6,14 @@ object KithIcons {
     val ArrowBack = arrow_back
     val ArrowForward = arrow_forward
     val Bolt = bolt
+    val Cancel = cancel
     val Check = check
     val ChevronForward = chevron_forward
     val Crown = crown
     val Edit = edit
     val Error = error
     val Groups = groups
+    val History = history
     val Home = home
     val HomeOutlined = home_outlined
     val Leaderboard = leaderboard
