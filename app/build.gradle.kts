@@ -48,6 +48,8 @@ dependencies {
     implementation(projects.feature.post.impl)
     implementation(projects.feature.profile.api)
     implementation(projects.feature.profile.impl)
+    implementation(projects.feature.browse.impl)
+    implementation(projects.feature.post.impl)
 
     implementation(projects.core.data)
     implementation(projects.core.ui)
