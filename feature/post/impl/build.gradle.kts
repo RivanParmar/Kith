@@ -9,4 +9,6 @@ android {
 
 dependencies {
     implementation(projects.feature.post.api)
+
+    implementation(projects.core.domain)
 }
