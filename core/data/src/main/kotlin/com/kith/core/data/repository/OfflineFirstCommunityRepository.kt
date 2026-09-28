@@ -3,8 +3,10 @@ package com.kith.core.data.repository
 import android.util.Log
 import com.kith.core.common.network.Dispatcher
 import com.kith.core.common.network.KithDispatchers
+import com.kith.core.data.model.asExternalModel
 import com.kith.core.database.dao.CommunityDao
 import com.kith.core.database.model.CommunityEntity
+import com.kith.core.model.data.Community
 import com.kith.core.network.KithAuthDataSource
 import com.kith.core.network.KithNetworkDataSource
 import com.kith.core.network.model.NetworkCommunity
@@ -12,6 +14,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
@@ -25,9 +28,12 @@ class OfflineFirstCommunityRepository @Inject constructor(
     @Dispatcher(KithDispatchers.IO) private val ioDispatcher: CoroutineDispatcher,
 ) : CommunityRepository {
 
-    override fun getAvailableCommunities(): Flow<List<NetworkCommunity>> = flow {
+    override val hasJoinedAnyCommunity: Flow<Boolean> =
+        communityDao.getJoinedCommunitiesCountStream().map { count -> count > 0 }
+
+    override fun getAvailableCommunities(): Flow<List<Community>> = flow {
         try {
-            val remoteCommunities = networkDataSource.getCommunities()
+            val remoteCommunities = networkDataSource.getCommunities().map { it.asExternalModel() }
             emit(remoteCommunities)
         } catch (e: CancellationException) {
             throw e
