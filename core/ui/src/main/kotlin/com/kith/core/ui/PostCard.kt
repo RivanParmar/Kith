@@ -99,21 +99,21 @@ fun PostCard(
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))
-                        .background(Color(0xFFEEF2FF))
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
                 ) {
                     Icon(
                         imageVector = KithIcons.Bolt,
                         contentDescription = null,
-                        tint = Color(0xFF5B8DF9),
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(16.dp),
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "${post.reward} XP",
-                        color = Color(0xFF5B8DF9),
+                        color = MaterialTheme.colorScheme.primary,
                         fontFamily = OutfitFontFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = 12.sp,
@@ -121,25 +121,28 @@ fun PostCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             Text(
                 text = post.title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.fillMaxWidth(),
-                lineHeight = 25.sp,
+                lineHeight = 24.sp,
             )
+
+            Spacer(modifier = Modifier.height(6.dp))
 
             Text(
                 text = post.content,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.fillMaxWidth(),
-                lineHeight = 22.sp,
+                lineHeight = 20.sp,
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -148,20 +151,20 @@ fun PostCard(
             ) {
                 Text(
                     text = if (post.isInPerson) "In-person" else "Virtual",
-                    color = Color(0xFF5B8DF9),
+                    color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 12.sp,
                     modifier = Modifier
-                        .background(Color(0xFFEEF2FF), shape = RoundedCornerShape(6.dp))
-                        .padding(6.dp),
+                        .background(MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(6.dp))
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
                 )
 
                 val formattedDate = remember { dateFormatted(post.createdAt) }
                 Text(
                     text = formattedDate,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.LightGray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
