@@ -25,6 +25,10 @@ class SupabaseNetworkDataSource @Inject constructor(
             .decodeList<NetworkPost>()
     }
 
+    override suspend fun createPost(networkPost: NetworkPost) {
+        supabaseClient.postgrest["posts"].insert(networkPost)
+    }
+
     override suspend fun getUserById(userId: String): NetworkUser {
         return supabaseClient.postgrest["users"]
             .select {

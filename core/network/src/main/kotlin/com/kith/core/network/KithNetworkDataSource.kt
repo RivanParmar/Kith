@@ -9,6 +9,8 @@ interface KithNetworkDataSource {
     /** Fetches the most recent [limit] posts, with author and community embedded. */
     suspend fun getPosts(limit: Int = 20): List<NetworkPost>
 
+    suspend fun createPost(networkPost: NetworkPost)
+
     /** Fetches a single user row — used for the Wallet card once auth is wired up. */
     suspend fun getUserById(userId: String): NetworkUser
 
