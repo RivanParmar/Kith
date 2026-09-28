@@ -25,6 +25,7 @@ import com.kith.core.data.util.NetworkMonitor
 import com.kith.core.designsystem.component.LoadingWheel
 import com.kith.core.designsystem.theme.KithTheme
 import com.kith.feature.auth.api.navigation.SignInNavKey
+import com.kith.feature.community.api.navigation.JoinCommunityNavKey
 import com.kith.feature.home.api.navigation.HomeNavKey
 import com.kith.feature.onboarding.api.navigation.OnboardingNavKey
 import com.kith.ui.KithApp
@@ -87,6 +88,8 @@ class MainActivity : ComponentActivity() {
                             OnboardingNavKey
                         } else if (!state.isSignedIn) {
                             SignInNavKey
+                        } else if (!state.hasJoinedCommunity) {
+                            JoinCommunityNavKey
                         } else {
                             HomeNavKey
                         }
