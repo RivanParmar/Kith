@@ -10,11 +10,14 @@ fun NetworkCommunity.asCommunityEntity() = CommunityEntity(
     description = description,
     imageUrl = imageUrl,
     updatedAt = updatedAt,
+    creatorId = userId,
     isJoinedByMe = false,
 )
 
 fun NetworkCommunity.asExternalModel() = Community(
     id = id,
     name = name,
+    description = description,
     imageUrl = imageUrl,
+    creatorId = userId,
 )

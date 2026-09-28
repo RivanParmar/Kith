@@ -13,4 +13,4 @@ data object CreateCommunityNavKey : NavKey
 data object CommunityListNavKey : NavKey
 
 @Serializable
-data object CommunityDetailNavKey : NavKey
+data class CommunityDetailNavKey(val communityId: String) : NavKey
