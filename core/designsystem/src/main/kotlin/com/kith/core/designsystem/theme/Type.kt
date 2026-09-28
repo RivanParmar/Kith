@@ -13,11 +13,16 @@ val GugiFontFamily = FontFamily(
 )
 
 val OutfitFontFamily = FontFamily(
-    Font(R.font.outfit_regular, FontWeight.Normal)
+    Font(R.font.outfit_regular, FontWeight.Normal),
+    Font(R.font.outfit_medium, FontWeight.Medium),
+    Font(R.font.outfit_semibold, FontWeight.SemiBold),
+    Font(R.font.outfit_bold, FontWeight.Bold)
 )
 
 val InterFontFamily = FontFamily(
-    Font(R.font.inter_regular, FontWeight.Normal)
+    Font(R.font.inter_regular, FontWeight.Normal),
+    Font(R.font.inter_medium, FontWeight.Medium),
+    Font(R.font.inter_bold, FontWeight.Bold)
 )
 
 val Typography = Typography(
@@ -72,14 +77,14 @@ val Typography = Typography(
     ),
     titleMedium = TextStyle(
         fontFamily = OutfitFontFamily,
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.Medium, // Compose will now automatically use outfit_medium.ttf
         fontSize = 16.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.15.sp,
     ),
     titleSmall = TextStyle(
         fontFamily = OutfitFontFamily,
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.Medium, // Compose will now automatically use outfit_medium.ttf
         fontSize = 14.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.1.sp,
@@ -93,7 +98,7 @@ val Typography = Typography(
     ),
     bodyMedium = TextStyle(
         fontFamily = InterFontFamily,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Normal, // Compose will now automatically use inter_regular.ttf
         fontSize = 14.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.25.sp,
@@ -107,7 +112,7 @@ val Typography = Typography(
     ),
     labelLarge = TextStyle(
         fontFamily = InterFontFamily,
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.Medium, // Compose will now automatically use inter_medium.ttf
         fontSize = 14.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.1.sp,
