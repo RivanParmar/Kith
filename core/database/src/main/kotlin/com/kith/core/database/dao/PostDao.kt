@@ -1,13 +1,12 @@
 package com.kith.core.database.dao
 
 import androidx.room.Dao
-import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
 import com.kith.core.database.model.PopulatedPostEntity
 import com.kith.core.database.model.PostEntity
-import com.kith.core.model.data.Post
+import com.kith.core.database.util.SyncStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -22,4 +21,13 @@ interface PostDao {
 
     @Upsert
     suspend fun insertPost(post: PostEntity)
+
+    @Query(value = "SELECT * FROM posts WHERE id = :postId")
+    suspend fun getPostById(postId: String): PostEntity?
+
+    @Query(value = "UPDATE posts SET sync_status = :syncStatus WHERE id = :postId")
+    suspend fun updateSyncStatus(postId: String, syncStatus: SyncStatus)
+
+    @Query(value = "SELECT * FROM posts WHERE sync_status = :syncStatus")
+    suspend fun getPostsBySyncStatus(syncStatus: SyncStatus): List<PostEntity>
 }
