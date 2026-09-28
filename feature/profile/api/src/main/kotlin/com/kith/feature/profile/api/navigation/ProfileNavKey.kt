@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data object ProfileNavKey : NavKey
-
+@Serializable
+data object PostHistoryNavKey : NavKey
 @Serializable
 data object TransactionsNavKey : NavKey

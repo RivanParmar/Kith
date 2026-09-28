@@ -109,4 +109,18 @@ class SupabaseNetworkDataSource @Inject constructor(
             }
             .decodeSingle<NetworkCommunity>()
     }
+
+    override suspend fun getPostsForUser(userId: String): List<NetworkPost> {
+        return supabaseClient.postgrest["posts"]
+            .select {
+                filter {
+                    // Using PostgREST syntax to check if user_id OR solver_id matches
+                    or {
+                        NetworkPost::userId eq userId
+                        NetworkPost::solverId eq userId
+                    }
+                }
+            }
+            .decodeList<NetworkPost>()
+    }
 }

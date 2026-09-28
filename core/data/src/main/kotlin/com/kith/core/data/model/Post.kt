@@ -12,10 +12,8 @@ fun NetworkPost.asEntity() = PostEntity(
     title = title,
     content = content,
     reward = reward,
-    // Parsing Supabase ISO-8601 strings into Instants
     createdAt = createdAt,
     updatedAt = updatedAt,
-    // Supplying the missing fields required by your Room Entity
     status = PostStatus.valueOf(status.uppercase()),
     solverId = solverId,
     answer = answer,

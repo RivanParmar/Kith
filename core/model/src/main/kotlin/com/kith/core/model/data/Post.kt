@@ -11,4 +11,5 @@ data class Post(
     val community: Community,
     val createdAt: Instant,
     val isInPerson: Boolean,
+    val status: String,
 )

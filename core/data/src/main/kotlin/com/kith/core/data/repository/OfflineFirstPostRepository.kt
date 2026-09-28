@@ -20,38 +20,55 @@ class OfflineFirstPostRepository @Inject constructor(
     private val networkDataSource: SupabaseNetworkDataSource
 ) : PostRepository {
 
-    // Added 'override' keyword
     override fun getAllPostsStream(): Flow<List<Post>> {
         return postDao.getAllPostsStream().map { entities ->
             entities.map { it.asExternalModel() }
         }
     }
 
-    // Added 'override' keyword
+    override fun getPostsByUserIdStream(userId: String): Flow<List<Post>> {
+        return postDao.getPostsByUserIdStream(userId).map { entities ->
+            entities.map { it.asExternalModel() }
+        }
+    }
+
     override suspend fun syncDataFromNetwork() {
-        // 1. Fetch posts (pass whatever limit makes sense for your UI)
         val networkPosts = networkDataSource.getPosts(limit = 20)
 
-        // 2. Extract unique IDs so we don't spam the network with duplicate requests
         val uniqueUserIds = networkPosts.map { it.userId }.toSet()
         val uniqueCommunityIds = networkPosts.map { it.communityId }.toSet()
 
-        // 3. Dynamically fetch and insert missing Users
         uniqueUserIds.forEach { id ->
             val user = networkDataSource.getUserById(id)
             userDao.upsertUser(user.asUserEntity())
         }
 
-        // 4. Dynamically fetch and insert missing Communities
         uniqueCommunityIds.forEach { id ->
             val community = networkDataSource.getCommunityById(id)
-            // Finds the userId of the first post that requested this community to satisfy your mapper function
             val associatedUserId = networkPosts.first { it.communityId == id }.userId
             communityDao.upsertCommunity(community.asCommunityEntity(associatedUserId))
         }
 
-        // 5. Insert Posts LAST to satisfy Room's Foreign Key constraints
         networkPosts.forEach { networkPost ->
+            postDao.insertPost(networkPost.asEntity())
+        }
+    }
+
+    override suspend fun syncUserPosts(userId: String) {
+        val userPosts = networkDataSource.getPostsForUser(userId)
+        if (userPosts.isEmpty()) return
+
+        val uniqueCommunityIds = userPosts.map { it.communityId }.toSet()
+        uniqueCommunityIds.forEach { id ->
+            try {
+                val community = networkDataSource.getCommunityById(id)
+                communityDao.upsertCommunity(community.asCommunityEntity(userId))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        userPosts.forEach { networkPost ->
             postDao.insertPost(networkPost.asEntity())
         }
     }
