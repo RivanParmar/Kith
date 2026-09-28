@@ -2,6 +2,7 @@ package com.kith.core.database.di
 
 import com.kith.core.database.KithDatabase
 import com.kith.core.database.dao.CommunityDao
+import com.kith.core.database.dao.NotificationDao
 import com.kith.core.database.dao.PostDao
 import com.kith.core.database.dao.RecentSearchQueryDao
 import com.kith.core.database.dao.UserDao
@@ -32,4 +33,9 @@ internal object DaosModule {
     fun providesRecentSearchQueryDao(
         database: KithDatabase,
     ): RecentSearchQueryDao = database.recentSearchQueryDao()
+
+    @Provides
+    fun providesNotificationDao(
+        database: KithDatabase,
+    ): NotificationDao = database.notificationDao()
 }
