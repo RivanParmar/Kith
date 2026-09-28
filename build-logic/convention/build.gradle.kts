@@ -66,6 +66,10 @@ gradlePlugin {
             id = libs.plugins.kith.android.room.get().pluginId
             implementationClass = "AndroidRoomConventionPlugin"
         }
+        register("androidFirebase") {
+            id = libs.plugins.kith.android.application.firebase.get().pluginId
+            implementationClass = "AndroidAppFirebaseConventionPlugin"
+        }
         register("jvmLibrary") {
             id = libs.plugins.kith.jvm.library.get().pluginId
             implementationClass = "JvmLibraryConventionPlugin"
