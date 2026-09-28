@@ -28,27 +28,29 @@ class NotificationsViewModel @Inject constructor(
         viewModelScope.launch {
             val current = notificationRepository.getNotifications().first()
             if (current.isEmpty()) {
-                notificationRepository.insertNotifications(
-                    listOf(
-                        Notification(
-                            id = "1",
+                notificationRepository.insertNotification(
+//                    listOf(
+//                        Notification(
+//                            id = "1",
                             title = "Stuck on React Hook state update bug",
-                            memberCount = "1,240",
-                            isRead = false
-                        ),
-                        Notification(
-                            id = "2",
-                            title = "How to center a div in Tailwind CSS",
-                            memberCount = "3,450",
-                            isRead = false
-                        ),
-                        Notification(
-                            id = "3",
-                            title = "Jetpack Compose recomposition issues",
-                            memberCount = "890",
-                            isRead = true
-                        )
-                    )
+                            body = "1,240",
+                            "1",
+//                            Clock.System.now(),
+//                            isRead = false
+//                        )
+//                        Notification(
+//                            id = "2",
+//                            title = "How to center a div in Tailwind CSS",
+//                            memberCount = "3,450",
+//                            isRead = false
+//                        ),
+//                        Notification(
+//                            id = "3",
+//                            title = "Jetpack Compose recomposition issues",
+//                            memberCount = "890",
+//                            isRead = true
+//                        )
+//                    )
                 )
             }
         }

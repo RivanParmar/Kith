@@ -21,20 +21,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.ui.tooling.preview.Preview
 import com.kith.core.designsystem.component.LoadingWheel
 import com.kith.core.model.data.Notification
+import kotlin.time.Clock
 
 @Composable
 fun NotificationsRoute(
     modifier: Modifier = Modifier,
-    viewModel: NotificationsViewModel = hiltViewModel()
+    viewModel: NotificationsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -52,8 +52,22 @@ fun NotificationsScreenPreview() {
         NotificationsScreen(
             uiState = NotificationsUiState.Success(
                 listOf(
-                    Notification("1", "Stuck on React Hook state update bug", "1,240", false),
-                    Notification("2", "Another bug", "1,000", true)
+                    Notification(
+                        "1",
+                        "Stuck on React Hook state update bug",
+                        "1,240",
+                        "1",
+                        Clock.System.now(),
+                        false
+                    ),
+                    Notification(
+                        "2",
+                        "Another bug",
+                        "1,000",
+                        "2",
+                        Clock.System.now(),
+                        true
+                    )
                 )
             ),
             onNotificationClick = {}
@@ -151,7 +165,7 @@ fun NotificationCard(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "${notification.memberCount} Members",
+            text = notification.body,
             fontSize = 14.sp,
             color = subtitleColor
         )
