@@ -12,4 +12,7 @@ dependencies {
 
     implementation(projects.core.model)
     implementation(projects.core.data)
+
+    implementation(libs.coil.kt)
+    implementation(libs.coil.kt.compose)
 }

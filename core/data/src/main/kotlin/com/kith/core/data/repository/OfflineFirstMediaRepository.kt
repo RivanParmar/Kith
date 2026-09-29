@@ -30,40 +30,25 @@ class OfflineFirstMediaRepository @Inject constructor(
         audioUri: String?,
     ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            // 1. Process Images (Compress to WebP)
             imageUris.forEachIndexed { index, uriString ->
                 val fileName = "kith_post_${postId}_${role}_img_$index.webp"
                 val webpBytes = compressToWebP(uriString.toUri())
-
-                // Save locally to Pictures/Kith
                 saveToMediaStore(fileName, webpBytes, "image/webp", Environment.DIRECTORY_PICTURES)
-                // Upload to Supabase
-                storageDataSource.uploadMedia(fileName, webpBytes)
+                storageDataSource.uploadMedia(fileName, webpBytes) // Defaults to "media"
             }
 
-            // 2. Process PDF
             pdfUri?.let { uriString ->
                 val fileName = "kith_post_${postId}_${role}_doc.pdf"
                 val pdfBytes = readBytesFromUri(uriString.toUri())
-
-                // Save locally to Documents/Kith
-                saveToMediaStore(
-                    fileName,
-                    pdfBytes,
-                    "application/pdf",
-                    Environment.DIRECTORY_DOCUMENTS
-                )
-                storageDataSource.uploadMedia(fileName, pdfBytes)
+                saveToMediaStore(fileName, pdfBytes, "application/pdf", Environment.DIRECTORY_DOCUMENTS)
+                storageDataSource.uploadMedia(fileName, pdfBytes) // Defaults to "media"
             }
 
-            // 3. Process Audio (Assume forced to .m4a earlier in the UI)
             audioUri?.let { uriString ->
                 val fileName = "kith_post_${postId}_${role}_audio.m4a"
                 val audioBytes = readBytesFromUri(uriString.toUri())
-
-                // Save locally to Music/Kith
                 saveToMediaStore(fileName, audioBytes, "audio/mp4", Environment.DIRECTORY_MUSIC)
-                storageDataSource.uploadMedia(fileName, audioBytes)
+                storageDataSource.uploadMedia(fileName, audioBytes) // Defaults to "media"
             }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -97,6 +82,27 @@ class OfflineFirstMediaRepository @Inject constructor(
         }
     }
 
+    // NEW: Handles Profile Image specific processing and bucket routing
+    override suspend fun uploadProfileImage(userId: String, imageUri: String): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            // Append timestamp to break Supabase cache on profile picture updates
+            val fileName = "profile_${userId}_${System.currentTimeMillis()}.webp"
+            val webpBytes = compressToWebP(imageUri.toUri())
+
+            // Upload to the specified profile_image bucket
+            val uploadResult = storageDataSource.uploadMedia(fileName, webpBytes, "profile_image")
+
+            if (uploadResult.isSuccess) {
+                val publicUrl = storageDataSource.getPublicUrl(fileName, "profile_image")
+                Result.success(publicUrl)
+            } else {
+                Result.failure(uploadResult.exceptionOrNull() ?: Exception("Unknown upload error"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     private fun compressToWebP(sourceUri: Uri): ByteArray {
         val inputStream = context.contentResolver.openInputStream(sourceUri)
             ?: throw IllegalArgumentException("Cannot open URI")
@@ -122,7 +128,6 @@ class OfflineFirstMediaRepository @Inject constructor(
     private fun saveToMediaStore(fileName: String, data: ByteArray, mimeType: String, directory: String) {
         val resolver = context.contentResolver
 
-        // FIX: Route to the correct Android database table based on MimeType
         val collection = when {
             mimeType.startsWith("image/") -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
             mimeType.startsWith("audio/") -> MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
@@ -131,7 +136,6 @@ class OfflineFirstMediaRepository @Inject constructor(
 
         val relativePath = "$directory/Kith/"
 
-        // 1. Check if the file already exists and delete it
         val projection = arrayOf(MediaStore.MediaColumns._ID)
         val selection = "${MediaStore.MediaColumns.DISPLAY_NAME} = ? AND ${MediaStore.MediaColumns.RELATIVE_PATH} = ?"
         val selectionArgs = arrayOf(fileName, relativePath)
@@ -144,7 +148,6 @@ class OfflineFirstMediaRepository @Inject constructor(
             }
         }
 
-        // 2. Insert the new file
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
             put(MediaStore.MediaColumns.MIME_TYPE, mimeType)

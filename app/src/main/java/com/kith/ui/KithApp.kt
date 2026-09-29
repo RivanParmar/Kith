@@ -40,9 +40,11 @@ import com.kith.feature.post.impl.navigation.postEntry
 import com.kith.feature.profile.impl.navigation.profileEntry
 import com.kith.navigation.TOP_LEVEL_NAV_ITEMS
 
-// Import the CompositionLocal and Helper we just defined in CreatePostScreen.kt
-import com.kith.feature.post.impl.LocalMediaPickerHelper
-import com.kith.feature.post.impl.MediaPickerHelper
+import com.kith.feature.post.impl.LocalMediaPickerHelper as PostLocalMediaPicker
+import com.kith.feature.post.impl.MediaPickerHelper as PostMediaPicker
+
+import com.kith.feature.profile.impl.LocalMediaPickerHelper as ProfileLocalMediaPicker
+import com.kith.feature.profile.impl.MediaPickerHelper as ProfileMediaPicker
 
 @Composable
 fun KithApp(
@@ -57,14 +59,25 @@ fun KithApp(
     // ALL LAUNCHERS DEFINED STRICTLY IN KITHAPP
     // ==========================================
     var photoCallback by remember { mutableStateOf<((List<Uri>) -> Unit)?>(null) }
+    var singlePhotoCallback by remember { mutableStateOf<((Uri?) -> Unit)?>(null) } // NEW
     var pdfCallback by remember { mutableStateOf<((Uri?) -> Unit)?>(null) }
     var audioCallback by remember { mutableStateOf<((Uri?) -> Unit)?>(null) }
 
+    // Multi-Picker for Posts (Max 5)
     val photoLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5),
         onResult = { uris ->
             photoCallback?.invoke(uris)
             photoCallback = null
+        }
+    )
+
+    // NEW: Single-Picker for Profile
+    val singlePhotoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+            singlePhotoCallback?.invoke(uri)
+            singlePhotoCallback = null
         }
     )
 
@@ -84,8 +97,9 @@ fun KithApp(
         }
     )
 
-    val mediaPickerHelper = remember {
-        MediaPickerHelper(
+    // Helper for CreatePostScreen
+    val postMediaHelper = remember {
+        PostMediaPicker(
             launchPhotoPicker = { callback ->
                 photoCallback = callback
                 photoLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
@@ -101,8 +115,21 @@ fun KithApp(
         )
     }
 
-    // Provide the helper down to all nested navigation screens
-    CompositionLocalProvider(LocalMediaPickerHelper provides mediaPickerHelper) {
+    // Helper for EditProfileDialog
+    val profileMediaHelper = remember {
+        ProfileMediaPicker(
+            launchPhotoPicker = { callback ->
+                singlePhotoCallback = callback
+                // Uses the single image launcher!
+                singlePhotoLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            }
+        )
+    }
+
+    CompositionLocalProvider(
+        PostLocalMediaPicker provides postMediaHelper,
+        ProfileLocalMediaPicker provides profileMediaHelper
+    ) {
         KithNavigationSuiteScaffold(
             showNavigation = isTopLevelDestination,
             navigationSuiteItems = {
@@ -111,18 +138,8 @@ fun KithApp(
                     item(
                         selected = selected,
                         onClick = { navigator.navigate(navKey) },
-                        icon = {
-                            Icon(
-                                imageVector = navItem.unselectedIcon,
-                                contentDescription = null,
-                            )
-                        },
-                        selectedIcon = {
-                            Icon(
-                                imageVector = navItem.selectedIcon,
-                                contentDescription = null,
-                            )
-                        },
+                        icon = { Icon(imageVector = navItem.unselectedIcon, contentDescription = null) },
+                        selectedIcon = { Icon(imageVector = navItem.selectedIcon, contentDescription = null) },
                         label = { Text(stringResource(navItem.iconTextId)) },
                     )
                 }

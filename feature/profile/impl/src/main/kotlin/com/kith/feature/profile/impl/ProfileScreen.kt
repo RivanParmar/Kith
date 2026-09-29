@@ -16,8 +16,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState // NEW IMPORT
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll // NEW IMPORT
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -35,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.kith.core.designsystem.component.LoadingWheel
 import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.KithTheme
@@ -94,12 +98,16 @@ internal fun ProfileScreen(
             var openEditProfileDialog by remember { mutableStateOf(false) }
             var openSettingsDialog by remember { mutableStateOf(false) }
 
+            // FIX: Remember a scroll state so the user can swipe down
+            val scrollState = rememberScrollState()
+
             Column(
                 modifier = modifier
                     .fillMaxSize()
                     .background(Color(0xFFF8F9FA))
                     .safeDrawingPadding()
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = 24.dp)
+                    .verticalScroll(scrollState), // FIX: Applied the scroll state to the main Column
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
@@ -127,8 +135,24 @@ internal fun ProfileScreen(
                                 .size(72.dp)
                                 .clip(CircleShape)
                                 .background(Color(0xFFE2E8F0)),
-                        )
-                        // TODO: Replace Box with AsyncImage or Image when implementing image loading
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (uiState.userProfile.profileImageUrl != null) {
+                                AsyncImage(
+                                    model = uiState.userProfile.profileImageUrl,
+                                    contentDescription = "Profile Image",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = KithIcons.Person, // Fallback icon
+                                    contentDescription = null,
+                                    tint = Color(0xFF94A3B8),
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+                        }
 
                         Spacer(modifier = Modifier.width(16.dp))
 
@@ -230,7 +254,7 @@ internal fun ProfileScreen(
                         HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
 
                         ProfileMenuItem(
-                            icon = KithIcons.Crown, // Feel free to change to KithIcons.History if you have it
+                            icon = KithIcons.Crown,
                             label = "Post History",
                             onClick = onPostHistoryClick,
                         )

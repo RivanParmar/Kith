@@ -11,4 +11,6 @@ dependencies {
     implementation(projects.feature.leaderboard.api)
 
     implementation(projects.core.data)
+    implementation(libs.coil.kt)
+    implementation(libs.coil.kt.compose)
 }

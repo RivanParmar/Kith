@@ -16,4 +16,6 @@ interface MediaRepository {
         extension: String,
         isSolved: Boolean
     ): String?
+
+    suspend fun uploadProfileImage(userId: String, imageUri: String): Result<String>
 }

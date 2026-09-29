@@ -6,21 +6,27 @@ import io.github.jan.supabase.storage.storage
 import javax.inject.Inject
 
 class SupabaseStorageDataSource @Inject constructor(
-    supabaseClient: SupabaseClient,
+    private val supabaseClient: SupabaseClient,
 ) : KithStorageDataSource {
 
-    private val bucket = supabaseClient.storage.from("media")
+    companion object {
+        // Explicitly defining your buckets here prevents typos
+        const val BUCKET_MEDIA = "media"
+        const val BUCKET_PROFILE = "profile_image"
+    }
 
     override suspend fun uploadMedia(
         fileName: String,
         fileBytes: ByteArray,
+        bucketName: String
     ): Result<Unit> {
         return try {
-            bucket.upload(
+            // Dynamically selects "media" or "profile_image" based on what the Repository requested
+            supabaseClient.storage.from(bucketName).upload(
                 path = fileName,
                 data = fileBytes,
                 options = {
-                    upsert = true
+                    upsert = true // Overwrites old profile pictures with the same name to save space
                 }
             )
             Result.success(Unit)
@@ -29,7 +35,7 @@ class SupabaseStorageDataSource @Inject constructor(
         }
     }
 
-    override fun getPublicUrl(fileName: String): String {
-        return bucket.publicUrl(fileName)
+    override fun getPublicUrl(fileName: String, bucketName: String): String {
+        return supabaseClient.storage.from(bucketName).publicUrl(fileName)
     }
 }

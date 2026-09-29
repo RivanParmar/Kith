@@ -28,20 +28,28 @@ class OfflineFirstUserRepository @Inject constructor(
     override suspend fun syncCurrentUser() {
         val userId = authDataSource.currentUserId() ?: return
 
-        val networkUser = networkDataSource.getUserById(userId)
-        userDao.upsertUser(networkUser.asUserEntity())
+        try {
+            val networkUser = networkDataSource.getUserById(userId)
+            userDao.upsertUser(networkUser.asUserEntity())
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
-
 
     override suspend fun updateProfile(name: String, bio: String, profileImageUrl: String?) {
         val userId = authDataSource.currentUserId() ?: return
 
-        // 1. Network First: Update Supabase
-        networkDataSource.updateUserProfile(userId, name, bio, profileImageUrl)
-
-        // 2. Local Second: Update Room Cache
-        // (Because Room returns a Flow, this instantly triggers your ViewModel to update the UI)
+        // 1. Local First: Instantly update Room.
+        // This triggers your UI StateFlow to update immediately without waiting for the network.
         userDao.updateProfile(userId, name, bio, profileImageUrl)
+
+        // 2. Network Second: Push the changes to Supabase in the background.
+        try {
+            networkDataSource.updateUserProfile(userId, name, bio, profileImageUrl)
+        } catch (e: Exception) {
+            // If the network fails, it won't crash the app. The local DB will retain the changes.
+            e.printStackTrace()
+        }
     }
 
     override suspend fun syncFcmToken(token: String) {

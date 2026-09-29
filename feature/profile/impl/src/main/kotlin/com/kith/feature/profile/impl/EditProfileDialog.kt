@@ -1,5 +1,6 @@
 package com.kith.feature.profile.impl
 
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -9,12 +10,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import coil3.compose.AsyncImage
 import com.kith.core.designsystem.icon.KithIcons
+
+// FIX: Signature updated to return a single Uri?
+class MediaPickerHelper(
+    val launchPhotoPicker: (onResult: (Uri?) -> Unit) -> Unit,
+)
+
+val LocalMediaPickerHelper = staticCompositionLocalOf<MediaPickerHelper> {
+    error("No MediaPickerHelper provided. Ensure it is provided in KithApp.kt")
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,6 +37,8 @@ internal fun EditProfileDialog(
     onDismiss: () -> Unit,
     onSave: (name: String, bio: String, imageUrl: String?) -> Unit,
 ) {
+    val mediaPicker = LocalMediaPickerHelper.current
+
     var name by remember { mutableStateOf(initialName) }
     var bio by remember { mutableStateOf(initialBio) }
     var imageUrl by remember { mutableStateOf(initialImageUrl) }
@@ -41,12 +55,15 @@ internal fun EditProfileDialog(
                     },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(KithIcons.Add, contentDescription = "Close")
+                            Icon(KithIcons.Close, contentDescription = "Close")
                         }
                     },
                     actions = {
                         TextButton(
-                            onClick = { onSave(name, bio, imageUrl) },
+                            onClick = {
+                                onSave(name, bio, imageUrl)
+                                onDismiss()
+                            },
                             enabled = name.isNotBlank(),
                         ) {
                             Text("Save", fontWeight = FontWeight.Bold, color = Color(0xFF3B82F6))
@@ -72,11 +89,26 @@ internal fun EditProfileDialog(
                             .background(Color(0xFFE2E8F0)),
                         contentAlignment = Alignment.Center,
                     ) {
-                        // TODO: Use AsyncImage here when implementing real images
-                        Icon(KithIcons.Add, contentDescription = null, tint = Color(0xFF94A3B8))
+                        if (imageUrl != null) {
+                            AsyncImage(
+                                model = imageUrl,
+                                contentDescription = "Profile Image",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Icon(KithIcons.Person, contentDescription = null, tint = Color(0xFF94A3B8))
+                        }
                     }
                     SmallFloatingActionButton(
-                        onClick = { /* TODO: Launch Photo Picker */ },
+                        onClick = {
+                            // Directly receives the single URI now
+                            mediaPicker.launchPhotoPicker { uri ->
+                                if (uri != null) {
+                                    imageUrl = uri.toString()
+                                }
+                            }
+                        },
                         shape = CircleShape,
                         containerColor = Color(0xFF3B82F6),
                         modifier = Modifier.size(32.dp),
@@ -110,7 +142,9 @@ internal fun EditProfileDialog(
                     value = bio,
                     onValueChange = { bio = it },
                     label = { Text("Bio") },
-                    modifier = Modifier.fillMaxWidth().height(120.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color(0xFF3B82F6),
                         focusedLabelColor = Color(0xFF3B82F6),
