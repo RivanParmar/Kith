@@ -1,5 +1,11 @@
 package com.kith.ui
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -96,6 +102,42 @@ fun KithApp(
                 NavDisplay(
                     entries = appState.navigationState.toEntries(entryProvider),
                     onBack = { navigator.goBack() },
+                    transitionSpec = {
+                        // Forward navigation:
+                        // New screen slides in from the right while fading in
+                        // Old screen slides out to the left while fading out
+                        val enter = slideIntoContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Start,
+                            animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+                        ) + fadeIn(
+                            animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+                        )
+                        val exit = slideOutOfContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Start,
+                            animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+                        ) + fadeOut(
+                            animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+                        )
+                        enter togetherWith exit
+                    },
+                    popTransitionSpec = {
+                        // Back/Pop navigation (reverse):
+                        // Previous screen slides in from the left while fading in
+                        // Current screen slides out to the right while fading out
+                        val enter = slideIntoContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.End,
+                            animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+                        ) + fadeIn(
+                            animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+                        )
+                        val exit = slideOutOfContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.End,
+                            animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+                        ) + fadeOut(
+                            animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+                        )
+                        enter togetherWith exit
+                    },
                 )
             }
         }

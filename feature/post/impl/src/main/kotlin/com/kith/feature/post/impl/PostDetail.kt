@@ -97,7 +97,7 @@ data class AttachedFile(
 // COLOR PALETTE & DESIGN TOKENS
 // =============================================================================
 
-private object PostDetailColors {
+internal object PostDetailColors {
     val Background = Color(0xFFFFFFFF)
     val TextPrimary = Color(0xFF111827)
     val TextSecondary = Color(0xFF4B5563)

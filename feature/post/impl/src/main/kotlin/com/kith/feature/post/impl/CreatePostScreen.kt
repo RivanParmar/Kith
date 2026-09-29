@@ -436,6 +436,6 @@ fun CreatePostScreen(
 @Composable
 fun CreatePostScreenPreview() {
     MaterialTheme {
-        CreatePostScreen()
+        CreatePostScreen(onBackClick = {})
     }
 }
