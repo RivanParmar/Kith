@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface CommunityRepository {
     val hasJoinedAnyCommunity: Flow<Boolean>
+    suspend fun hasJoinedAnyCommunitySync(): Boolean
     fun getAvailableCommunities(): Flow<List<Community>>
     fun getJoinedCommunitiesStream(): Flow<List<Community>>
     fun getCommunityByIdStream(id: String): Flow<Community>
@@ -21,4 +22,6 @@ interface CommunityRepository {
         password: String,
         description: String,
     ): Result<Unit>
+
+    suspend fun syncJoinedCommunities(): Result<Unit>
 }

@@ -9,6 +9,8 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import javax.inject.Inject
@@ -23,8 +25,6 @@ class SupabaseNetworkDataSource @Inject constructor(
             }
             .decodeSingle<NetworkPost>()
     }
-
-    // ... (Keep all your existing overrides exactly as they are) ...
 
     override suspend fun getPosts(limit: Int): List<NetworkPost> {
         return supabaseClient.postgrest["posts"].select { limit(count = limit.toLong()) }.decodeList<NetworkPost>()
@@ -134,7 +134,6 @@ class SupabaseNetworkDataSource @Inject constructor(
         supabaseClient.postgrest["communities"].update({ set("description", description) }) { filter { eq("id", communityId) } }
     }
 
-    // NEW: Search Users
     override suspend fun searchUsers(communityId: String, query: String): List<NetworkUser> {
         return supabaseClient.postgrest["users"]
             .select {
@@ -185,4 +184,20 @@ class SupabaseNetworkDataSource @Inject constructor(
             filter { eq("id", postId) }
         }
     }
+
+    override suspend fun getJoinedCommunities(userId: String): List<NetworkCommunity> {
+        val response = supabaseClient.postgrest["community_members"]
+            .select(columns = Columns.raw("communities(*)")) {
+                filter { eq("user_id", userId) }
+            }
+            .decodeList<NetworkCommunityMembers>()
+
+        return response.map { it.community }
+    }
 }
+
+@Serializable
+private data class NetworkCommunityMembers(
+    @SerialName("communities")
+    val community: NetworkCommunity
+)

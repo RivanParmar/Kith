@@ -47,4 +47,6 @@ interface KithNetworkDataSource {
 
     // NEW: Search for users by name
     suspend fun searchUsers(communityId: String, query: String): List<NetworkUser>
+
+    suspend fun getJoinedCommunities(userId: String): List<NetworkCommunity>
 }

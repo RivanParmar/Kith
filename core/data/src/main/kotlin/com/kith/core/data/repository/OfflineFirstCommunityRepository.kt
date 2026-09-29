@@ -31,10 +31,12 @@ class OfflineFirstCommunityRepository @Inject constructor(
     @Dispatcher(KithDispatchers.IO) private val ioDispatcher: CoroutineDispatcher,
 ) : CommunityRepository {
 
-    // ... (Keep your existing overrides exactly as they are) ...
-
     override val hasJoinedAnyCommunity: Flow<Boolean> =
         communityDao.getJoinedCommunitiesCountStream().map { count -> count > 0 }
+
+    override suspend fun hasJoinedAnyCommunitySync(): Boolean = withContext(ioDispatcher) {
+        communityDao.getJoinedCommunitiesCount() > 0
+    }
 
     override fun getAvailableCommunities(): Flow<List<Community>> = flow {
         try {
@@ -61,6 +63,7 @@ class OfflineFirstCommunityRepository @Inject constructor(
         withContext(ioDispatcher) {
             try {
                 val isSuccess = networkDataSource.joinCommunity(communityId, password)
+
                 if (isSuccess) {
                     communityDao.markAsJoined(listOf(communityId))
                     Result.success(Unit)
@@ -173,4 +176,36 @@ class OfflineFirstCommunityRepository @Inject constructor(
                 Result.failure(e)
             }
         }
+
+    override suspend fun syncJoinedCommunities(): Result<Unit> = withContext(ioDispatcher) {
+        try {
+            val currentUserId = authDataSource.currentUserId()
+                ?: return@withContext Result.failure(Exception("User not authenticated"))
+
+            val remoteCommunities = networkDataSource.getJoinedCommunities(currentUserId)
+
+            if (remoteCommunities.isNotEmpty()) {
+                // Upsert all joined communities into Room marked as joined
+                remoteCommunities.forEach { networkCommunity ->
+                    communityDao.upsertCommunity(
+                        CommunityEntity(
+                            id = networkCommunity.id,
+                            name = networkCommunity.name,
+                            description = networkCommunity.description,
+                            imageUrl = networkCommunity.imageUrl,
+                            updatedAt = networkCommunity.updatedAt,
+                            isJoinedByMe = true,
+                            creatorId = networkCommunity.userId,
+                        )
+                    )
+                }
+            }
+
+            Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
