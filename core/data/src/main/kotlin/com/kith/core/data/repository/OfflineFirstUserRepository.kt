@@ -43,4 +43,8 @@ class OfflineFirstUserRepository @Inject constructor(
         // (Because Room returns a Flow, this instantly triggers your ViewModel to update the UI)
         userDao.updateProfile(userId, name, bio, profileImageUrl)
     }
+
+    override suspend fun syncFcmToken(token: String) {
+        syncFcmToken(token)
+    }
 }

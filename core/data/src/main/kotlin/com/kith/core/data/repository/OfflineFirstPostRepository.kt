@@ -74,7 +74,7 @@ class OfflineFirstPostRepository @Inject constructor(
         val community = networkDataSource.getCommunityById(networkPost.communityId)
 
         userDao.upsertUser(user.asUserEntity())
-        communityDao.upsertCommunity(community.asCommunityEntity())
+        communityDao.upsertCommunityPreservingStatus(community.asCommunityEntity())
         postDao.insertPost(networkPost.asEntity())
     }
 

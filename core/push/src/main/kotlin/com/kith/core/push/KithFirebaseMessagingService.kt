@@ -5,6 +5,7 @@ import com.google.firebase.messaging.RemoteMessage
 import com.kith.core.common.network.Dispatcher
 import com.kith.core.common.network.KithDispatchers
 import com.kith.core.data.repository.NotificationRepository
+import com.kith.core.data.repository.UserRepository
 import com.kith.core.notifications.Notifier
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineDispatcher
@@ -19,6 +20,9 @@ class KithFirebaseMessagingService : FirebaseMessagingService() {
 
     @Inject
     lateinit var notificationRepository: NotificationRepository
+
+    @Inject
+    lateinit var userRepository: UserRepository
 
     @Inject
     lateinit var notifier: Notifier
@@ -44,6 +48,14 @@ class KithFirebaseMessagingService : FirebaseMessagingService() {
 
                 notifier.postNotifications(savedNotification)
             }
+        }
+    }
+
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+
+        scope.launch {
+            userRepository.syncFcmToken(token)
         }
     }
 

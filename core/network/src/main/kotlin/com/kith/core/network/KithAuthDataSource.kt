@@ -12,4 +12,6 @@ interface KithAuthDataSource {
     suspend fun updateUser(newPassword: String): Result<Unit>
 
     suspend fun resetPassword(email: String): Result<Unit>
+
+    suspend fun syncFcmToken(token: String)
 }

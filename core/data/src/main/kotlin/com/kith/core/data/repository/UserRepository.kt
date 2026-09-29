@@ -7,4 +7,5 @@ interface UserRepository {
      fun getUserProfileStream(): Flow<UserProfile?>
      suspend fun syncCurrentUser()
      suspend fun updateProfile(name: String, bio: String, profileImageUrl: String?)
+     suspend fun syncFcmToken(token: String)
 }

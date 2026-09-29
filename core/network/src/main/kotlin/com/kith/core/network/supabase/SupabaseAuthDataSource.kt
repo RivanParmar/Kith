@@ -5,7 +5,9 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
+import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -15,11 +17,9 @@ class SupabaseAuthDataSource @Inject constructor(
     private val supabase: SupabaseClient
 ) : KithAuthDataSource {
 
-    // Maps the internal Supabase state to a clean, decoupled Boolean flow
-    // that your ViewModel can collect to determine if the user should see the Main app or Auth screen.
-    override val sessionStatus: Flow<Boolean> = supabase.auth.sessionStatus.map { status ->
-        status is SessionStatus.Authenticated
-    }
+    override val sessionStatus: Flow<Boolean> = supabase.auth.sessionStatus
+        .filterNot { it is SessionStatus.Initializing }
+        .map { it is SessionStatus.Authenticated }
 
     override fun currentUserId(): String? {
         return supabase.auth.currentUserOrNull()?.id
@@ -63,5 +63,19 @@ class SupabaseAuthDataSource @Inject constructor(
 
     override suspend fun resetPassword(email: String): Result<Unit> = runCatching {
         supabase.auth.resetPasswordForEmail(email = email)
+    }
+
+    override suspend fun syncFcmToken(token: String) {
+        try {
+            val currentUser = currentUserId() ?: return
+
+            supabase.postgrest["users"].update(
+                { set("fcm_token", token) }
+            ) {
+                filter { eq("id", currentUser) }
+            }
+        } catch (e: Exception) {
+
+        }
     }
 }
