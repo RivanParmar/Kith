@@ -12,45 +12,66 @@ import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
     primary = PrimaryBlue,
-    secondary = SecondaryBlue,
-    tertiary = LightBlue,
-    background = BackgroundDark,
-    surface = SurfaceDark,
-    error = ErrorOrange,
     onPrimary = White,
+    primaryContainer = PrimaryContainerDark,
+    onPrimaryContainer = OnPrimaryContainerDark,
+    secondary = SecondaryBlue,
     onSecondary = White,
+    secondaryContainer = SecondaryContainerDark,
+    onSecondaryContainer = OnSecondaryContainerDark,
+    tertiary = LightBlue,
     onTertiary = Black,
+    background = BackgroundDark,
     onBackground = White,
+    surface = SurfaceDark,
     onSurface = White,
+    surfaceVariant = SurfaceVariantDark,
+    onSurfaceVariant = OnSurfaceVariantDark,
+    outline = OutlineDark,
+    outlineVariant = OutlineVariantDark,
+    error = ErrorRed,
+    onError = White,
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = PrimaryBlue,
-    secondary = SecondaryBlue,
-    tertiary = LightBlue,
-    background = BackgroundLight,
-    surface = SurfaceLight,
-    error = ErrorOrange,
     onPrimary = White,
+    primaryContainer = PrimaryContainerLight,
+    onPrimaryContainer = OnPrimaryContainerLight,
+    secondary = SecondaryBlue,
     onSecondary = White,
+    secondaryContainer = SecondaryContainerLight,
+    onSecondaryContainer = OnSecondaryContainerLight,
+    tertiary = LightBlue,
     onTertiary = White,
+    background = BackgroundLight,
     onBackground = DarkNavy,
+    surface = SurfaceLight,
     onSurface = DarkNavy,
+    surfaceVariant = SurfaceVariantLight,
+    onSurfaceVariant = OnSurfaceVariantLight,
+    outline = OutlineLight,
+    outlineVariant = OutlineVariantLight,
+    error = ErrorRed,
+    onError = White,
 )
 
 @Composable
 fun KithTheme(
+    // 1. Ensure these parameters exist
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false,
+    dynamicColor: Boolean = true, // Your default dynamic color setting
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
+        // 2. Dynamic color logic (keep your existing logic here)
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        // 3. Fallback to KITH custom colors based strictly on the darkTheme boolean
+        darkTheme -> DarkColorScheme // Your existing KITH dark colors
+        else -> LightColorScheme // Your existing KITH light colors
     }
 
     MaterialTheme(
