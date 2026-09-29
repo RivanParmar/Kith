@@ -84,10 +84,6 @@ import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.model.data.User
 import java.util.UUID
 
-// =============================================================================
-// ATTACHMENT MODEL
-// =============================================================================
-
 data class AttachedFile(
     val id: String = UUID.randomUUID().toString(),
     val name: String,
@@ -95,10 +91,6 @@ data class AttachedFile(
     val isDocument: Boolean = false,
     val uri: String? = null
 )
-
-// =============================================================================
-// COLOR PALETTE & DESIGN TOKENS
-// =============================================================================
 
 private object PostDetailColors {
     val Background = Color(0xFFFFFFFF)
@@ -392,10 +384,6 @@ private val ImageIcon: ImageVector
         }
     }.build()
 
-// =============================================================================
-// MAIN ENTRY POINT COMPOSABLE
-// =============================================================================
-
 @Composable
 fun PostDetailScreen(
     modifier: Modifier = Modifier,
@@ -409,7 +397,7 @@ fun PostDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    PostDetailContent(
+    PostDetailScreen(
         uiState = uiState,
         onBackClick = onBackClick,
         onDeleteClick = { viewModel.onDeletePost(onBackClick) },
@@ -432,7 +420,7 @@ fun PostDetailScreen(
 }
 
 @Composable
-private fun PostDetailContent(
+internal fun PostDetailScreen(
     uiState: PostDetailUiState,
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {},
@@ -637,7 +625,7 @@ private fun PostDetailContent(
                     PostTagsRow(
                         isInPerson = post.isInPerson,
                         communityName = post.community.name,
-                        onCommunityClick = { onCommunityClick(post.community.id) }
+                        onCommunityClick = { onCommunityClick(post.community.id) },
                     )
 
                     // 4 & 5. Expandable Description & Image Attachments Section
@@ -734,6 +722,7 @@ private fun PostDetailContent(
                                 }
                             )
 
+                            // Accept or Reject Solution UI for Author
                             SolutionDecisionRow(
                                 status = uiState.solutionStatus,
                                 onAccept = onAcceptSolution,
@@ -762,10 +751,6 @@ private fun PostDetailContent(
         }
     }
 }
-
-// =============================================================================
-// SUB-COMPONENTS
-// =============================================================================
 
 @Composable
 private fun PostDetailTopBar(
@@ -938,12 +923,12 @@ private fun AuthorProfileCard(author: User, onClick: () -> Unit, modifier: Modif
                     overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "Economics Department • Senior",
-                    fontSize = 12.sp,
-                    color = PostDetailColors.TextSecondary
-                )
-                Spacer(modifier = Modifier.height(3.dp))
+//                Text(
+//                    text = "Economics Department • Senior",
+//                    fontSize = 12.sp,
+//                    color = PostDetailColors.TextSecondary
+//                )
+//                Spacer(modifier = Modifier.height(3.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = KithIcons.StarRate,
@@ -953,7 +938,7 @@ private fun AuthorProfileCard(author: User, onClick: () -> Unit, modifier: Modif
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "${author.rating} (42 reviews)",
+                        text = "${author.rating}",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         color = PostDetailColors.TextSecondary
@@ -1513,126 +1498,126 @@ private fun SubmitAnswerBottomBar(
     }
 }
 
-// =============================================================================
+    // =============================================================================
 // PREVIEWS
 // =============================================================================
 
-@Preview(name = "1. Loading", showBackground = true, widthDp = 390, heightDp = 844)
-@Composable
-private fun PreviewLoading() {
-    MaterialTheme {
-        PostDetailContent(uiState = PostDetailUiState.Loading)
+    @Preview(name = "1. Loading", showBackground = true, widthDp = 390, heightDp = 844)
+    @Composable
+    private fun PreviewLoading() {
+        MaterialTheme {
+            PostDetailScreen(uiState = PostDetailUiState.Loading)
+        }
     }
-}
 
-@Preview(name = "2. Error", showBackground = true, widthDp = 390, heightDp = 844)
-@Composable
-private fun PreviewError() {
-    MaterialTheme {
-        PostDetailContent(uiState = PostDetailUiState.Error("Something went wrong"))
+    @Preview(name = "2. Error", showBackground = true, widthDp = 390, heightDp = 844)
+    @Composable
+    private fun PreviewError() {
+        MaterialTheme {
+            PostDetailScreen(uiState = PostDetailUiState.Error("Something went wrong"))
+        }
     }
-}
 
-@Preview(name = "3. Visitor - Not Accepted", showBackground = true, widthDp = 390, heightDp = 844)
-@Composable
-private fun PreviewVisitorNotAccepted() {
-    MaterialTheme {
-        PostDetailContent(
-            uiState = PostDetailUiState.Success(
-                post = samplePostDetail.copy(answer = null),
-                isAuthor = false,
-                isAcceptedByCurrentUser = false
+    @Preview(name = "3. Visitor - Not Accepted", showBackground = true, widthDp = 390, heightDp = 844)
+    @Composable
+    private fun PreviewVisitorNotAccepted() {
+        MaterialTheme {
+            PostDetailScreen(
+                uiState = PostDetailUiState.Success(
+                    post = samplePostDetail.copy(answer = null),
+                    isAuthor = false,
+                    isAcceptedByCurrentUser = false
+                )
             )
-        )
+        }
     }
-}
 
-@Preview(name = "4. Solver - Accepted (Answer Form)", showBackground = true, widthDp = 390, heightDp = 844)
-@Composable
-private fun PreviewSolverAccepted() {
-    MaterialTheme {
-        PostDetailContent(
-            uiState = PostDetailUiState.Success(
-                post = samplePostDetail.copy(answer = null),
-                isAuthor = false,
-                isAcceptedByCurrentUser = true
+    @Preview(name = "4. Solver - Accepted (Answer Form)", showBackground = true, widthDp = 390, heightDp = 844)
+    @Composable
+    private fun PreviewSolverAccepted() {
+        MaterialTheme {
+            PostDetailScreen(
+                uiState = PostDetailUiState.Success(
+                    post = samplePostDetail.copy(answer = null),
+                    isAuthor = false,
+                    isAcceptedByCurrentUser = true
+                )
             )
-        )
+        }
     }
-}
 
-@Preview(name = "5. Author - Waiting For Answer", showBackground = true, widthDp = 390, heightDp = 844)
-@Composable
-private fun PreviewAuthorWaiting() {
-    MaterialTheme {
-        PostDetailContent(
-            uiState = PostDetailUiState.Success(
-                post = samplePostDetail.copy(answer = null),
-                isAuthor = true,
-                isAcceptedByCurrentUser = false
+    @Preview(name = "5. Author - Waiting For Answer", showBackground = true, widthDp = 390, heightDp = 844)
+    @Composable
+    private fun PreviewAuthorWaiting() {
+        MaterialTheme {
+            PostDetailScreen(
+                uiState = PostDetailUiState.Success(
+                    post = samplePostDetail.copy(answer = null),
+                    isAuthor = true,
+                    isAcceptedByCurrentUser = false
+                )
             )
-        )
+        }
     }
-}
 
-@Preview(name = "6. Author - Answer Pending Decision", showBackground = true, widthDp = 390, heightDp = 844)
-@Composable
-private fun PreviewAuthorAnswerPending() {
-    MaterialTheme {
-        PostDetailContent(
-            uiState = PostDetailUiState.Success(
-                post = samplePostDetailAnswered,
-                isAuthor = true,
-                isAcceptedByCurrentUser = false,
-                userRating = 4,
-                solutionStatus = SolutionStatus.PENDING
+    @Preview(name = "6. Author - Answer Pending Decision", showBackground = true, widthDp = 390, heightDp = 844)
+    @Composable
+    private fun PreviewAuthorAnswerPending() {
+        MaterialTheme {
+            PostDetailScreen(
+                uiState = PostDetailUiState.Success(
+                    post = samplePostDetailAnswered,
+                    isAuthor = true,
+                    isAcceptedByCurrentUser = false,
+                    userRating = 4,
+                    solutionStatus = SolutionStatus.PENDING
+                )
             )
-        )
+        }
     }
-}
 
-@Preview(name = "7. Author - Solution Accepted", showBackground = true, widthDp = 390, heightDp = 844)
-@Composable
-private fun PreviewAuthorSolutionAccepted() {
-    MaterialTheme {
-        PostDetailContent(
-            uiState = PostDetailUiState.Success(
-                post = samplePostDetailAnswered,
-                isAuthor = true,
-                isAcceptedByCurrentUser = false,
-                userRating = 5,
-                solutionStatus = SolutionStatus.ACCEPTED
+    @Preview(name = "7. Author - Solution Accepted", showBackground = true, widthDp = 390, heightDp = 844)
+    @Composable
+    private fun PreviewAuthorSolutionAccepted() {
+        MaterialTheme {
+            PostDetailScreen(
+                uiState = PostDetailUiState.Success(
+                    post = samplePostDetailAnswered,
+                    isAuthor = true,
+                    isAcceptedByCurrentUser = false,
+                    userRating = 5,
+                    solutionStatus = SolutionStatus.ACCEPTED
+                )
             )
-        )
+        }
     }
-}
 
-@Preview(name = "8. Author - Solution Rejected", showBackground = true, widthDp = 390, heightDp = 844)
-@Composable
-private fun PreviewAuthorSolutionRejected() {
-    MaterialTheme {
-        PostDetailContent(
-            uiState = PostDetailUiState.Success(
-                post = samplePostDetailAnswered,
-                isAuthor = true,
-                isAcceptedByCurrentUser = false,
-                userRating = 2,
-                solutionStatus = SolutionStatus.REJECTED
+    @Preview(name = "8. Author - Solution Rejected", showBackground = true, widthDp = 390, heightDp = 844)
+    @Composable
+    private fun PreviewAuthorSolutionRejected() {
+        MaterialTheme {
+            PostDetailScreen(
+                uiState = PostDetailUiState.Success(
+                    post = samplePostDetailAnswered,
+                    isAuthor = true,
+                    isAcceptedByCurrentUser = false,
+                    userRating = 2,
+                    solutionStatus = SolutionStatus.REJECTED
+                )
             )
-        )
+        }
     }
-}
 
-@Preview(name = "9. Solver - Answer Sent (Read Only)", showBackground = true, widthDp = 390, heightDp = 844)
-@Composable
-private fun PreviewSolverAnswerSent() {
-    MaterialTheme {
-        PostDetailContent(
-            uiState = PostDetailUiState.Success(
-                post = samplePostDetailAnswered,
-                isAuthor = false,
-                isAcceptedByCurrentUser = true
+    @Preview(name = "9. Solver - Answer Sent (Read Only)", showBackground = true, widthDp = 390, heightDp = 844)
+    @Composable
+    private fun PreviewSolverAnswerSent() {
+        MaterialTheme {
+            PostDetailScreen(
+                uiState = PostDetailUiState.Success(
+                    post = samplePostDetailAnswered,
+                    isAuthor = false,
+                    isAcceptedByCurrentUser = true
+                )
             )
-        )
+        }
     }
-}

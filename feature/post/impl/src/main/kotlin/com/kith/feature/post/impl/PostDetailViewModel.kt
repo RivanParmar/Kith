@@ -1,6 +1,5 @@
 package com.kith.feature.post.impl
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kith.core.data.repository.AuthRepository
@@ -8,159 +7,160 @@ import com.kith.core.data.repository.PostRepository
 import com.kith.core.model.data.Community
 import com.kith.core.model.data.PostDetail
 import com.kith.core.model.data.User
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 import kotlin.time.Instant
 
-@HiltViewModel
-class PostDetailViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
+private data class PostTransientState(
+    val isAcceptedByCurrentUser: Boolean = false,
+    val userRating: Int = 5,
+    val isSubmitting: Boolean = false,
+    val isDeleting: Boolean = false
+)
+
+@HiltViewModel(assistedFactory = PostDetailViewModel.Factory::class)
+class PostDetailViewModel @AssistedInject constructor(
     private val postRepository: PostRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    @Assisted val postId: String,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<PostDetailUiState>(PostDetailUiState.Loading)
-    val uiState: StateFlow<PostDetailUiState> = _uiState.asStateFlow()
+    // Manage only the transient UI state manually
+    private val transientState = MutableStateFlow(PostTransientState())
 
-    // Using .get<String>() is safer and prevents NoClassDefFoundErrors on older dependency versions
-    private val postId: String? = savedStateHandle.get<String>("postId")
-        ?: savedStateHandle.get<String>("id")
+    // 2. The NiA Reactive Pipeline
+    val uiState: StateFlow<PostDetailUiState> = postDetailUiState(
+        postId = postId,
+        postRepository = postRepository,
+        authRepository = authRepository,
+        transientStateFlow = transientState
+    ).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = PostDetailUiState.Loading,
+    )
 
     init {
-        if (postId != null) {
-            loadPostDetail(postId)
-        } else {
-            _uiState.value = PostDetailUiState.Error("Post ID is missing in navigation")
-        }
-    }
-
-    private fun loadPostDetail(id: String) {
-        viewModelScope.launch {
-            val currentUserId = authRepository.currentUserId()
-
-            postRepository.getPostDetailStream(id)
-                .catch { e ->
-                    // Prevent flow crashes if the DB throws an exception
-                    _uiState.value = PostDetailUiState.Error(e.message ?: "Failed to load post details")
-                }
-                .collect { postDetail ->
-                    val isAuthor = currentUserId != null && currentUserId == postDetail.author.id
-                    val backendStatus = if (postDetail.isAccepted) SolutionStatus.ACCEPTED else SolutionStatus.PENDING
-
-                    _uiState.update { currentState ->
-                        if (currentState is PostDetailUiState.Success) {
-                            currentState.copy(
-                                post = postDetail,
-                                isAuthor = isAuthor,
-                                solutionStatus = if (backendStatus == SolutionStatus.ACCEPTED) backendStatus else currentState.solutionStatus
-                            )
-                        } else {
-                            PostDetailUiState.Success(
-                                post = postDetail,
-                                isAuthor = isAuthor,
-                                solutionStatus = backendStatus,
-                                isAcceptedByCurrentUser = false
-                            )
-                        }
-                    }
-                }
-        }
-
-        // Background network sync
+        // Trigger background network sync exactly like NiA does for topics
         viewModelScope.launch {
             try {
-                postRepository.syncPostById(id)
+                postRepository.syncPostById(postId)
             } catch (_: Exception) {
-                // Fails silently, stream relies on offline-first cache
+                // Background refresh fallback
             }
         }
     }
 
     fun onAcceptClick() {
-        _uiState.update { currentState ->
-            if (currentState is PostDetailUiState.Success) {
-                currentState.copy(isAcceptedByCurrentUser = true)
-            } else currentState
-        }
+        transientState.update { it.copy(isAcceptedByCurrentUser = !it.isAcceptedByCurrentUser) }
     }
 
     fun onSubmitAnswer(answer: String) {
-        val id = postId ?: return
         viewModelScope.launch {
-            _uiState.update { if (it is PostDetailUiState.Success) it.copy(isSubmitting = true) else it }
+            transientState.update { it.copy(isSubmitting = true) }
             try {
-                postRepository.submitAnswer(id, answer, authRepository.currentUserId()!!)
-                _uiState.update { currentState ->
-                    if (currentState is PostDetailUiState.Success) {
-                        currentState.copy(isSubmitting = false, isAcceptedByCurrentUser = false)
-                    } else currentState
-                }
+                postRepository.submitAnswer(postId, answer, authRepository.currentUserId()!!)
+                transientState.update { it.copy(isSubmitting = false, isAcceptedByCurrentUser = false) }
             } catch (e: Exception) {
-                _uiState.update { if (it is PostDetailUiState.Success) it.copy(isSubmitting = false) else it }
+                transientState.update { it.copy(isSubmitting = false) }
             }
         }
     }
 
     fun onRateSolution(rating: Int) {
-        val id = postId ?: return
-
-        // Optimistic UI update
-        _uiState.update { if (it is PostDetailUiState.Success) it.copy(userRating = rating) else it }
-
+        transientState.update { it.copy(userRating = rating) }
         viewModelScope.launch {
             try {
-                postRepository.rateSolution(id, rating)
+                postRepository.rateSolution(postId, rating)
             } catch (_: Exception) {}
         }
     }
 
     fun onAcceptSolution() {
-        val id = postId ?: return
-        _uiState.update { if (it is PostDetailUiState.Success) it.copy(solutionStatus = SolutionStatus.ACCEPTED) else it }
         viewModelScope.launch {
             try {
-                postRepository.acceptSolution(id)
-            } catch (_: Exception) {
-                _uiState.update { if (it is PostDetailUiState.Success) it.copy(solutionStatus = SolutionStatus.PENDING) else it }
-            }
+                postRepository.acceptSolution(postId)
+                // We no longer manually update _uiState!
+                // Room will update the DB and instantly emit the new data to our pipeline.
+            } catch (_: Exception) {}
         }
     }
 
     fun onRejectSolution() {
-        val id = postId ?: return
-        _uiState.update { if (it is PostDetailUiState.Success) it.copy(solutionStatus = SolutionStatus.REJECTED) else it }
         viewModelScope.launch {
             try {
-                postRepository.rejectSolution(id)
-            } catch (_: Exception) {
-                _uiState.update { if (it is PostDetailUiState.Success) it.copy(solutionStatus = SolutionStatus.PENDING) else it }
-            }
+                postRepository.rejectSolution(postId)
+                // Room auto-emits the new data here too!
+            } catch (_: Exception) {}
         }
     }
 
     fun onDeletePost(onDeleted: () -> Unit) {
-        val id = postId ?: return
         viewModelScope.launch {
-            _uiState.update { if (it is PostDetailUiState.Success) it.copy(isDeleting = true) else it }
+            transientState.update { it.copy(isDeleting = true) }
             try {
-                postRepository.deletePost(id)
+                postRepository.deletePost(postId)
                 onDeleted()
             } catch (e: Exception) {
-                _uiState.update { if (it is PostDetailUiState.Success) it.copy(isDeleting = false) else it }
+                transientState.update { it.copy(isDeleting = false) }
             }
         }
     }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(postId: String): PostDetailViewModel
+    }
 }
 
-// =============================================================================
-// SAMPLE DATA FOR PREVIEWS (Retained to prevent UI compilation errors)
-// =============================================================================
+// 3. The pure flow-builder function (Mimics NiA's topicUiState)
+private fun postDetailUiState(
+    postId: String,
+    postRepository: PostRepository,
+    authRepository: AuthRepository,
+    transientStateFlow: StateFlow<PostTransientState>
+): Flow<PostDetailUiState> {
+
+    val currentUserIdStream = flow { emit(authRepository.currentUserId()) }
+    val postStream = postRepository.getPostDetailStream(postId)
+
+    // Combine all 3 sources directly into your Success state
+    return combine(
+        postStream,
+        currentUserIdStream,
+        transientStateFlow
+    ) { postDetail, currentUserId, transient ->
+
+        val isAuthor = currentUserId != null && currentUserId == postDetail.author.id
+        val initialStatus = if (postDetail.isAccepted) SolutionStatus.ACCEPTED else SolutionStatus.PENDING
+
+        PostDetailUiState.Success(
+            post = postDetail,
+            isAuthor = isAuthor,
+            isAcceptedByCurrentUser = transient.isAcceptedByCurrentUser,
+            solutionStatus = initialStatus,
+            userRating = transient.userRating,
+            isSubmitting = transient.isSubmitting,
+            isDeleting = transient.isDeleting
+        ) as PostDetailUiState
+    }
+        // Catch any database or auth crashes and map them to the Error state
+        .catch { exception ->
+            emit(PostDetailUiState.Error(exception.message))
+        }
+}
 
 val samplePostAuthor = User(
     id = "user-101",

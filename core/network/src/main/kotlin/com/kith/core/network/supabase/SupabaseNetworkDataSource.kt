@@ -150,16 +150,14 @@ class SupabaseNetworkDataSource @Inject constructor(
     }
 
     override suspend fun submitAnswer(postId: String, answer: String, currentUserId: String) {
-//        val currentUserId = supabaseClient.auth.currentUserOrNull()?.id ?: ""
-        supabaseClient.postgrest["posts"].update(
-            {
-                set("answer", answer)
-                set("status", "pending")
-                set("solver_id", currentUserId)
+        supabaseClient.postgrest.rpc(
+            function = "submit_answer",
+            parameters = buildJsonObject {
+                put("p_post_id", postId)
+                put("p_answer", answer)
+                put("p_solver_id", currentUserId)
             }
-        ) {
-            filter { eq("id", postId) }
-        }
+        )
     }
 
     override suspend fun acceptAnswer(postId: String) {
