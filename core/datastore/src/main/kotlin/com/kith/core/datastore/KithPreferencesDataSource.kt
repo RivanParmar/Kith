@@ -24,6 +24,7 @@ class KithPreferencesDataSource @Inject constructor(
                     DarkThemeConfigProto.DARK_THEME_CONFIG_LIGHT -> DarkThemeConfig.LIGHT
                     DarkThemeConfigProto.DARK_THEME_CONFIG_DARK -> DarkThemeConfig.DARK
                 },
+                useDynamicColor = if (preferences.hasUseDynamicColor()) preferences.useDynamicColor else true,
                 pushNotificationsEnabled = preferences.pushNotificationsEnabled,
                 shouldHideOnboarding = preferences.hasDoneOnboarding,
                 lastLoginTimestamp = preferences.lastLoginTimestamp
@@ -39,6 +40,14 @@ class KithPreferencesDataSource @Inject constructor(
                     DarkThemeConfig.LIGHT -> DarkThemeConfigProto.DARK_THEME_CONFIG_LIGHT
                     DarkThemeConfig.DARK -> DarkThemeConfigProto.DARK_THEME_CONFIG_DARK
                 }
+            }
+        }
+    }
+
+    suspend fun setDynamicColorPreference(useDynamicColor: Boolean) {
+        userPreferences.updateData {
+            it.copy {
+                this.useDynamicColor = useDynamicColor
             }
         }
     }
