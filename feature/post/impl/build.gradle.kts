@@ -13,4 +13,7 @@ dependencies {
     implementation(projects.core.data)
 
     implementation(projects.core.domain)
+
+    implementation(libs.coil.kt)
+    implementation(libs.coil.kt.compose)
 }

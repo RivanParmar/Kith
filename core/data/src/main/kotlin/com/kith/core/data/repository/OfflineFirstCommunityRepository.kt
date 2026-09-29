@@ -8,6 +8,7 @@ import com.kith.core.database.dao.CommunityDao
 import com.kith.core.database.model.CommunityEntity
 import com.kith.core.database.model.asExternalModel
 import com.kith.core.model.data.Community
+import com.kith.core.model.data.User
 import com.kith.core.network.KithAuthDataSource
 import com.kith.core.network.KithNetworkDataSource
 import com.kith.core.network.model.NetworkCommunity
@@ -30,6 +31,8 @@ class OfflineFirstCommunityRepository @Inject constructor(
     @Dispatcher(KithDispatchers.IO) private val ioDispatcher: CoroutineDispatcher,
 ) : CommunityRepository {
 
+    // ... (Keep your existing overrides exactly as they are) ...
+
     override val hasJoinedAnyCommunity: Flow<Boolean> =
         communityDao.getJoinedCommunitiesCountStream().map { count -> count > 0 }
 
@@ -40,7 +43,6 @@ class OfflineFirstCommunityRepository @Inject constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            // Emits empty list if the server cannot be reached
             emit(emptyList())
         }
     }.flowOn(ioDispatcher)
@@ -49,33 +51,25 @@ class OfflineFirstCommunityRepository @Inject constructor(
         return communityDao.getJoinedCommunitiesStream().map { entities ->
             entities.map { it.asExternalModel() }
         }
-        // Removed .flowOn(ioDispatcher) because Room automatically runs Flow queries on a custom background dispatcher.
     }
 
     override fun getCommunityByIdStream(id: String): Flow<Community> {
         return communityDao.getCommunityByIdStream(id).map { it.asExternalModel() }
-        // Removed .flowOn(ioDispatcher) here as well.
     }
 
     override suspend fun attemptJoinCommunity(communityId: String, password: String): Result<Unit> =
         withContext(ioDispatcher) {
             try {
-                // 1. The Strict Online Call (No WorkManager here)
                 val isSuccess = networkDataSource.joinCommunity(communityId, password)
-
                 if (isSuccess) {
-                    // 2. Update the local Room cache instantly so the UI reacts
                     communityDao.markAsJoined(listOf(communityId))
                     Result.success(Unit)
                 } else {
-                    // 3. Wrong password or rejected
                     Result.failure(Exception("Incorrect community password"))
                 }
             } catch (e: CancellationException) {
-                // IMPORTANT: Never swallow CancellationException in Coroutines
                 throw e
             } catch (e: Exception) {
-                // Catches "No Internet" / socket / HTTP exceptions from Ktor/Supabase
                 Result.failure(Exception("Network error. Must be online to join a community.", e))
             }
         }
@@ -90,7 +84,6 @@ class OfflineFirstCommunityRepository @Inject constructor(
                 Exception("Not logged in!")
             )
 
-            // 1. The Strict Online Call to create the community on the server
             val networkCommunity = NetworkCommunity(
                 id = UUID.randomUUID().toString(),
                 name = name,
@@ -100,18 +93,15 @@ class OfflineFirstCommunityRepository @Inject constructor(
                 userId = currentUser,
                 updatedAt = Clock.System.now(),
             )
-            val createdCommunity = networkDataSource.createCommunity(
-                networkCommunity
-            )
+            val createdCommunity = networkDataSource.createCommunity(networkCommunity)
 
-            // 2. Update the local Room cache instantly and mark as joined by creator
             communityDao.upsertCommunity(
                 CommunityEntity(
                     id = createdCommunity.id,
                     name = createdCommunity.name,
                     description = createdCommunity.description,
                     imageUrl = createdCommunity.imageUrl,
-                    creatorId = currentUser, // FIX: Added the missing creatorId here
+                    creatorId = currentUser,
                     updatedAt = createdCommunity.updatedAt,
                     isJoinedByMe = true,
                 )
@@ -119,10 +109,8 @@ class OfflineFirstCommunityRepository @Inject constructor(
 
             Result.success(Unit)
         } catch (e: CancellationException) {
-            // IMPORTANT: Never swallow CancellationException in Coroutines
             throw e
         } catch (e: Exception) {
-            // Catches "No Internet" / socket / HTTP exceptions from Ktor/Supabase
             Log.d("CREATE_COMMUNITY", e.toString())
             Result.failure(Exception("Network error. Must be online to create a community.", e))
         }
@@ -159,7 +147,6 @@ class OfflineFirstCommunityRepository @Inject constructor(
     override suspend fun updateCommunityDescription(communityId: String, description: String): Result<Unit> = withContext(ioDispatcher) {
         try {
             networkDataSource.updateCommunityDescription(communityId, description)
-            // Optimistic update: instantly reflect the text change locally
             val localEntity = communityDao.getCommunityByIdStream(communityId).first()
             communityDao.upsertCommunity(localEntity.copy(description = description))
             Result.success(Unit)
@@ -167,4 +154,23 @@ class OfflineFirstCommunityRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
+    // NEW: Execute search and map network model to domain model
+    // NEW: Execute search and map network model to domain model
+    override suspend fun searchCommunityMembers(communityId: String, query: String): Result<List<User>> =
+        withContext(ioDispatcher) {
+            try {
+                val networkUsers = networkDataSource.searchUsers(communityId, query)
+                // Assuming networkUser.asExternalModel() extension exists based on your architecture pattern
+                val profiles = networkUsers.map { it.asExternalModel() }
+
+                // Explicitly define the generic type to fix the compiler inference error
+                Result.success(profiles)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // Explicitly define the generic type here as well
+                Result.failure(e)
+            }
+        }
 }

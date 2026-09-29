@@ -20,7 +20,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation3.runtime.entryProvider
@@ -38,6 +42,10 @@ import com.kith.feature.post.impl.navigation.postEntry
 import com.kith.feature.profile.impl.navigation.profileEntry
 import com.kith.navigation.TOP_LEVEL_NAV_ITEMS
 
+// Import the CompositionLocal and Helper we just defined in CreatePostScreen.kt
+import com.kith.feature.post.impl.LocalMediaPickerHelper
+import com.kith.feature.post.impl.MediaPickerHelper
+
 @Composable
 fun KithApp(
     appState: KithAppState,
@@ -45,59 +53,108 @@ fun KithApp(
     windowAdaptiveInfo: WindowAdaptiveInfo = currentWindowAdaptiveInfoV2(),
 ) {
     val navigator = remember { Navigator(appState.navigationState) }
-
     val isTopLevelDestination = appState.navigationState.currentKey in TOP_LEVEL_NAV_ITEMS.keys
 
-    KithNavigationSuiteScaffold(
-        showNavigation = isTopLevelDestination,
-        navigationSuiteItems = {
-            TOP_LEVEL_NAV_ITEMS.forEach { (navKey, navItem) ->
-                val selected = navKey == appState.navigationState.currentTopLevelKey
-                item(
-                    selected = selected,
-                    onClick = { navigator.navigate(navKey) },
-                    icon = {
-                        Icon(
-                            imageVector = navItem.unselectedIcon,
-                            contentDescription = null,
-                        )
-                    },
-                    selectedIcon = {
-                        Icon(
-                            imageVector = navItem.selectedIcon,
-                            contentDescription = null,
-                        )
-                    },
-                    label = { Text(stringResource(navItem.iconTextId)) },
-                )
+    // ==========================================
+    // ALL LAUNCHERS DEFINED STRICTLY IN KITHAPP
+    // ==========================================
+    var photoCallback by remember { mutableStateOf<((List<Uri>) -> Unit)?>(null) }
+    var pdfCallback by remember { mutableStateOf<((Uri?) -> Unit)?>(null) }
+    var audioCallback by remember { mutableStateOf<((Uri?) -> Unit)?>(null) }
+
+    val photoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5),
+        onResult = { uris ->
+            photoCallback?.invoke(uris)
+            photoCallback = null
+        }
+    )
+
+    val pdfLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri ->
+            pdfCallback?.invoke(uri)
+            pdfCallback = null
+        }
+    )
+
+    val audioLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri ->
+            audioCallback?.invoke(uri)
+            audioCallback = null
+        }
+    )
+
+    val mediaPickerHelper = remember {
+        MediaPickerHelper(
+            launchPhotoPicker = { callback ->
+                photoCallback = callback
+                photoLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            },
+            launchPdfPicker = { callback ->
+                pdfCallback = callback
+                pdfLauncher.launch("application/pdf")
+            },
+            launchAudioPicker = { callback ->
+                audioCallback = callback
+                audioLauncher.launch("audio/*")
             }
-        },
-        windowAdaptiveInfo = windowAdaptiveInfo,
-    ) {
-        Scaffold(
-            modifier = modifier,
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        ) { padding ->
-            Column(
-                modifier = Modifier
-                    .padding(padding)
-                    .consumeWindowInsets(padding)
-                    .windowInsetsPadding(
-                        WindowInsets.safeDrawing.only(
-                            WindowInsetsSides.Horizontal,
-                        ),
-                    ),
-            ) {
-                val entryProvider = entryProvider {
-                    authEntry(navigator)
-                    browseEntry(navigator)
-                    communityEntry(navigator)
-                    homeEntry(navigator)
-                    leaderboardEntry(navigator)
-                    onboardingEntry(navigator)
-                    postEntry(navigator)
-                    profileEntry(navigator)
+        )
+    }
+
+    // Provide the helper down to all nested navigation screens
+    CompositionLocalProvider(LocalMediaPickerHelper provides mediaPickerHelper) {
+        KithNavigationSuiteScaffold(
+            showNavigation = isTopLevelDestination,
+            navigationSuiteItems = {
+                TOP_LEVEL_NAV_ITEMS.forEach { (navKey, navItem) ->
+                    val selected = navKey == appState.navigationState.currentTopLevelKey
+                    item(
+                        selected = selected,
+                        onClick = { navigator.navigate(navKey) },
+                        icon = {
+                            Icon(
+                                imageVector = navItem.unselectedIcon,
+                                contentDescription = null,
+                            )
+                        },
+                        selectedIcon = {
+                            Icon(
+                                imageVector = navItem.selectedIcon,
+                                contentDescription = null,
+                            )
+                        },
+                        label = { Text(stringResource(navItem.iconTextId)) },
+                    )
                 }
+            },
+            windowAdaptiveInfo = windowAdaptiveInfo,
+        ) {
+            Scaffold(
+                modifier = modifier,
+                contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            ) { padding ->
+                Column(
+                    modifier = Modifier
+                        .padding(padding)
+                        .consumeWindowInsets(padding)
+                        .windowInsetsPadding(
+                            WindowInsets.safeDrawing.only(
+                                WindowInsetsSides.Horizontal,
+                            ),
+                        ),
+                ) {
+                    val entryProvider = entryProvider {
+                        authEntry(navigator)
+                        browseEntry(navigator)
+                        communityEntry(navigator)
+                        homeEntry(navigator)
+                        leaderboardEntry(navigator)
+                        onboardingEntry(navigator)
+                        postEntry(navigator)
+                        profileEntry(navigator)
+                    }
 
                 NavDisplay(
                     entries = appState.navigationState.toEntries(entryProvider),

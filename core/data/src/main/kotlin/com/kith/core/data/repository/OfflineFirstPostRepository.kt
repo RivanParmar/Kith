@@ -123,7 +123,12 @@ class OfflineFirstPostRepository @Inject constructor(
     ) {
         val now = Clock.System.now()
 
-        val syncStatus = if (request.isDraft) SyncStatus.DRAFT else SyncStatus.PENDING_CREATE
+        // FIX: Safely parse the dynamic status
+        val mappedStatus = try {
+            PostStatus.valueOf(request.status)
+        } catch (e: Exception) {
+            PostStatus.OPEN
+        }
 
         val entity = PostEntity(
             id = postId,
@@ -131,20 +136,20 @@ class OfflineFirstPostRepository @Inject constructor(
             communityId = request.communityId,
             title = request.title,
             content = request.content,
-            status = PostStatus.OPEN,
+            status = mappedStatus, // FIX: Use dynamic status
             reward = request.reward,
             isInPerson = request.isInPerson,
             userImageCount = request.imageUris.size,
             userHasPdf = request.pdfUri != null,
             userHasAudio = request.audioUri != null,
             answer = null,
-            solverId = null,
+            solverId = request.solverId, // FIX: Assign to specific user
             solverImageCount = 0,
             solverHasPdf = false,
             solverHasAudio = false,
             createdAt = now,
             updatedAt = now,
-            syncStatus = syncStatus,
+            syncStatus = SyncStatus.PENDING_CREATE,
         )
         Log.d("CREATE", "Created entity!")
 

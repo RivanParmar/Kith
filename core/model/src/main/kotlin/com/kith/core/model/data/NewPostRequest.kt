@@ -9,5 +9,6 @@ data class NewPostRequest(
     val imageUris: List<String>,
     val pdfUri: String?,
     val audioUri: String?,
-    val isDraft: Boolean,
+    val status: String,
+    val solverId: String?,
 )
