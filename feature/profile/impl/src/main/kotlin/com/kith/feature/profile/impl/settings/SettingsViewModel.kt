@@ -78,6 +78,9 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setPushNotificationsEnabled(enabled: Boolean) {
+        _uiState.value = _uiState.value.copy(
+            notificationsEnabled = enabled
+        )
         viewModelScope.launch {
             userDataRepository.setPushNotificationsEnabled(enabled)
         }

@@ -3,6 +3,8 @@ package com.kith.feature.profile.impl.settings
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -52,14 +54,16 @@ fun SettingsDialog(
         )
     }
 
-//    val permissionLauncher = rememberLauncherForActivityResult(
-//        ActivityResultContracts.RequestPermission()
-//    ) { isGranted: Boolean ->
-//        hasNotificationPermission = isGranted
-//        if (isGranted) {
-//            viewModel.setPushNotificationsEnabled(true)
-//        }
-//    }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        hasNotificationPermission = isGranted
+        if (isGranted) {
+            viewModel.setPushNotificationsEnabled(true)
+        } else {
+            viewModel.setPushNotificationsEnabled(false)
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -107,7 +111,7 @@ fun SettingsDialog(
                                         Manifest.permission.POST_NOTIFICATIONS
                                     ) == PackageManager.PERMISSION_GRANTED
                                     if (!isGranted) {
-//                                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                                     } else {
                                         hasNotificationPermission = true
                                         viewModel.setPushNotificationsEnabled(true)
