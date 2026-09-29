@@ -13,6 +13,8 @@ interface CommunityRepository {
     suspend fun leaveCommunity(communityId: String): Result<Unit>
     suspend fun deleteCommunity(communityId: String): Result<Unit>
     suspend fun updateCommunityDescription(communityId: String, description: String): Result<Unit>
+    // Add this inside the interface:
+    suspend fun searchCommunityMembers(communityId: String, query: String): Result<List<com.kith.core.model.data.User>>
 
     suspend fun createCommunity(
         name: String,

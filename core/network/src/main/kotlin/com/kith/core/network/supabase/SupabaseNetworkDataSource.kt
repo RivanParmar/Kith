@@ -24,12 +24,10 @@ class SupabaseNetworkDataSource @Inject constructor(
             .decodeSingle<NetworkPost>()
     }
 
+    // ... (Keep all your existing overrides exactly as they are) ...
+
     override suspend fun getPosts(limit: Int): List<NetworkPost> {
-        return supabaseClient.postgrest["posts"]
-            .select {
-                limit(count = limit.toLong())
-            }
-            .decodeList<NetworkPost>()
+        return supabaseClient.postgrest["posts"].select { limit(count = limit.toLong()) }.decodeList<NetworkPost>()
     }
 
     override suspend fun createPost(networkPost: NetworkPost) {
@@ -37,49 +35,30 @@ class SupabaseNetworkDataSource @Inject constructor(
     }
 
     override suspend fun getUserById(userId: String): NetworkUser {
-        return supabaseClient.postgrest["users"]
-            .select {
-                filter { eq("id", userId) }
-            }
-            .decodeSingle<NetworkUser>()
+        return supabaseClient.postgrest["users"].select { filter { eq("id", userId) } }.decodeSingle<NetworkUser>()
     }
 
     override suspend fun getCommunityById(communityId: String): NetworkCommunity {
-        return supabaseClient.postgrest["communities"]
-            .select {
-                filter { eq("id", communityId) }
-            }
-            .decodeSingle<NetworkCommunity>()
+        return supabaseClient.postgrest["communities"].select { filter { eq("id", communityId) } }.decodeSingle<NetworkCommunity>()
     }
 
     override suspend fun getCommunities(): List<NetworkCommunity> {
-        return supabaseClient.postgrest["communities"]
-            .select()
-            .decodeList<NetworkCommunity>()
+        return supabaseClient.postgrest["communities"].select().decodeList<NetworkCommunity>()
     }
 
-    override suspend fun updateUserProfile(
-        userId: String,
-        name: String,
-        bio: String,
-        profileImageUrl: String?
-    ) {
+    override suspend fun updateUserProfile(userId: String, name: String, bio: String, profileImageUrl: String?) {
         supabaseClient.postgrest["users"].update(
             {
                 set("name", name)
                 set("bio", bio)
                 set("profile_image_url", profileImageUrl)
             }
-        ) {
-            filter { eq("id", userId) }
-        }
+        ) { filter { eq("id", userId) } }
     }
 
     override suspend fun getTransactionsForUser(userId: String): List<NetworkTransaction> {
         return supabaseClient.postgrest["transactions"]
-            .select(Columns.raw("id, user_id, amount, time, posts(title)")) {
-                filter { eq("user_id", userId) }
-            }
+            .select(Columns.raw("id, user_id, amount, time, posts(title)")) { filter { eq("user_id", userId) } }
             .decodeList<NetworkTransaction>()
     }
 
@@ -97,6 +76,7 @@ class SupabaseNetworkDataSource @Inject constructor(
         return supabaseClient.postgrest["users"]
             .select {
                 order(column = sortByColumn, order = Order.DESCENDING)
+                limit(count = 50)
             }
             .decodeList<NetworkUser>()
     }
@@ -111,21 +91,14 @@ class SupabaseNetworkDataSource @Inject constructor(
         ).decodeAs<Boolean>()
     }
 
-    override suspend fun createCommunity(
-        community: NetworkCommunity,
-    ): NetworkCommunity {
-        return supabaseClient.postgrest["communities"]
-            .insert(community) {
-                select()
-            }
-            .decodeSingle<NetworkCommunity>()
+    override suspend fun createCommunity(community: NetworkCommunity): NetworkCommunity {
+        return supabaseClient.postgrest["communities"].insert(community) { select() }.decodeSingle<NetworkCommunity>()
     }
 
     override suspend fun getPostsForUser(userId: String): List<NetworkPost> {
         return supabaseClient.postgrest["posts"]
             .select {
                 filter {
-                    // Using PostgREST syntax to check if user_id OR solver_id matches
                     or {
                         NetworkPost::userId eq userId
                         NetworkPost::solverId eq userId
@@ -149,9 +122,7 @@ class SupabaseNetworkDataSource @Inject constructor(
 
     override suspend fun deleteCommunity(communityId: String): Boolean {
         return try {
-            supabaseClient.postgrest["communities"].delete {
-                filter { eq("id", communityId) }
-            }
+            supabaseClient.postgrest["communities"].delete { filter { eq("id", communityId) } }
             true
         } catch (e: Exception) {
             e.printStackTrace()
@@ -160,18 +131,21 @@ class SupabaseNetworkDataSource @Inject constructor(
     }
 
     override suspend fun updateCommunityDescription(communityId: String, description: String) {
-        supabaseClient.postgrest["communities"].update(
-            { set("description", description) }
-        ) {
-            filter { eq("id", communityId) }
-        }
+        supabaseClient.postgrest["communities"].update({ set("description", description) }) { filter { eq("id", communityId) } }
     }
 
-    override suspend fun getTopUser(sortByColumn: String): List<NetworkUser> {
+    // NEW: Search Users
+    override suspend fun searchUsers(communityId: String, query: String): List<NetworkUser> {
         return supabaseClient.postgrest["users"]
             .select {
-                order(sortByColumn, Order.DESCENDING)
-                limit(count = 50)
+                filter {
+                    // Case-insensitive search on the user's name
+                    ilike("name", "%$query%")
+
+                    // TODO: To strictly restrict this search to the selected community,
+                    // add your schema-specific filter here. For example:
+                    // eq("community_id", communityId)
+                }
             }
             .decodeList<NetworkUser>()
     }

@@ -27,4 +27,7 @@ object KithIcons {
     val StarRate = star_rate
     val Visibility = visibility
     val VisibilityOff = visibility_off
+    val Close = close
+    val ArrowDown = keyboard_double_arrow_down
+    val CheckCircle = check_circle
 }

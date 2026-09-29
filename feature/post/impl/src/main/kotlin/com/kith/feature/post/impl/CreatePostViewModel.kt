@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.kith.core.data.repository.CommunityRepository
 import com.kith.core.domain.CreatePostUseCase
 import com.kith.core.model.data.NewPostRequest
+import com.kith.core.model.data.User
+import com.kith.core.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,37 +18,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-//@HiltViewModel
-//class CreatePostViewModel @Inject constructor(
-//    private val createPostUseCase: CreatePostUseCase,
-//) : ViewModel() {
-//
-//    fun submitPost(title: String, content: String) {
-//        viewModelScope.launch {
-//            try {
-//                val request = NewPostRequest(
-//                    title = title,
-//                    content = content,
-//                    communityId = "7dcf257c-977d-4252-a18e-d7178774aabe",
-//                    reward = 20,
-//                    isInPerson = false,
-//                    imageUris = emptyList(),
-//                    pdfUri = null,
-//                    audioUri = null,
-//                )
-//
-//                createPostUseCase(request)
-//                Log.d("CREATE", "Success!")
-//            } catch (e: Exception) {
-//                Log.d("CREATE", "Failed!")
-//            }
-//        }
-//    }
-//}
 @HiltViewModel
 class CreatePostViewModel @Inject constructor(
     private val createPostUseCase: CreatePostUseCase,
-    communityRepository: CommunityRepository,
+    private val communityRepository: CommunityRepository,
+    userRepository: UserRepository,
 ) : ViewModel() {
 
     private val _formState = MutableStateFlow(CreatePostFormState())
@@ -54,6 +30,9 @@ class CreatePostViewModel @Inject constructor(
 
     private val _submissionState = MutableStateFlow<PostSubmissionState>(PostSubmissionState.Idle)
     val submissionState: StateFlow<PostSubmissionState> = _submissionState.asStateFlow()
+
+    private val _userSearchResults = MutableStateFlow<List<User>>(emptyList())
+    val userSearchResults: StateFlow<List<User>> = _userSearchResults.asStateFlow()
 
     val communitiesUiState: StateFlow<CommunitiesUiState> =
         communityRepository.getAvailableCommunities()
@@ -64,13 +43,43 @@ class CreatePostViewModel @Inject constructor(
                 initialValue = CommunitiesUiState.Loading,
             )
 
+    val isPremium: StateFlow<Boolean> = userRepository.getUserProfileStream()
+        .map { profile -> profile?.isPremium == true }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = false
+        )
+
     fun dismissSubmissionError() {
         _submissionState.value = PostSubmissionState.Idle
     }
 
-    fun createPost(isDraft: Boolean, currentForm: CreatePostFormState) {
+    fun searchUsersInCommunity(communityId: String?, query: String) {
+        if (query.isBlank() || communityId == null) {
+            _userSearchResults.value = emptyList()
+            return
+        }
+
+        viewModelScope.launch {
+            communityRepository.searchCommunityMembers(communityId, query)
+                .onSuccess { users ->
+                    @Suppress("UNCHECKED_CAST")
+                    _userSearchResults.value = users as List<User>
+                }
+                .onFailure { error ->
+                    _userSearchResults.value = emptyList()
+                    Log.e("CREATE_POST", "Failed to fetch users", error)
+                }
+        }
+    }
+
+    fun clearUserSearch() {
+        _userSearchResults.value = emptyList()
+    }
+
+    fun createPost(currentForm: CreatePostFormState) {
         if (!currentForm.isValid) {
-            // Tell the UI to show an error instead of failing silently
             _submissionState.value = PostSubmissionState.Error("Please fill in the title, description, and select a community.")
             Log.d("CREATE", "Reached here!")
             return
@@ -80,12 +89,17 @@ class CreatePostViewModel @Inject constructor(
             _submissionState.value = PostSubmissionState.Submitting
 
             try {
-                val currentState = communitiesUiState.value
-                val communityId = if (currentState is CommunitiesUiState.Success) {
-                    currentState.communities.find { it.name == currentForm.selectedCommunity }!!.id
-                } else {
-                    throw IllegalStateException("Communities not loaded")
+                val communityId = currentForm.selectedCommunity?.id
+                    ?: throw IllegalStateException("Community not selected")
+
+                val solverId = currentForm.selectedTargetUser?.id
+
+                val postStatus = when {
+                    currentForm.selectedTargetUser != null -> "ASSIGNED"
+                    else -> "OPEN"
                 }
+
+                Log.d("CREATE", postStatus)
 
                 val request = NewPostRequest(
                     title = currentForm.title,
@@ -96,7 +110,8 @@ class CreatePostViewModel @Inject constructor(
                     imageUris = currentForm.selectedImageUris,
                     pdfUri = currentForm.selectedPdfUri,
                     audioUri = currentForm.selectedAudioUri,
-                    isDraft = isDraft,
+                    status = postStatus,
+                    solverId = solverId
                 )
 
                 createPostUseCase(request)

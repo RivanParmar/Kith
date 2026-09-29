@@ -3,11 +3,10 @@ package com.kith.core.database.util
 import androidx.room.TypeConverter
 
 enum class SyncStatus(val code: Int) {
-    DRAFT(0),
-    SYNCED(1),
-    PENDING_CREATE(2),
-    PENDING_UPDATE(3),
-    PENDING_DELETE(4),
+    SYNCED(0),
+    PENDING_CREATE(1),
+    PENDING_UPDATE(2),
+    PENDING_DELETE(3),
 }
 
 internal class SyncStatusConverter {
