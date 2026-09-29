@@ -149,24 +149,45 @@ class SupabaseNetworkDataSource @Inject constructor(
             .decodeList<NetworkUser>()
     }
 
-    override suspend fun submitAnswer(postId: String, answer: String) {
+    override suspend fun submitAnswer(postId: String, answer: String, currentUserId: String) {
+//        val currentUserId = supabaseClient.auth.currentUserOrNull()?.id ?: ""
         supabaseClient.postgrest["posts"].update(
             {
                 set("answer", answer)
+                set("status", "pending")
+                set("solver_id", currentUserId)
             }
         ) {
             filter { eq("id", postId) }
         }
     }
 
-    override suspend fun updatePostSolutionStatus(postId: String, isAccepted: Boolean) {
-        supabaseClient.postgrest["posts"].update(
-            {
-                set("is_accepted", isAccepted)
+    override suspend fun acceptAnswer(postId: String) {
+        val post = getPostById(postId)
+        val solverId = post.solverId ?: return
+        val reward = post.reward
+
+        supabaseClient.postgrest.rpc(
+            function = "accept_answer",
+            parameters = buildJsonObject {
+                put("p_post_id", postId)
+                put("p_receiver_id", solverId)
+                put("p_amount", reward)
             }
-        ) {
-            filter { eq("id", postId) }
-        }
+        )
+    }
+
+    override suspend fun rejectAnswer(postId: String) {
+        val post = getPostById(postId)
+        val solverId = post.solverId ?: return
+
+        supabaseClient.postgrest.rpc(
+            function = "reject_answer",
+            parameters = buildJsonObject {
+                put("p_post_id", postId)
+                put("p_answerer_id", solverId)
+            }
+        )
     }
 
     override suspend fun deletePost(postId: String) {

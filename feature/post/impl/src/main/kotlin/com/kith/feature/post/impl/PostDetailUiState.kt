@@ -16,7 +16,7 @@ sealed interface PostDetailUiState {
         val isAuthor: Boolean = false,
         val isAcceptedByCurrentUser: Boolean = false,
         val solutionStatus: SolutionStatus = SolutionStatus.PENDING,
-        val userRating: Int = 5,
+        val userRating: Int = 0, // Defaults to 0 so the stars are empty initially
         val isSubmitting: Boolean = false,
         val isDeleting: Boolean = false
     ) : PostDetailUiState

@@ -12,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,7 +20,7 @@ import kotlin.time.Instant
 
 @HiltViewModel
 class PostDetailViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+    private val savedStateHandle: SavedStateHandle,
     private val postRepository: PostRepository,
     private val authRepository: AuthRepository
 ) : ViewModel() {
@@ -27,13 +28,15 @@ class PostDetailViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<PostDetailUiState>(PostDetailUiState.Loading)
     val uiState: StateFlow<PostDetailUiState> = _uiState.asStateFlow()
 
-    private val postId: String? = savedStateHandle["postId"]
+    // Using .get<String>() is safer and prevents NoClassDefFoundErrors on older dependency versions
+    private val postId: String? = savedStateHandle.get<String>("postId")
+        ?: savedStateHandle.get<String>("id")
 
     init {
         if (postId != null) {
             loadPostDetail(postId)
         } else {
-            _uiState.value = PostDetailUiState.Error("Post ID is missing")
+            _uiState.value = PostDetailUiState.Error("Post ID is missing in navigation")
         }
     }
 
@@ -41,33 +44,40 @@ class PostDetailViewModel @Inject constructor(
         viewModelScope.launch {
             val currentUserId = authRepository.currentUserId()
 
-            postRepository.getPostDetailStream(id).collect { postDetail ->
-                val isAuthor = currentUserId != null && currentUserId == postDetail.author.id
-                val initialStatus = if (postDetail.isAccepted) SolutionStatus.ACCEPTED else SolutionStatus.PENDING
+            postRepository.getPostDetailStream(id)
+                .catch { e ->
+                    // Prevent flow crashes if the DB throws an exception
+                    _uiState.value = PostDetailUiState.Error(e.message ?: "Failed to load post details")
+                }
+                .collect { postDetail ->
+                    val isAuthor = currentUserId != null && currentUserId == postDetail.author.id
+                    val backendStatus = if (postDetail.isAccepted) SolutionStatus.ACCEPTED else SolutionStatus.PENDING
 
-                _uiState.update { currentState ->
-                    if (currentState is PostDetailUiState.Success) {
-                        currentState.copy(
-                            post = postDetail,
-                            isAuthor = isAuthor,
-                            solutionStatus = initialStatus
-                        )
-                    } else {
-                        PostDetailUiState.Success(
-                            post = postDetail,
-                            isAuthor = isAuthor,
-                            solutionStatus = initialStatus
-                        )
+                    _uiState.update { currentState ->
+                        if (currentState is PostDetailUiState.Success) {
+                            currentState.copy(
+                                post = postDetail,
+                                isAuthor = isAuthor,
+                                solutionStatus = if (backendStatus == SolutionStatus.ACCEPTED) backendStatus else currentState.solutionStatus
+                            )
+                        } else {
+                            PostDetailUiState.Success(
+                                post = postDetail,
+                                isAuthor = isAuthor,
+                                solutionStatus = backendStatus,
+                                isAcceptedByCurrentUser = false
+                            )
+                        }
                     }
                 }
-            }
         }
 
+        // Background network sync
         viewModelScope.launch {
             try {
                 postRepository.syncPostById(id)
             } catch (_: Exception) {
-                // Background refresh fallback
+                // Fails silently, stream relies on offline-first cache
             }
         }
     }
@@ -75,10 +85,8 @@ class PostDetailViewModel @Inject constructor(
     fun onAcceptClick() {
         _uiState.update { currentState ->
             if (currentState is PostDetailUiState.Success) {
-                currentState.copy(isAcceptedByCurrentUser = !currentState.isAcceptedByCurrentUser)
-            } else {
-                currentState
-            }
+                currentState.copy(isAcceptedByCurrentUser = true)
+            } else currentState
         }
     }
 
@@ -87,7 +95,7 @@ class PostDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { if (it is PostDetailUiState.Success) it.copy(isSubmitting = true) else it }
             try {
-                postRepository.submitAnswer(id, answer)
+                postRepository.submitAnswer(id, answer, authRepository.currentUserId()!!)
                 _uiState.update { currentState ->
                     if (currentState is PostDetailUiState.Success) {
                         currentState.copy(isSubmitting = false, isAcceptedByCurrentUser = false)
@@ -101,7 +109,10 @@ class PostDetailViewModel @Inject constructor(
 
     fun onRateSolution(rating: Int) {
         val id = postId ?: return
+
+        // Optimistic UI update
         _uiState.update { if (it is PostDetailUiState.Success) it.copy(userRating = rating) else it }
+
         viewModelScope.launch {
             try {
                 postRepository.rateSolution(id, rating)
@@ -111,21 +122,25 @@ class PostDetailViewModel @Inject constructor(
 
     fun onAcceptSolution() {
         val id = postId ?: return
+        _uiState.update { if (it is PostDetailUiState.Success) it.copy(solutionStatus = SolutionStatus.ACCEPTED) else it }
         viewModelScope.launch {
             try {
                 postRepository.acceptSolution(id)
-                _uiState.update { if (it is PostDetailUiState.Success) it.copy(solutionStatus = SolutionStatus.ACCEPTED) else it }
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+                _uiState.update { if (it is PostDetailUiState.Success) it.copy(solutionStatus = SolutionStatus.PENDING) else it }
+            }
         }
     }
 
     fun onRejectSolution() {
         val id = postId ?: return
+        _uiState.update { if (it is PostDetailUiState.Success) it.copy(solutionStatus = SolutionStatus.REJECTED) else it }
         viewModelScope.launch {
             try {
                 postRepository.rejectSolution(id)
-                _uiState.update { if (it is PostDetailUiState.Success) it.copy(solutionStatus = SolutionStatus.REJECTED) else it }
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+                _uiState.update { if (it is PostDetailUiState.Success) it.copy(solutionStatus = SolutionStatus.PENDING) else it }
+            }
         }
     }
 
@@ -144,7 +159,7 @@ class PostDetailViewModel @Inject constructor(
 }
 
 // =============================================================================
-// SAMPLE DATA FOR PREVIEWS
+// SAMPLE DATA FOR PREVIEWS (Retained to prevent UI compilation errors)
 // =============================================================================
 
 val samplePostAuthor = User(

@@ -23,9 +23,11 @@ interface KithNetworkDataSource {
 
     suspend fun getTransactionsForUser(userId: String): List<NetworkTransaction>
 
-    suspend fun submitAnswer(postId: String, answer: String)
+    suspend fun submitAnswer(postId: String, answer: String, currentUserId: String)
 
-    suspend fun updatePostSolutionStatus(postId: String, isAccepted: Boolean)
+//    suspend fun updatePostSolutionStatus(postId: String, isAccepted: Boolean)
+
+    suspend fun acceptAnswer(postId: String)
 
     suspend fun deletePost(postId: String)
 
@@ -49,4 +51,7 @@ interface KithNetworkDataSource {
     suspend fun searchUsers(communityId: String, query: String): List<NetworkUser>
 
     suspend fun getJoinedCommunities(userId: String): List<NetworkCommunity>
+
+    suspend fun rejectAnswer(postId: String)
+
 }

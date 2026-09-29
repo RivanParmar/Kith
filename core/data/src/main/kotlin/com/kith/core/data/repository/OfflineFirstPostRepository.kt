@@ -78,18 +78,20 @@ class OfflineFirstPostRepository @Inject constructor(
         postDao.insertPost(networkPost.asEntity())
     }
 
-    override suspend fun submitAnswer(postId: String, answer: String) {
-        networkDataSource.submitAnswer(postId, answer)
+    override suspend fun submitAnswer(postId: String, answer: String, currentUserId: String) {
+        networkDataSource.submitAnswer(postId, answer, currentUserId)
         syncPostById(postId)
     }
 
     override suspend fun acceptSolution(postId: String) {
-        networkDataSource.updatePostSolutionStatus(postId, true)
+//        networkDataSource.updatePostSolutionStatus(postId, true)
+        networkDataSource.acceptAnswer(postId)
         syncPostById(postId)
     }
 
     override suspend fun rejectSolution(postId: String) {
-        networkDataSource.updatePostSolutionStatus(postId, false)
+//        networkDataSource.updatePostSolutionStatus(postId, false)
+        networkDataSource.rejectAnswer(postId)
         syncPostById(postId)
     }
 

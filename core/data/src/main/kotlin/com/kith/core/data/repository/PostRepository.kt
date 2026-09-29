@@ -12,7 +12,7 @@ interface PostRepository {
     suspend fun syncDataFromNetwork()
     suspend fun syncPostById(postId: String)
 
-    suspend fun submitAnswer(postId: String, answer: String)
+    suspend fun submitAnswer(postId: String, answer: String, currentUserId: String)
     suspend fun acceptSolution(postId: String)
     suspend fun rejectSolution(postId: String)
     suspend fun rateSolution(postId: String, rating: Int)
