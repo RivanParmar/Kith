@@ -14,6 +14,7 @@ import com.kith.core.model.data.Post
 
 fun LazyGridScope.postsFeed(
     feedState: PostsFeedUiState,
+    onPostClick: (String) -> Unit = { _ -> },
 ) {
     when (feedState) {
         PostsFeedUiState.Loading -> {
@@ -32,6 +33,7 @@ fun LazyGridScope.postsFeed(
                     modifier = Modifier
                         .padding(horizontal = 8.dp)
                         .animateItem(),
+                    onPostClick = onPostClick,
                 )
             }
         }

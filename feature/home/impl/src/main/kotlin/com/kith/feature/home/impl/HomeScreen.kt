@@ -40,6 +40,7 @@ import com.kith.feature.home.api.R
 fun HomeRoute(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
+    onPostClick: (String) -> Unit = { _ -> },
 ) {
     val feedState by viewModel.feedState.collectAsStateWithLifecycle()
     val walletUiState by viewModel.walletState.collectAsStateWithLifecycle()
@@ -51,6 +52,7 @@ fun HomeRoute(
         walletUiState = walletUiState,
         onSync = viewModel::sync,
         modifier = modifier,
+        onPostClick = onPostClick,
     )
 }
 
@@ -61,6 +63,7 @@ internal fun HomeScreen(
     walletUiState: WalletUiState,
     modifier: Modifier = Modifier,
     onSync: () -> Unit = {},
+    onPostClick: (String) -> Unit = { _ -> },
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -118,7 +121,10 @@ internal fun HomeScreen(
                     )
                 }
 
-                postsFeed(feedState = feedState)
+                postsFeed(
+                    feedState = feedState,
+                    onPostClick = onPostClick,
+                )
             }
         }
     }

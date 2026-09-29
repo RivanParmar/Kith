@@ -46,14 +46,14 @@ import kotlin.time.toJavaInstant
 fun PostCard(
     post: Post,
     modifier: Modifier = Modifier,
-    onPostClick: () -> Unit = {},
+    onPostClick: (String) -> Unit = { _ -> },
 ) {
     OutlinedCard(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight(),
         shape = RoundedCornerShape(16.dp),
-        onClick = onPostClick,
+        onClick = { onPostClick(post.id) },
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
