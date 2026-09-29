@@ -58,14 +58,13 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun KithTheme(
-    // 1. Ensure these parameters exist
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true, // Your default dynamic color setting
+    disableDynamicTheming: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
         // 2. Dynamic color logic (keep your existing logic here)
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        disableDynamicTheming && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }

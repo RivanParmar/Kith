@@ -2,6 +2,7 @@ package com.kith
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -10,6 +11,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
@@ -30,8 +32,13 @@ import com.kith.feature.home.api.navigation.HomeNavKey
 import com.kith.feature.onboarding.api.navigation.OnboardingNavKey
 import com.kith.ui.KithApp
 import com.kith.ui.rememberKithAppState
+import com.kith.util.isSystemInDarkTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
@@ -47,18 +54,18 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        // Removed static enableEdgeToEdge() here; it will be called dynamically in the flow below.
+
+        // Initialize with default/system values to prevent flashes before state loads
+        var themeSettings by mutableStateOf(
+            ThemeSettings(
+                darkTheme = resources.configuration.isSystemInDarkTheme, // Or set a default based on your UI state
+                disableDynamicTheming = true, // Or set a default based on your UI state
+            )
+        )
 
         var uiState: MainActivityUiState by mutableStateOf(MainActivityUiState.Loading)
-
-        lifecycleScope.launch {
-            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect {
-                    uiState = it
-                }
-            }
-        }
-
         var isMinSplashTimeElapsed by mutableStateOf(savedInstanceState != null)
 
         if (savedInstanceState == null) {
@@ -68,12 +75,49 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        // Update the uiState and ThemeSettings dynamically
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                combine(
+                    isSystemInDarkTheme(), // Listens to system theme changes
+                    viewModel.uiState,
+                ) { systemDark, state ->
+                    uiState = state
+                    ThemeSettings(
+                        // Assumes you have these properties on MainActivityUiState like NiA does
+                        darkTheme = state.shouldUseDarkTheme(systemDark),
+                        disableDynamicTheming = state.shouldDisableDynamicTheming,
+                    )
+                }
+                    .onEach { themeSettings = it }
+                    .map { it.darkTheme }
+                    .distinctUntilChanged()
+                    .collect { darkTheme ->
+                        // Dynamically update EdgeToEdge when theme preference changes
+                        enableEdgeToEdge(
+                            statusBarStyle = SystemBarStyle.auto(
+                                lightScrim = android.graphics.Color.TRANSPARENT,
+                                darkScrim = android.graphics.Color.TRANSPARENT,
+                            ) { darkTheme },
+                            navigationBarStyle = SystemBarStyle.auto(
+                                lightScrim = lightScrim,
+                                darkScrim = darkScrim,
+                            ) { darkTheme },
+                        )
+                    }
+            }
+        }
+
         splashScreen.setKeepOnScreenCondition {
-            viewModel.uiState.value.shouldKeepSplashScreen() || !isMinSplashTimeElapsed
+            uiState.shouldKeepSplashScreen() || !isMinSplashTimeElapsed
         }
 
         setContent {
-            KithTheme {
+            // Pass the dynamically updated settings to your theme
+            KithTheme(
+                darkTheme = themeSettings.darkTheme,
+                disableDynamicTheming = themeSettings.disableDynamicTheming,
+            ) {
                 when (val state = uiState) {
                     is MainActivityUiState.Loading -> {
                         Box(modifier = Modifier.fillMaxSize()) {
@@ -115,3 +159,21 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+/**
+ * The default light scrim, as defined by androidx and the platform.
+ */
+private val lightScrim = android.graphics.Color.argb(0xe6, 0xFF, 0xFF, 0xFF)
+
+/**
+ * The default dark scrim, as defined by androidx and the platform.
+ */
+private val darkScrim = android.graphics.Color.argb(0x80, 0x1b, 0x1b, 0x1b)
+
+/**
+ * Class for the system theme settings.
+ */
+data class ThemeSettings(
+    val darkTheme: Boolean,
+    val disableDynamicTheming: Boolean,
+)
