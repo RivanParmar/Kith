@@ -2,6 +2,7 @@ package com.kith
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -10,8 +11,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -24,6 +27,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.kith.core.data.util.NetworkMonitor
 import com.kith.core.designsystem.component.LoadingWheel
 import com.kith.core.designsystem.theme.KithTheme
+import com.kith.core.model.data.DarkThemeConfig
 import com.kith.feature.auth.api.navigation.SignInNavKey
 import com.kith.feature.home.api.navigation.HomeNavKey
 import com.kith.feature.onboarding.api.navigation.OnboardingNavKey
@@ -72,7 +76,37 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            KithTheme {
+            val darkTheme = when (val state = uiState) {
+                MainActivityUiState.Loading -> isSystemInDarkTheme()
+                is MainActivityUiState.Success -> when (state.userData.darkThemeConfig) {
+                    DarkThemeConfig.FOLLOW_SYSTEM -> isSystemInDarkTheme()
+                    DarkThemeConfig.LIGHT -> false
+                    DarkThemeConfig.DARK -> true
+                }
+            }
+            val dynamicColor = when (val state = uiState) {
+                MainActivityUiState.Loading -> true
+                is MainActivityUiState.Success -> state.userData.useDynamicColor
+            }
+
+            DisposableEffect(darkTheme) {
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.auto(
+                        android.graphics.Color.TRANSPARENT,
+                        android.graphics.Color.TRANSPARENT,
+                    ) { darkTheme },
+                    navigationBarStyle = SystemBarStyle.auto(
+                        android.graphics.Color.TRANSPARENT,
+                        android.graphics.Color.TRANSPARENT,
+                    ) { darkTheme },
+                )
+                onDispose {}
+            }
+
+            KithTheme(
+                darkTheme = darkTheme,
+                dynamicColor = dynamicColor,
+            ) {
                 when (val state = uiState) {
                     is MainActivityUiState.Loading -> {
                         Box(modifier = Modifier.fillMaxSize()) {

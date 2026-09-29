@@ -5,9 +5,10 @@ option java_multiple_files = true;
 
 import "com/kith/data/dark_theme_config.proto";
 
-// NEXT AVAILABLE ID: 5
+// NEXT AVAILABLE ID: 6
 message UserPreferences {
   DarkThemeConfigProto dark_theme_config = 1;
+  optional bool use_dynamic_color = 2;
   bool push_notifications_enabled = 3;
   bool has_done_onboarding = 4;
   int64 last_login_timestamp = 5;

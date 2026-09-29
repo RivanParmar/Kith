@@ -17,6 +17,10 @@ class OfflineFirstUserDataRepository @Inject constructor(
         kithPreferencesDataSource.setDarkThemeConfig(darkThemeConfig)
     }
 
+    override suspend fun setDynamicColorPreference(useDynamicColor: Boolean) {
+        kithPreferencesDataSource.setDynamicColorPreference(useDynamicColor)
+    }
+
     override suspend fun setPushNotificationsEnabled(enabled: Boolean) {
         kithPreferencesDataSource.setPushNotificationsEnabled(enabled)
     }

@@ -94,18 +94,10 @@ fun KithApp(
                 }
 
                 NavDisplay(
-    navigator = navigator,
-    entryProvider = entryProvider, // Fixed parameter name
-    transitionSpec = {
-        // If sliding into the profile screen, slide up
-        if (targetState.key == "profile") {
-            slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up, tween(400)) togetherWith 
-            slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down, tween(400))
-        } else {
-            // Default crossfade for other screens
-            fadeIn(tween(300)) togetherWith fadeOut(tween(300))
+                    entries = appState.navigationState.toEntries(entryProvider),
+                    onBack = { navigator.goBack() },
+                )
+            }
         }
     }
-)
-
-                 
+}
