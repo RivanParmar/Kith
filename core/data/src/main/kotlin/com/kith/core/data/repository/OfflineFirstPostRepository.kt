@@ -1,58 +1,176 @@
 package com.kith.core.data.repository
 
+import android.util.Log
 import com.kith.core.data.model.asCommunityEntity
 import com.kith.core.data.model.asEntity
+import com.kith.core.data.model.asNetworkModel
 import com.kith.core.data.model.asUserEntity
 import com.kith.core.database.dao.CommunityDao
 import com.kith.core.database.dao.PostDao
 import com.kith.core.database.dao.UserDao
+import com.kith.core.database.model.PostEntity
 import com.kith.core.database.model.asExternalModel
+import com.kith.core.database.model.asPostDetail
+import com.kith.core.database.util.PostStatus
+import com.kith.core.database.util.SyncStatus
+import com.kith.core.model.data.NewPostRequest
 import com.kith.core.model.data.Post
-import com.kith.core.network.supabase.SupabaseNetworkDataSource
+import com.kith.core.model.data.PostDetail
+import com.kith.core.network.KithNetworkDataSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import kotlin.time.Clock
 
 class OfflineFirstPostRepository @Inject constructor(
     private val postDao: PostDao,
     private val userDao: UserDao,
     private val communityDao: CommunityDao,
-    private val networkDataSource: SupabaseNetworkDataSource
+    private val networkDataSource: KithNetworkDataSource
 ) : PostRepository {
 
-    // Added 'override' keyword
     override fun getAllPostsStream(): Flow<List<Post>> {
         return postDao.getAllPostsStream().map { entities ->
             entities.map { it.asExternalModel() }
         }
     }
 
-    // Added 'override' keyword
+    override fun getPostDetailStream(postId: String): Flow<PostDetail> {
+        return postDao.getPostDetailStream(postId).map { populatedPostEntity ->
+            populatedPostEntity.asPostDetail()
+        }
+    }
+
+    override fun getPostsByUserIdStream(userId: String): Flow<List<Post>> {
+        return postDao.getPostsByUserIdStream(userId).map { entities ->
+            entities.map { it.asExternalModel() }
+        }
+    }
+
     override suspend fun syncDataFromNetwork() {
-        // 1. Fetch posts (pass whatever limit makes sense for your UI)
         val networkPosts = networkDataSource.getPosts(limit = 20)
 
-        // 2. Extract unique IDs so we don't spam the network with duplicate requests
         val uniqueUserIds = networkPosts.map { it.userId }.toSet()
         val uniqueCommunityIds = networkPosts.map { it.communityId }.toSet()
 
-        // 3. Dynamically fetch and insert missing Users
         uniqueUserIds.forEach { id ->
             val user = networkDataSource.getUserById(id)
             userDao.upsertUser(user.asUserEntity())
         }
 
-        // 4. Dynamically fetch and insert missing Communities
         uniqueCommunityIds.forEach { id ->
             val community = networkDataSource.getCommunityById(id)
-            // Finds the userId of the first post that requested this community to satisfy your mapper function
-            val associatedUserId = networkPosts.first { it.communityId == id }.userId
-            communityDao.upsertCommunity(community.asCommunityEntity(associatedUserId))
+            communityDao.upsertCommunity(community.asCommunityEntity())
         }
 
-        // 5. Insert Posts LAST to satisfy Room's Foreign Key constraints
         networkPosts.forEach { networkPost ->
             postDao.insertPost(networkPost.asEntity())
         }
+    }
+
+    override suspend fun syncPostById(postId: String) {
+        val networkPost = networkDataSource.getPostById(postId)
+        val user = networkDataSource.getUserById(networkPost.userId)
+        val community = networkDataSource.getCommunityById(networkPost.communityId)
+
+        userDao.upsertUser(user.asUserEntity())
+        communityDao.upsertCommunity(community.asCommunityEntity())
+        postDao.insertPost(networkPost.asEntity())
+    }
+
+    override suspend fun submitAnswer(postId: String, answer: String) {
+        networkDataSource.submitAnswer(postId, answer)
+        syncPostById(postId)
+    }
+
+    override suspend fun acceptSolution(postId: String) {
+        networkDataSource.updatePostSolutionStatus(postId, true)
+        syncPostById(postId)
+    }
+
+    override suspend fun rejectSolution(postId: String) {
+        networkDataSource.updatePostSolutionStatus(postId, false)
+        syncPostById(postId)
+    }
+
+    override suspend fun rateSolution(postId: String, rating: Int) {
+        networkDataSource.rateSolution(postId, rating)
+    }
+
+    override suspend fun syncUserPosts(userId: String) {
+        val userPosts = networkDataSource.getPostsForUser(userId)
+        if (userPosts.isEmpty()) return
+
+        val uniqueCommunityIds = userPosts.map { it.communityId }.toSet()
+        uniqueCommunityIds.forEach { id ->
+            try {
+                val community = networkDataSource.getCommunityById(id)
+                communityDao.upsertCommunity(community.asCommunityEntity())
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        userPosts.forEach { networkPost ->
+            postDao.insertPost(networkPost.asEntity())
+        }
+    }
+
+    override suspend fun createDraft(
+        postId: String,
+        userId: String,
+        request: NewPostRequest,
+    ) {
+        val now = Clock.System.now()
+
+        val syncStatus = if (request.isDraft) SyncStatus.DRAFT else SyncStatus.PENDING_CREATE
+
+        val entity = PostEntity(
+            id = postId,
+            userId = userId,
+            communityId = request.communityId,
+            title = request.title,
+            content = request.content,
+            status = PostStatus.OPEN,
+            reward = request.reward,
+            isInPerson = request.isInPerson,
+            userImageCount = request.imageUris.size,
+            userHasPdf = request.pdfUri != null,
+            userHasAudio = request.audioUri != null,
+            answer = null,
+            solverId = null,
+            solverImageCount = 0,
+            solverHasPdf = false,
+            solverHasAudio = false,
+            createdAt = now,
+            updatedAt = now,
+            syncStatus = syncStatus,
+        )
+        Log.d("CREATE", "Created entity!")
+
+        syncDataFromNetwork()
+        postDao.insertPost(entity)
+        Log.d("CREATE", "Inserted into database!")
+    }
+
+    override suspend fun publishPostToNetwork(postId: String) {
+        val entity = postDao.getPostById(postId) ?: return
+
+        try {
+            networkDataSource.createPost(entity.asNetworkModel())
+
+            postDao.updateSyncStatus(postId, SyncStatus.SYNCED)
+            Log.d("CREATE", "Success!")
+        } catch (e: Exception) {
+            // Leave as PENDING_CREATE for background SyncManager to retry
+            Log.d("CREATE", "Failed!")
+            Log.d("CREATE", e.toString())
+        }
+    }
+
+    override suspend fun deletePost(postId: String) {
+        networkDataSource.deletePost(postId)
+//        postDao.deletePostById(postId)
+        // TODO
     }
 }

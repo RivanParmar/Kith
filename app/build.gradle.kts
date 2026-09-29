@@ -3,6 +3,7 @@ import com.kith.KithBuildType
 plugins {
     alias(libs.plugins.kith.android.application)
     alias(libs.plugins.kith.android.application.compose)
+    alias(libs.plugins.kith.android.application.firebase)
     alias(libs.plugins.kith.hilt)
     alias(libs.plugins.kotlin.serialization)
 }

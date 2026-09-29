@@ -88,7 +88,7 @@ val Typography = Typography(
     ),
     titleSmall = TextStyle(
         fontFamily = OutfitFontFamily,
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.Medium, // Compose will now automatically use outfit_medium.ttf
         fontSize = 14.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.1.sp,
@@ -102,7 +102,7 @@ val Typography = Typography(
     ),
     bodyMedium = TextStyle(
         fontFamily = InterFontFamily,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Normal, // Compose will now automatically use inter_regular.ttf
         fontSize = 14.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.25.sp,

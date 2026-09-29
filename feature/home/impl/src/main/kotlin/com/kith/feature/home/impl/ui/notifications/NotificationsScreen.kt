@@ -1,7 +1,8 @@
 package com.kith.feature.home.impl.ui.notifications
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -15,26 +16,29 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.ui.tooling.preview.Preview
 import com.kith.core.designsystem.component.LoadingWheel
 import com.kith.core.model.data.Notification
+import kotlin.time.Clock
 
 @Composable
 fun NotificationsRoute(
     modifier: Modifier = Modifier,
-    viewModel: NotificationsViewModel = hiltViewModel()
+    viewModel: NotificationsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -43,22 +47,6 @@ fun NotificationsRoute(
         onNotificationClick = viewModel::markAsRead,
         modifier = modifier
     )
-}
-
-@Preview
-@Composable
-fun NotificationsScreenPreview() {
-    MaterialTheme {
-        NotificationsScreen(
-            uiState = NotificationsUiState.Success(
-                listOf(
-                    Notification("1", "Stuck on React Hook state update bug", "1,240", false),
-                    Notification("2", "Another bug", "1,000", true)
-                )
-            ),
-            onNotificationClick = {}
-        )
-    }
 }
 
 @Composable
@@ -83,26 +71,57 @@ fun NotificationsScreen(
 
         when (uiState) {
             is NotificationsUiState.Loading -> {
-                LoadingWheel(contentDesc = "Loading notifications", modifier = Modifier.fillMaxSize())
-            }
-            is NotificationsUiState.Error -> {
-                Text(
-                    text = uiState.message,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(24.dp)
-                )
-            }
-            is NotificationsUiState.Success -> {
-                LazyColumn(
+                Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp)
+                    contentAlignment = Alignment.Center
                 ) {
-                    items(uiState.notifications, key = { it.id }) { notification ->
-                        NotificationCard(
-                            notification = notification,
-                            onClick = { onNotificationClick(notification.id) }
+                    LoadingWheel(contentDesc = "Loading notifications")
+                }
+            }
+
+            is NotificationsUiState.Error -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = uiState.message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
+
+            is NotificationsUiState.Success -> {
+                if (uiState.notifications.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No notifications yet",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyLarge
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(
+                            items = uiState.notifications,
+                            key = { it.id }
+                        ) { notification ->
+                            NotificationCard(
+                                notification = notification,
+                                onClick = { onNotificationClick(notification.id) }
+                            )
+                        }
                     }
                 }
             }
@@ -127,33 +146,79 @@ fun NotificationCard(
     } else {
         MaterialTheme.colorScheme.onPrimary
     }
-    
+
     val subtitleColor = if (notification.isRead) {
         MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
     } else {
-        MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+        MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(backgroundColor)
-            .clickable(onClick = onClick)
-            .padding(16.dp)
-    ) {
-        Text(
-            text = notification.title,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = contentColor,
-            lineHeight = 22.sp
+    Card(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = backgroundColor,
+            contentColor = contentColor
         )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "${notification.memberCount} Members",
-            fontSize = 14.sp,
-            color = subtitleColor
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = notification.title,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = contentColor,
+                lineHeight = 22.sp
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = notification.body,
+                fontSize = 14.sp,
+                color = subtitleColor
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun NotificationsScreenPreview() {
+    MaterialTheme {
+        NotificationsScreen(
+            uiState = NotificationsUiState.Success(
+                listOf(
+                    Notification(
+                        id = "1",
+                        title = "Stuck on React Hook state update bug",
+                        body = "1,240 active members",
+                        postId = "1",
+                        timestamp = Clock.System.now(),
+                        isRead = false,
+                    ),
+                    Notification(
+                        id = "2",
+                        title = "How to center a div in Tailwind CSS",
+                        body = "1,000 active members",
+                        postId = "2",
+                        timestamp = Clock.System.now(),
+                        isRead = true,
+                    )
+                )
+            ),
+            onNotificationClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun NotificationsScreenEmptyPreview() {
+    MaterialTheme {
+        NotificationsScreen(
+            uiState = NotificationsUiState.Success(emptyList()),
+            onNotificationClick = {}
         )
     }
 }

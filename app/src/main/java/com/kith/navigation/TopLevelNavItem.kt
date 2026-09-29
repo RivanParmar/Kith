@@ -6,7 +6,7 @@ import com.kith.core.designsystem.icon.KithIcons
 import com.kith.feature.browse.api.navigation.BrowseNavKey
 import com.kith.feature.home.api.navigation.HomeNavKey
 import com.kith.feature.leaderboard.api.navigation.LeaderboardNavKey
-import com.kith.feature.post.api.navigation.PostNavKey
+import com.kith.feature.post.api.navigation.CreatePostNavKey
 import com.kith.feature.profile.api.navigation.ProfileNavKey
 import com.kith.feature.browse.api.R as browseR
 import com.kith.feature.home.api.R as homeR
@@ -59,7 +59,7 @@ val PROFILE = TopLevelNavItem(
 val TOP_LEVEL_NAV_ITEMS = mapOf(
     HomeNavKey to HOME,
     BrowseNavKey to BROWSE,
-    PostNavKey to POST,
+    CreatePostNavKey to POST,
     LeaderboardNavKey to LEADERBOARD,
     ProfileNavKey to PROFILE,
 )

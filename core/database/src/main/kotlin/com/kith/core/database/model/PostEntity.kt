@@ -23,9 +23,21 @@ data class PostEntity(
     val reward: Int,
     @ColumnInfo(name = "is_in_person")
     val isInPerson: Boolean,
+    @ColumnInfo(name = "user_image_count", defaultValue = "0")
+    val userImageCount: Int,
+    @ColumnInfo(name = "user_has_pdf", defaultValue = "false")
+    val userHasPdf: Boolean,
+    @ColumnInfo(name = "user_has_audio", defaultValue = "false")
+    val userHasAudio: Boolean,
     val answer: String?,
     @ColumnInfo(name = "solver_id")
     val solverId: String?,
+    @ColumnInfo(name = "solver_image_count", defaultValue = "0")
+    val solverImageCount: Int,
+    @ColumnInfo(name = "solver_has_pdf", defaultValue = "false")
+    val solverHasPdf: Boolean,
+    @ColumnInfo(name = "solver_has_audio", defaultValue = "false")
+    val solverHasAudio: Boolean,
     @ColumnInfo(name = "created_at")
     val createdAt: Instant,
     @ColumnInfo(name = "updated_at")

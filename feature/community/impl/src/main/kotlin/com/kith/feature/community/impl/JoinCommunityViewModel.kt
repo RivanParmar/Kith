@@ -3,7 +3,7 @@ package com.kith.feature.community.impl
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kith.core.data.repository.CommunityRepository
-import com.kith.core.network.model.NetworkCommunity
+import com.kith.core.model.data.Community
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.collections.find
 
 @HiltViewModel
 class JoinCommunityViewModel @Inject constructor(
@@ -22,7 +21,7 @@ class JoinCommunityViewModel @Inject constructor(
     val uiState: StateFlow<JoinCommunityUiState> = _uiState.asStateFlow()
 
     // Cached in memory for matching name -> id
-    private var serverCommunities: List<NetworkCommunity> = emptyList()
+    private var serverCommunities: List<Community> = emptyList()
 
     init {
         fetchCommunitiesFromServer()

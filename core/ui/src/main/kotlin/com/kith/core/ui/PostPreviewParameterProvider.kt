@@ -43,12 +43,18 @@ object KithPreviewData {
         Community(
             id = "c1",
             name = "CS 101",
-            imageUrl = null
+            imageUrl = null,
+            description = TODO(),
+            creatorId = TODO(),
+            memberCount = TODO(),
         ),
         Community(
             id = "c2",
             name = "General",
-            imageUrl = null
+            imageUrl = null,
+            description = TODO(),
+            creatorId = TODO(),
+            memberCount = TODO()
         )
     )
 
@@ -61,7 +67,8 @@ object KithPreviewData {
             author = users[0],
             community = communities[0],
             createdAt = Clock.System.now(),
-            isInPerson = false
+            isInPerson = false,
+            status = TODO(),
         ),
         Post(
             id = "p2",
@@ -71,7 +78,8 @@ object KithPreviewData {
             author = users[1],
             community = communities[1],
             createdAt = Clock.System.now(),
-            isInPerson = true
+            isInPerson = true,
+            status = TODO(),
         ),
         Post(
             id = "p3",
@@ -81,7 +89,8 @@ object KithPreviewData {
             author = users[2],
             community = communities[1],
             createdAt = Clock.System.now(),
-            isInPerson = true
+            isInPerson = true,
+            status = TODO(),
         ),
 
     )

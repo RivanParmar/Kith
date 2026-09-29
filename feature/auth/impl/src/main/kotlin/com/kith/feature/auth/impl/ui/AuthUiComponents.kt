@@ -56,7 +56,7 @@ internal fun WaveHeader(
          Image(
              painter = painterResource(R.drawable.wave_backgroundimage),
              contentDescription = null,
-             contentScale = ContentScale.Fit,
+             contentScale = ContentScale.Crop,
              modifier = Modifier.matchParentSize(),
          )
 

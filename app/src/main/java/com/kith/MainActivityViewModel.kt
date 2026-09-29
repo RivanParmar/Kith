@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.kith.MainActivityUiState.Loading
 import com.kith.MainActivityUiState.Success
 import com.kith.core.data.repository.AuthRepository
+import com.kith.core.data.repository.CommunityRepository
 import com.kith.core.data.repository.UserDataRepository
 import com.kith.core.model.data.UserData
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,13 +19,15 @@ import javax.inject.Inject
 class MainActivityViewModel @Inject constructor(
     userDataRepository: UserDataRepository,
     authRepository: AuthRepository,
+    communityRepository: CommunityRepository,
 ) : ViewModel() {
 
     val uiState: StateFlow<MainActivityUiState> = combine(
         userDataRepository.userData,
-        authRepository.sessionStatus
-    ) { userData, isSignedIn ->
-        Success(userData, isSignedIn)
+        authRepository.sessionStatus,
+        communityRepository.hasJoinedAnyCommunity,
+    ) { userData, isSignedIn, hasJoinedCommunity ->
+        Success(userData, isSignedIn, hasJoinedCommunity)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -38,6 +41,7 @@ sealed interface MainActivityUiState {
     data class Success(
         val userData: UserData,
         val isSignedIn: Boolean,
+        val hasJoinedCommunity: Boolean,
     ) : MainActivityUiState {
         override val shouldShowOnboarding: Boolean =
             !userData.shouldHideOnboarding

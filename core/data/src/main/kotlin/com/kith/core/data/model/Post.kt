@@ -12,13 +12,39 @@ fun NetworkPost.asEntity() = PostEntity(
     title = title,
     content = content,
     reward = reward,
-    // Parsing Supabase ISO-8601 strings into Instants
+    userImageCount = userImageCount,
+    userHasPdf = userHasPdf,
+    userHasAudio = userHasAudio,
     createdAt = createdAt,
     updatedAt = updatedAt,
-    // Supplying the missing fields required by your Room Entity
     status = PostStatus.valueOf(status.uppercase()),
     solverId = solverId,
     answer = answer,
+    solverImageCount = solverImageCount,
+    solverHasPdf = solverHasPdf,
+    solverHasAudio = solverHasAudio,
     isInPerson = isInPerson,
-    syncStatus = SyncStatus.SYNCED
+    syncStatus = SyncStatus.SYNCED,
+)
+
+fun PostEntity.asNetworkModel() = NetworkPost(
+    id = id,
+    userId = userId,
+    communityId = communityId,
+    title = title,
+    content = content,
+    status = status.name.lowercase(),
+    userImageCount = userImageCount,
+    userHasPdf = userHasPdf,
+    userHasAudio = userHasAudio,
+    answer = answer,
+    reward = reward,
+    isInPerson = isInPerson,
+    solverId = solverId,
+    solverImageCount = solverImageCount,
+    solverHasPdf = solverHasPdf,
+    solverHasAudio = solverHasAudio,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    solvedAt = null,
 )

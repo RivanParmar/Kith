@@ -55,7 +55,8 @@ fun ProfileScreen(
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel = hiltViewModel(),
     onWalletClick: () -> Unit = {},
-    onNavigateToLogin: () -> Unit = {}, // Added navigation callback
+    onPostHistoryClick: () -> Unit = {},
+    onNavigateToLogin: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -63,6 +64,7 @@ fun ProfileScreen(
         uiState = uiState,
         modifier = modifier,
         onWalletClick = onWalletClick,
+        onPostHistoryClick = onPostHistoryClick,
         onLogoutClick = {
             viewModel.logout(onSuccess = onNavigateToLogin)
         },
@@ -76,6 +78,7 @@ internal fun ProfileScreen(
     modifier: Modifier = Modifier,
     onWalletClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
+    onPostHistoryClick: () -> Unit = {},
     onEditProfile: (name: String, bio: String, imageUrl: String?) -> Unit = { _, _, _, -> },
 ) {
     when (uiState) {
@@ -227,6 +230,14 @@ internal fun ProfileScreen(
                         HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
 
                         ProfileMenuItem(
+                            icon = KithIcons.Crown, // Feel free to change to KithIcons.History if you have it
+                            label = "Post History",
+                            onClick = onPostHistoryClick,
+                        )
+
+                        HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
+
+                        ProfileMenuItem(
                             icon = KithIcons.Crown,
                             label = "Upgrade to Premium",
                             labelColor = Color(0xFF3B82F6),
@@ -293,7 +304,7 @@ internal fun ProfileScreen(
                     initialImageUrl = uiState.userProfile.profileImageUrl,
                     onDismiss = { openEditProfileDialog = false },
                     onSave = { name, bio, imageUrl ->
-                             onEditProfile(name, bio, imageUrl)
+                        onEditProfile(name, bio, imageUrl)
                         openEditProfileDialog = false },
                 )
             }
@@ -457,6 +468,7 @@ fun ProfileScreenPreview() {
                 )
             ),
             onWalletClick = {},
+            onPostHistoryClick = {},
             onLogoutClick = {},
         )
     }
