@@ -63,5 +63,7 @@ include(":feature:post:api")
 include(":feature:post:impl")
 include(":feature:profile:api")
 include(":feature:profile:impl")
+include(":feature:paywall:api")
+include(":feature:paywall:impl")
 
 include(":sync:work")

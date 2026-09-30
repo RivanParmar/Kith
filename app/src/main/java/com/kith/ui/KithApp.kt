@@ -44,6 +44,7 @@ import com.kith.feature.leaderboard.impl.navigation.leaderboardEntry
 import com.kith.feature.onboarding.impl.navigation.onboardingEntry
 import com.kith.feature.post.impl.navigation.postEntry
 import com.kith.feature.profile.impl.navigation.profileEntry
+import com.kith.feature.paywall.impl.navigation.paywallEntry
 import com.kith.navigation.TOP_LEVEL_NAV_ITEMS
 
 // Import the CompositionLocal and Helper we just defined in CreatePostScreen.kt
@@ -158,6 +159,7 @@ fun KithApp(
                         onboardingEntry(navigator)
                         postEntry(navigator)
                         profileEntry(navigator)
+                        paywallEntry(navigator)
                     }
 
                 NavDisplay(
