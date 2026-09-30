@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kith.core.data.repository.LeaderboardRepository
 import com.kith.core.model.data.UserProfile
+import com.kith.core.network.KithAuthDataSource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +20,10 @@ import javax.inject.Inject
 @HiltViewModel
 class LeaderboardViewModel @Inject constructor(
     private val leaderboardRepository: LeaderboardRepository,
+    authDataSource: KithAuthDataSource,
 ) : ViewModel() {
+
+    val currentUserId = authDataSource.currentUserId()
 
     private val _selectedSortBy = MutableStateFlow(LeaderboardTab.BY_XP)
     val selectedSortBy: StateFlow<LeaderboardTab> = _selectedSortBy.asStateFlow()

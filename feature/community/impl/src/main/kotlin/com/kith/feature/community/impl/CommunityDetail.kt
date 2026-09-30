@@ -43,10 +43,18 @@ import com.kith.core.designsystem.icon.KithIcons
 
 @Composable
 fun CommunityDetailScreen(
+    communityId: String,
     onBackClick: () -> Unit,
     onNavigateUp: () -> Unit, // Called after leaving/deleting
-    viewModel: CommunityDetailViewModel = hiltViewModel()
 ) {
+    // 1. Properly invoke the AssistedInject Factory for Compose
+    val viewModel = hiltViewModel<CommunityDetailViewModel, CommunityDetailViewModel.Factory>(
+        creationCallback = { factory ->
+            factory.create(communityId)
+        }
+    )
+
+    // 2. Safely collect the state
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     when (uiState) {

@@ -2,4 +2,5 @@
 <resources>
     <string name="feature_profile_api_title">Profile</string>
     <string name="feature_profile_api_transactions_title">Transactions</string>
+    <string name="feature_profile_api_post_history_title">Post History</string>
 </resources>

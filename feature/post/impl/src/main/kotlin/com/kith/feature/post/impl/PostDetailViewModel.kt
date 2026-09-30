@@ -28,7 +28,7 @@ import kotlin.time.Instant
 private data class PostTransientState(
     val isAcceptedByCurrentUser: Boolean = false,
     val solutionStatus: SolutionStatus? = null,
-    val userRating: Int = 5,
+    val userRating: Float = 5f,
     val isSubmitting: Boolean = false,
     val isDeleting: Boolean = false
 )
@@ -41,10 +41,8 @@ class PostDetailViewModel @AssistedInject constructor(
     val mediaRepository: MediaRepository,
 ) : ViewModel() {
 
-    // Manage only the transient UI state manually
     private val transientState = MutableStateFlow(PostTransientState())
 
-    // 2. The NiA Reactive Pipeline
     val uiState: StateFlow<PostDetailUiState> = postDetailUiState(
         postId = postId,
         postRepository = postRepository,
@@ -58,13 +56,10 @@ class PostDetailViewModel @AssistedInject constructor(
     )
 
     init {
-        // Trigger background network sync exactly like NiA does for topics
         viewModelScope.launch {
             try {
                 postRepository.syncPostById(postId)
-            } catch (_: Exception) {
-                // Background refresh fallback
-            }
+            } catch (_: Exception) { }
         }
     }
 
@@ -76,19 +71,20 @@ class PostDetailViewModel @AssistedInject constructor(
         viewModelScope.launch {
             transientState.update { it.copy(isSubmitting = true) }
             try {
-                postRepository.submitAnswer(postId, answer, authRepository.currentUserId()!!)
+                val solverId = authRepository.currentUserId() ?: return@launch
+                postRepository.submitAnswer(postId, answer, solverId)
                 transientState.update { it.copy(isSubmitting = false, isAcceptedByCurrentUser = false) }
-            } catch (e: Exception) {
+            } catch (_: Exception) { // FIX: Changed e to _ to clear warning
                 transientState.update { it.copy(isSubmitting = false) }
             }
         }
     }
 
-    fun onRateSolution(rating: Int) {
-        transientState.update { it.copy(userRating = rating) }
+    fun onRateSolution(rating: Float) {
         viewModelScope.launch {
             try {
                 postRepository.rateSolution(postId, rating)
+                transientState.update { it.copy(userRating = rating) }
             } catch (_: Exception) {}
         }
     }
@@ -98,9 +94,7 @@ class PostDetailViewModel @AssistedInject constructor(
         viewModelScope.launch {
             try {
                 postRepository.acceptSolution(postId)
-            } catch (e: Exception) {
-                android.util.Log.e("PostDetailViewModel", "Error in acceptSolution", e)
-            }
+            } catch (_: Exception) {}
         }
     }
 
@@ -109,9 +103,7 @@ class PostDetailViewModel @AssistedInject constructor(
         viewModelScope.launch {
             try {
                 postRepository.rejectSolution(postId)
-            } catch (e: Exception) {
-                android.util.Log.e("PostDetailViewModel", "Error in rejectSolution", e)
-            }
+            } catch (_: Exception) {}
         }
     }
 
@@ -121,7 +113,7 @@ class PostDetailViewModel @AssistedInject constructor(
             try {
                 postRepository.deletePost(postId)
                 onDeleted()
-            } catch (e: Exception) {
+            } catch (_: Exception) { // FIX: Changed e to _ to clear warning
                 transientState.update { it.copy(isDeleting = false) }
             }
         }
@@ -133,7 +125,6 @@ class PostDetailViewModel @AssistedInject constructor(
     }
 }
 
-// 3. The pure flow-builder function (Mimics NiA's topicUiState)
 private fun postDetailUiState(
     postId: String,
     postRepository: PostRepository,
@@ -145,7 +136,6 @@ private fun postDetailUiState(
     val currentUserIdStream = flow { emit(authRepository.currentUserId()) }
     val postStream = postRepository.getPostDetailStream(postId)
 
-    // Combine all 3 sources directly into your Success state
     return combine(
         postStream,
         currentUserIdStream,
@@ -171,16 +161,15 @@ private fun postDetailUiState(
             resolvedImageUris = resolvedUris,
             isAuthor = isAuthor,
             isAcceptedByCurrentUser = transient.isAcceptedByCurrentUser,
-            solutionStatus = effectiveStatus,
-            userRating = transient.userRating,
+            solutionStatus = initialStatus,
+            // FIX: Prioritize the saved database rating over the transient default!
+            userRating = postDetail.rating ?: transient.userRating,
             isSubmitting = transient.isSubmitting,
             isDeleting = transient.isDeleting
         ) as PostDetailUiState
+    }.catch { exception ->
+        emit(PostDetailUiState.Error(exception.message))
     }
-        // Catch any database or auth crashes and map them to the Error state
-        .catch { exception ->
-            emit(PostDetailUiState.Error(exception.message))
-        }
 }
 
 val samplePostAuthor = User(
@@ -211,6 +200,7 @@ val samplePostDetail = PostDetail(
     isAccepted = false,
     answer = null,
     solver = null,
+    rating = null,
     userImageCount = 1233,
     userHasPdf = false,
     userHasAudio = false,

@@ -26,6 +26,7 @@ fun EntryProviderScope<NavKey>.postEntry(navigator: Navigator) {
             ) { factory ->
                 factory.create(id)
             },
+            onBackClick = { navigator.goBack() }
         )
     }
 }

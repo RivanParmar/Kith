@@ -9,3 +9,6 @@ data object ProfileNavKey : NavKey
 data object PostHistoryNavKey : NavKey
 @Serializable
 data object TransactionsNavKey : NavKey
+
+@Serializable
+data class UserProfileNavKey(val userId: String) : NavKey

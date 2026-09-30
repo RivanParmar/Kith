@@ -22,6 +22,7 @@ data class NetworkPost(
     val userHasAudio: Boolean,
     val answer: String? = null,
     val reward: Int,
+    val rating: Float? = null, // Stores the exact 1.0f - 5.0f rating given to this solution
     @SerialName("is_in_person")
     val isInPerson: Boolean,
     @SerialName("solver_id")

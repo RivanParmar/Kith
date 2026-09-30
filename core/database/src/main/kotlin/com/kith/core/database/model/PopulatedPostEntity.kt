@@ -59,4 +59,5 @@ fun PopulatedPostEntity.asPostDetail() = PostDetail(
     solverImageCount = post.solverImageCount,
     solverHasPdf = post.userHasPdf,
     solverHasAudio = post.solverHasAudio,
+    rating = post.rating,
 )

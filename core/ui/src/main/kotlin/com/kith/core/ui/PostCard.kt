@@ -1,6 +1,7 @@
 package com.kith.core.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
@@ -48,6 +50,7 @@ fun PostCard(
     post: Post,
     modifier: Modifier = Modifier,
     onPostClick: (String) -> Unit = { _ -> },
+    onAuthorClick: (String) -> Unit = { _ -> },
 ) {
     OutlinedCard(
         modifier = modifier
@@ -61,36 +64,66 @@ fun PostCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                ProfileAvatar(
-                    user = post.author,
-                    avatarSize = 40.dp,
-                )
+                // Clickable row for Author Profile (Avatar + Name + Rating)
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onAuthorClick(post.author.id) },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (post.author.profileImageUrl != null) {
+                            AsyncImage(
+                                model = post.author.profileImageUrl,
+                                contentDescription = "User profile picture",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Icon(
+                                imageVector = KithIcons.Person,
+                                contentDescription = null,
+                                tint = Color.Gray,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
 
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = post.author.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = KithIcons.StarRate,
-                            contentDescription = null,
-                            tint = Color(0xFFFDB814),
-                            modifier = Modifier.size(14.dp),
-                        )
-                        Spacer(modifier = Modifier.width(2.dp))
+                    Column {
                         Text(
-                            text = "${post.author.rating}",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.Gray,
+                            text = post.author.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = KithIcons.StarRate,
+                                contentDescription = null,
+                                tint = Color(0xFFFDB814),
+                                modifier = Modifier.size(14.dp),
+                            )
+                            Spacer(modifier = Modifier.width(2.dp))
+                            Text(
+                                text = "${post.author.rating}",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Gray,
+                            )
+                        }
                     }
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Row(
                     modifier = Modifier
@@ -133,6 +166,8 @@ fun PostCard(
                 color = Color.Gray,
                 modifier = Modifier.fillMaxWidth(),
                 lineHeight = 22.sp,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -180,6 +215,7 @@ private fun PostCardPreview(
         PostCard(
             post = posts[0],
             onPostClick = {},
+            onAuthorClick = {}
         )
     }
 }

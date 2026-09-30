@@ -76,9 +76,14 @@ enum class BrowseFilter(val label: String) {
 fun BrowseScreen(
     modifier: Modifier = Modifier,
     viewModel: BrowseViewModel = hiltViewModel(),
+    onPostClick: (String) -> Unit = { _ -> },
+    onAuthorClick: (String) -> Unit = {},
+    onNavigateToMyProfile: () -> Unit = {},
 ) {
     val feedState by viewModel.feedState.collectAsStateWithLifecycle()
     val recentSearchQueriesUiState by viewModel.recentSearchQueriesUiState.collectAsStateWithLifecycle()
+
+    val currentUserId = viewModel.currentUserId
 
     BrowseScreen(
         feedState = feedState,
@@ -86,6 +91,14 @@ fun BrowseScreen(
         modifier = modifier,
         onSearchTriggered = viewModel::onSearchTriggered,
         onClearRecentSearches = viewModel::clearRecentSearches,
+        onPostClick = onPostClick,
+        onAuthorClick = { clickedAuthorId ->
+            if (clickedAuthorId == currentUserId) {
+                onNavigateToMyProfile()
+            } else {
+                onAuthorClick(clickedAuthorId)
+            }
+        }
     )
 }
 
@@ -99,6 +112,8 @@ internal fun BrowseScreen(
     onFilterSelected: ((BrowseFilter) -> Unit)? = null,
     onSearchTriggered: (String) -> Unit = {},
     onClearRecentSearches: () -> Unit = {},
+    onPostClick: (String) -> Unit = { _ -> },
+    onAuthorClick: (String) -> Unit = {},
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -107,10 +122,9 @@ internal fun BrowseScreen(
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
 
-    // True when the user taps into the search bar or activates search
     val isSearching = searchBarState.targetValue == SearchBarValue.Expanded
 
-    // Holds the currently active filter (All, In-person, or Virtual)
+    // Holds the currently active filter (All, In-person, or Online)
     var currentFilter by remember { mutableStateOf(initialFilter) }
 
     // Live search query as the user types
@@ -190,7 +204,7 @@ internal fun BrowseScreen(
                             }
                         ) {
                             Icon(
-                                imageVector = KithIcons.Add,
+                                imageVector = KithIcons.Cancel,
                                 contentDescription = "Clear search"
                             )
                         }
@@ -265,7 +279,7 @@ internal fun BrowseScreen(
                 }
             }
 
-            // Dynamic Row for "All", "In-person", "Virtual" Filter Chips
+            // Dynamic Row for "All", "In-person", "Online" Filter Chips
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -379,7 +393,7 @@ private fun RecentSearchesContent(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
                                 Icon(
-                                    imageVector = KithIcons.Edit,
+                                    imageVector = KithIcons.History,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )

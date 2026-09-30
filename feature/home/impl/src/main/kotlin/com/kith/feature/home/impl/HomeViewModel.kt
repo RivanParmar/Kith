@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.kith.core.data.repository.PostRepository
 import com.kith.core.data.repository.WalletRepository
 import com.kith.core.data.util.SyncManager
+import com.kith.core.network.KithAuthDataSource
 import com.kith.core.ui.PostsFeedUiState
 import com.kith.core.ui.WalletUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,11 +20,14 @@ class HomeViewModel @Inject constructor(
     postRepository: PostRepository,
     walletRepository: WalletRepository,
     private val syncManager: SyncManager,
+    authDataSource: KithAuthDataSource,
 ) : ViewModel() {
 
     init {
         syncManager.requestSync()
     }
+
+    val currentUserId = authDataSource.currentUserId()
 
     val walletState: StateFlow<WalletUiState> = walletRepository.getWalletDataStream()
         .map { WalletUiState.Success(it) }

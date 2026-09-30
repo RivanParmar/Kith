@@ -86,7 +86,7 @@ internal fun PostHistoryScreen(
                 modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 topBar = {
                     KithMediumTopAppBar(
-                        titleRes = R.string.feature_profile_api_title,
+                        titleRes = R.string.feature_profile_api_post_history_title,
                         navigationIcon = null,
                         navigationIconContentDescription = null,
                         actionIcon = null,
@@ -107,14 +107,6 @@ internal fun PostHistoryScreen(
                             .fillMaxSize()
                             .background(Color.White)
                     ) {
-                        Text(
-                            text = "Post History",
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF0F172A),
-                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
-                        )
-
                         SegmentedTabControl(
                             selectedTab = selectedTab,
                             onTabSelected = onTabSelected,

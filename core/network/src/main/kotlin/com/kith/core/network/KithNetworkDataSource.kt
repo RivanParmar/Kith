@@ -29,8 +29,6 @@ interface KithNetworkDataSource {
 
     suspend fun deletePost(postId: String)
 
-    suspend fun rateSolution(postId: String, rating: Int)
-
     /** Calls the Supabase SQL RPC function to claim the daily reward */
     suspend fun claimDailyRewardViaRpc(): Boolean
     suspend fun getTopUsers(sortByColumn: String): List<NetworkUser>
@@ -51,5 +49,6 @@ interface KithNetworkDataSource {
     suspend fun getJoinedCommunities(userId: String): List<NetworkCommunity>
 
     suspend fun rejectAnswer(postId: String)
+    suspend fun rateSolution(postId: String, rating: Float)
 
 }

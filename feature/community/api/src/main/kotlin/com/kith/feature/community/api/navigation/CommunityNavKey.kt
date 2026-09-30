@@ -12,5 +12,6 @@ data object CreateCommunityNavKey : NavKey
 @Serializable
 data object CommunityListNavKey : NavKey
 
+// UPDATED: Now accepts the communityId argument
 @Serializable
 data class CommunityDetailNavKey(val communityId: String) : NavKey

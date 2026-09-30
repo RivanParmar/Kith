@@ -1,5 +1,6 @@
 package com.kith.core.network.supabase
 
+import android.util.Log
 import com.kith.core.network.KithNetworkDataSource
 import com.kith.core.network.model.NetworkCommunity
 import com.kith.core.network.model.NetworkPost
@@ -194,16 +195,6 @@ class SupabaseNetworkDataSource @Inject constructor(
         }
     }
 
-    override suspend fun rateSolution(postId: String, rating: Int) {
-        supabaseClient.postgrest["posts"].update(
-            {
-                set("rating", rating)
-            }
-        ) {
-            filter { eq("id", postId) }
-        }
-    }
-
     override suspend fun getJoinedCommunities(userId: String): List<NetworkCommunity> {
         val response = supabaseClient.postgrest["community_members"]
             .select(columns = Columns.raw("communities(*)")) {
@@ -212,6 +203,17 @@ class SupabaseNetworkDataSource @Inject constructor(
             .decodeList<NetworkCommunityMembers>()
 
         return response.map { it.community }
+    }
+
+     override suspend fun rateSolution(postId: String, rating: Float) { // CHANGED TO FLOAT
+         Log.d("RATING", "Post Id: $postId, Rating: $rating")
+        supabaseClient.postgrest.rpc(
+            function = "rate_user_solution",
+            parameters = buildJsonObject {
+                put("p_post_id", postId)
+                put("p_rating", rating)
+            }
+        )
     }
 }
 

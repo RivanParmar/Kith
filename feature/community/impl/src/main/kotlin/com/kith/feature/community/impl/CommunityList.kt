@@ -78,7 +78,10 @@ private fun CommunityCard(
     community: Community,
     onClick: () -> Unit
 ) {
-    val memberCountFormatted = NumberFormat.getNumberInstance(Locale.US).format(community.memberCount)
+    // FIX: Safely handle if memberCount is null or 0.
+    // If you haven't added memberCount to your database yet, just hardcode a placeholder or hide it.
+    val memberCountToDisplay = community.memberCount ?: 0
+    val memberCountFormatted = NumberFormat.getNumberInstance(Locale.US).format(memberCountToDisplay)
 
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
@@ -94,14 +97,22 @@ private fun CommunityCard(
             Box(
                 modifier = Modifier.size(56.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xFFE3E6F0)),
                 contentAlignment = Alignment.Center
-            ) {}
+            ) {
+                // If you have images later, put an AsyncImage here!
+            }
 
             Spacer(modifier = Modifier.width(14.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = community.name, color = Color(0xFF1B1F3B), fontSize = 15.sp, fontWeight = FontWeight.SemiBold, lineHeight = 19.sp)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(text = "$memberCountFormatted Members", color = Color(0xFFA0A3B1), fontSize = 13.sp)
+
+                // Only show members if greater than 0, otherwise show a generic subtitle
+                if (memberCountToDisplay > 0) {
+                    Text(text = "$memberCountFormatted Members", color = Color(0xFFA0A3B1), fontSize = 13.sp)
+                } else {
+                    Text(text = "Active Community", color = Color(0xFFA0A3B1), fontSize = 13.sp)
+                }
             }
         }
     }

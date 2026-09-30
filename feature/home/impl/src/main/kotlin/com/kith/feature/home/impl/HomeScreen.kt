@@ -42,10 +42,14 @@ fun HomeRoute(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
     onPostClick: (String) -> Unit = { _ -> },
+    onAuthorClick: (String) -> Unit = {},
+    onNavigateToMyProfile: () -> Unit = {},
 ) {
     val feedState by viewModel.feedState.collectAsStateWithLifecycle()
     val walletUiState by viewModel.walletState.collectAsStateWithLifecycle()
     val isSyncing by viewModel.isSyncing.collectAsStateWithLifecycle()
+
+    val currentUserId = viewModel.currentUserId
 
     HomeScreen(
         isSyncing = isSyncing,
@@ -54,6 +58,13 @@ fun HomeRoute(
         onSync = viewModel::sync,
         modifier = modifier,
         onPostClick = onPostClick,
+        onAuthorClick = { clickedAuthorId ->
+            if (clickedAuthorId == currentUserId) {
+                onNavigateToMyProfile()
+            } else {
+                onAuthorClick(clickedAuthorId)
+            }
+        }
     )
 }
 
@@ -65,21 +76,13 @@ internal fun HomeScreen(
     modifier: Modifier = Modifier,
     onSync: () -> Unit = {},
     onPostClick: (String) -> Unit = { _ -> },
+    onAuthorClick: (String) -> Unit = {},
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-//            Text(
-//                text = "KITH",
-//                fontSize = 32.sp,
-//                fontFamily = OutfitFontFamily,
-//                fontWeight = FontWeight.ExtraBold,
-//                color = Color.Black,
-//                letterSpacing = 1.5.sp,
-//                modifier = Modifier.padding(horizontal = 24.dp, vertical = 30.dp),
-//            )
             KithMediumTopAppBar(
                 titleRes = R.string.feature_home_api_app_title,
                 navigationIcon = null,
@@ -100,10 +103,10 @@ internal fun HomeScreen(
                 .fillMaxSize()
                 .padding(padding),
         ) {
-            LazyVerticalGrid (
+            LazyVerticalGrid(
                 modifier = Modifier.fillMaxSize(),
                 columns = GridCells.Adaptive(300.dp),
-                contentPadding = PaddingValues(start = 10.dp, end = 10.dp, bottom = 24.dp),
+                contentPadding = PaddingValues(start = 10.dp, end = 10.dp, top = 16.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 item {
@@ -128,6 +131,7 @@ internal fun HomeScreen(
                 postsFeed(
                     feedState = feedState,
                     onPostClick = onPostClick,
+                    onAuthorClick = onAuthorClick,
                 )
             }
         }
@@ -147,11 +151,15 @@ private fun HomeScreenPreview(
                 feed = posts,
             ),
             walletUiState = WalletUiState.Success(
-                WalletData(balance = 1450,
+                WalletData(
+                    balance = 1450,
                     level = 3,
-                    nextTierXp = 2000,)
+                    nextTierXp = 2000,
+                )
             ),
             onSync = {},
+            onPostClick = {},
+            onAuthorClick = {}
         )
     }
 }

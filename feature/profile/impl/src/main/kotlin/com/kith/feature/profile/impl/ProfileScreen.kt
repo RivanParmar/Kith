@@ -63,6 +63,7 @@ fun ProfileScreen(
     onWalletClick: () -> Unit = {},
     onPostHistoryClick: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {},
+    onNavigateToCommunity: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -75,6 +76,7 @@ fun ProfileScreen(
             viewModel.logout(onSuccess = onNavigateToLogin)
         },
         onEditProfile = viewModel::saveProfile,
+        onNavigateToCommunity = onNavigateToCommunity,
     )
 }
 
@@ -85,6 +87,7 @@ internal fun ProfileScreen(
     onWalletClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
     onPostHistoryClick: () -> Unit = {},
+    onNavigateToCommunity: () -> Unit = {},
     onEditProfile: (name: String, bio: String, imageUrl: String?) -> Unit = { _, _, _, -> },
 ) {
     when (uiState) {
@@ -269,7 +272,7 @@ internal fun ProfileScreen(
                         ProfileMenuItem(
                             icon = KithIcons.Groups,
                             label = "Community Settings",
-                            onClick = { /* TODO */ },
+                            onClick = onNavigateToCommunity,
                         )
                     }
                 }

@@ -9,6 +9,8 @@ android {
 
 dependencies {
     implementation(projects.feature.leaderboard.api)
+    implementation(projects.feature.profile.api)
+
 
     implementation(projects.core.data)
     implementation(libs.coil.kt)

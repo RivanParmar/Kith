@@ -3,6 +3,7 @@ package com.kith.feature.profile.impl
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,33 +16,90 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
+import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.DarkNavy
 import com.kith.core.designsystem.theme.InterFontFamily
 import com.kith.core.designsystem.theme.OutfitFontFamily
 import com.kith.core.designsystem.theme.PrimaryBlue
 import com.kith.core.model.data.UserProfile
-import com.kith.core.ui.ProfileAvatar
 
 @Composable
 fun OtherUserProfileScreen(
+    userId: String,
+    onBackClick: () -> Unit = {},
+    onTagClick: () -> Unit = {},
+    onRequestClick: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    // Inject ViewModel using AssistedInject via creationCallback
+    val viewModel = hiltViewModel<OtherUserProfileViewModel, OtherUserProfileViewModel.Factory>(
+        creationCallback = { factory ->
+            factory.create(userId)
+        }
+    )
+
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    when (uiState) {
+        is OtherUserProfileUiState.Loading -> {
+            Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = PrimaryBlue)
+            }
+        }
+        is OtherUserProfileUiState.Error -> {
+            Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(
+                    text = (uiState as OtherUserProfileUiState.Error).message ?: "Error loading profile",
+                    color = Color.Red,
+                    fontSize = 16.sp
+                )
+            }
+        }
+        is OtherUserProfileUiState.Success -> {
+            val profile = (uiState as OtherUserProfileUiState.Success).profile
+            OtherUserProfileContent(
+                userProfile = profile,
+                onBackClick = onBackClick,
+                onTagClick = onTagClick,
+                onRequestClick = onRequestClick,
+                modifier = modifier
+            )
+        }
+    }
+}
+
+@Composable
+internal fun OtherUserProfileContent(
     userProfile: UserProfile,
+    onBackClick: () -> Unit = {},
     onTagClick: () -> Unit = {},
     onRequestClick: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -82,6 +140,20 @@ fun OtherUserProfileScreen(
             drawPath(path, color = topBackgroundColor)
         }
 
+        // Back Button overlay at the top left
+        IconButton(
+            onClick = onBackClick,
+            modifier = Modifier
+                .safeDrawingPadding()
+                .padding(top = 8.dp, start = 8.dp)
+        ) {
+            Icon(
+                imageVector = KithIcons.ArrowBack,
+                contentDescription = "Back",
+                tint = Color.White
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -89,15 +161,35 @@ fun OtherUserProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             // Avatar
-            ProfileAvatar(
-                userProfile = userProfile,
-                avatarSize = 100.dp,
-            )
-            
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+                    .background(PrimaryBlue)
+                    .border(4.dp, Color.White.copy(alpha = 0.2f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                if (!userProfile.profileImageUrl.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = userProfile.profileImageUrl,
+                        contentDescription = "User Profile Picture",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = KithIcons.PersonOutlined,
+                        contentDescription = "Default Profile",
+                        tint = Color.White,
+                        modifier = Modifier.size(56.dp)
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             val displayName = userProfile.name.takeIf { it.isNotBlank() } ?: "Name"
             Text(
                 text = displayName,
@@ -106,16 +198,10 @@ fun OtherUserProfileScreen(
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
-            
-            Text(
-                text = "@${userProfile.id}",
-                fontFamily = InterFontFamily,
-                fontSize = 16.sp,
-                color = Color.White.copy(alpha = 0.8f)
-            )
-            
+
+
+
             Spacer(modifier = Modifier.height(16.dp))
-            
             OutlinedButton(
                 onClick = onTagClick,
                 colors = ButtonDefaults.outlinedButtonColors(
@@ -133,9 +219,9 @@ fun OtherUserProfileScreen(
                     fontWeight = FontWeight.Medium
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(48.dp))
-            
+
             // Lower Section
             Column(
                 modifier = Modifier
@@ -151,13 +237,13 @@ fun OtherUserProfileScreen(
                     val level = (userProfile.xp / 1000) + 1
                     OtherUserProfileStatItem(value = "Level $level", label = "Rank", color = bottomTextColor)
                     OtherUserProfileStatItem(value = userProfile.xp.toString(), label = "Total XP", color = bottomTextColor)
-                    OtherUserProfileStatItem(value = userProfile.problemsSolved.toString(), label = "connection", color = bottomTextColor)
+                    OtherUserProfileStatItem(value = userProfile.problemsSolved.toString(), label = "Connections", color = bottomTextColor)
                 }
-                
+
                 Spacer(modifier = Modifier.height(24.dp))
                 HorizontalDivider(color = dividerColor)
                 Spacer(modifier = Modifier.height(24.dp))
-                
+
                 Text(
                     text = "Bio",
                     fontFamily = OutfitFontFamily,
@@ -165,9 +251,9 @@ fun OtherUserProfileScreen(
                     fontWeight = FontWeight.Bold,
                     color = bottomTextColor
                 )
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
-                
+
                 Card(
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
@@ -187,23 +273,11 @@ fun OtherUserProfileScreen(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.weight(1f))
-            
-//            val requestButtonColor = when (connectionState) {
-//                ConnectionState.NOT_CONNECTED -> if (isDark) PrimaryBlue else Color.Black
-//                ConnectionState.PENDING_SENT -> Color.Gray
-//                ConnectionState.PENDING_RECEIVED -> PrimaryBlue
-//                ConnectionState.CONNECTED -> Color(0xFF10B981) // Green
-//            }
+
             val requestButtonTextColor = Color.White
-//            val buttonText = when (connectionState) {
-//                ConnectionState.NOT_CONNECTED -> "SEND REQUEST"
-//                ConnectionState.PENDING_SENT -> "REQUEST SENT"
-//                ConnectionState.PENDING_RECEIVED -> "ACCEPT REQUEST"
-//                ConnectionState.CONNECTED -> "CONNECTED"
-//            }
-            
+
             Button(
                 onClick = onRequestClick,
                 colors = ButtonDefaults.buttonColors(
@@ -252,9 +326,9 @@ fun OtherUserProfileStatItem(value: String, label: String, color: Color) {
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun OtherUserProfileScreenPreview() {
+private fun OtherUserProfileScreenPreview() {
     com.kith.core.designsystem.theme.KithTheme {
-        OtherUserProfileScreen(
+        OtherUserProfileContent(
             userProfile = UserProfile(
                 id = "id",
                 name = "Name",

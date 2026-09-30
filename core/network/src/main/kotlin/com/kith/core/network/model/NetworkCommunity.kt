@@ -9,7 +9,10 @@ data class NetworkCommunity(
     val id: String,
     val name: String,
     val description: String? = null,
-    val password: String,
+
+    // FIX: Make this nullable with a default value so the JSON parser doesn't crash!
+    val password: String? = null,
+
     @SerialName("image_url")
     val imageUrl: String? = null,
     @SerialName("user_id")

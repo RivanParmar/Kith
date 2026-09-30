@@ -77,11 +77,23 @@ class OfflineFirstPostRepository @Inject constructor(
 
         userDao.upsertUser(user.asUserEntity())
         communityDao.upsertCommunityPreservingStatus(community.asCommunityEntity())
+
+        // FIX 1: Used ?.let for a safe smart cast
+        networkPost.solverId?.let { safeSolverId ->
+            try {
+                val solver = networkDataSource.getUserById(safeSolverId)
+                userDao.upsertUser(solver.asUserEntity())
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
         postDao.insertPost(networkPost.asEntity())
     }
 
-    override suspend fun submitAnswer(postId: String, answer: String, currentUserId: String) {
-        networkDataSource.submitAnswer(postId, answer, currentUserId)
+    override suspend fun submitAnswer(postId: String, answer: String, solverId: String) {
+        // FIX 2: Passed solverId to the network data source
+        networkDataSource.submitAnswer(postId, answer, solverId)
         syncPostById(postId)
     }
 
@@ -113,8 +125,9 @@ class OfflineFirstPostRepository @Inject constructor(
         }
     }
 
-    override suspend fun rateSolution(postId: String, rating: Int) {
+    override suspend fun rateSolution(postId: String, rating: Float) {
         networkDataSource.rateSolution(postId, rating)
+        syncPostById(postId)
     }
 
     override suspend fun syncUserPosts(userId: String) {
@@ -143,10 +156,9 @@ class OfflineFirstPostRepository @Inject constructor(
     ) {
         val now = Clock.System.now()
 
-        // FIX: Safely parse the dynamic status
         val mappedStatus = try {
             PostStatus.valueOf(request.status)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             PostStatus.OPEN
         }
 
@@ -156,20 +168,21 @@ class OfflineFirstPostRepository @Inject constructor(
             communityId = request.communityId,
             title = request.title,
             content = request.content,
-            status = mappedStatus, // FIX: Use dynamic status
+            status = mappedStatus,
             reward = request.reward,
             isInPerson = request.isInPerson,
             userImageCount = request.imageUris.size,
             userHasPdf = request.pdfUri != null,
             userHasAudio = request.audioUri != null,
             answer = null,
-            solverId = request.solverId, // FIX: Assign to specific user
+            solverId = request.solverId,
             solverImageCount = 0,
             solverHasPdf = false,
             solverHasAudio = false,
             createdAt = now,
             updatedAt = now,
             syncStatus = SyncStatus.PENDING_CREATE,
+            rating = null,
         )
         Log.d("CREATE", "Created entity!")
 
@@ -183,13 +196,11 @@ class OfflineFirstPostRepository @Inject constructor(
 
         try {
             networkDataSource.createPost(entity.asNetworkModel())
-
             postDao.updateSyncStatus(postId, SyncStatus.SYNCED)
             Log.d("CREATE", "Success!")
         } catch (e: Exception) {
-            // Leave as PENDING_CREATE for background SyncManager to retry
-            Log.d("CREATE", "Failed!")
-            Log.d("CREATE", e.toString())
+            // FIX 5: Actually using the 'e' parameter to log the exact error
+            Log.e("CREATE", "Failed to publish post to network", e)
         }
     }
 

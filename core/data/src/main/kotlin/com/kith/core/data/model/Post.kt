@@ -25,6 +25,7 @@ fun NetworkPost.asEntity() = PostEntity(
     solverHasAudio = solverHasAudio,
     isInPerson = isInPerson,
     syncStatus = SyncStatus.SYNCED,
+    rating = rating,
 )
 
 fun PostEntity.asNetworkModel() = NetworkPost(
@@ -47,4 +48,5 @@ fun PostEntity.asNetworkModel() = NetworkPost(
     createdAt = createdAt,
     updatedAt = updatedAt,
     solvedAt = null,
+    rating = rating,
 )

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kith.core.data.repository.PostRepository
 import com.kith.core.data.repository.RecentSearchRepository
+import com.kith.core.network.KithAuthDataSource
 import com.kith.core.ui.PostsFeedUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -17,7 +18,10 @@ import javax.inject.Inject
 class BrowseViewModel @Inject constructor(
     postRepository: PostRepository,
     private val recentSearchRepository: RecentSearchRepository,
+    authDataSource: KithAuthDataSource,
 ) : ViewModel() {
+
+    val currentUserId = authDataSource.currentUserId()
 
     val feedState: StateFlow<PostsFeedUiState> = postRepository.getAllPostsStream()
         .map { PostsFeedUiState.Success(it) }

@@ -27,9 +27,18 @@ class CommunityListViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             authDataSource.currentUserId()?.let { userId ->
+
+                // 1. Try to fetch premium status (If it fails, it's fine, default is false)
                 try {
                     val user = networkDataSource.getUserById(userId)
                     isPremiumUser.value = user.isPremium
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+
+                // 2. INDEPENDENTLY sync communities (so this runs even if the user fetch fails!)
+                try {
+                    communityRepository.syncJoinedCommunities()
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }

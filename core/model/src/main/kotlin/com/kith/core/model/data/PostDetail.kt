@@ -14,6 +14,7 @@ data class PostDetail(
     val isAccepted: Boolean,
     val answer: String?,
     val solver: User?,
+    val rating: Float? = null,
     val userImageCount: Int,
     val userHasPdf: Boolean,
     val userHasAudio: Boolean,

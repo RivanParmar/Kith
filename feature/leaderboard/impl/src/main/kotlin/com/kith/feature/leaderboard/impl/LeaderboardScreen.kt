@@ -95,13 +95,25 @@ private fun UserProfile.getFormattedScore(tab: LeaderboardTab): String {
 fun LeaderboardScreen(
     modifier: Modifier = Modifier,
     viewModel: LeaderboardViewModel = hiltViewModel(),
+    onUserClick: (String) -> Unit = {},
+    onNavigateToMyProfile: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val currentTab by viewModel.selectedSortBy.collectAsStateWithLifecycle()
+
+    val currentUserId = viewModel.currentUserId
+
     LeaderboardContent(
         uiState = uiState,
         currentTab = currentTab,
         onTabChanged = viewModel::onTabChanged,
+        onUserClick = { clickedUserId ->
+            if (clickedUserId == currentUserId) {
+                onNavigateToMyProfile()
+            } else {
+                onUserClick(clickedUserId)
+            }
+        },
         modifier = modifier,
     )
 }
@@ -112,6 +124,7 @@ private fun LeaderboardContent(
     modifier: Modifier = Modifier,
     currentTab: LeaderboardTab = LeaderboardTab.BY_XP,
     onTabChanged: (LeaderboardTab) -> Unit = {},
+    onUserClick: (String) -> Unit = {}
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -161,7 +174,7 @@ private fun LeaderboardContent(
                             PodiumRow(
                                 podium = podium,
                                 currentTab = currentTab,
-                                onUserClick = { },
+                                onUserClick = { user -> onUserClick(user.id) },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(top = 10.dp, bottom = 12.dp),
@@ -174,7 +187,7 @@ private fun LeaderboardContent(
                             user = user,
                             rank = index + 4,
                             currentTab = currentTab,
-                            onClick = { },
+                            onClick = { onUserClick(user.id) },
                         )
                     }
                 }
@@ -450,45 +463,13 @@ private fun LeaderboardPreview() {
             problemsAsked = 24,
             problemsSolved = 82,
             isPremium = false
-        ),
-        UserProfile(
-            id = "3",
-            name = "John",
-            profileImageUrl = null,
-            bio = null,
-            xp = 3200,
-            rating = 4.5f,
-            problemsAsked = 45,
-            problemsSolved = 15,
-            isPremium = false
-        ),
-        UserProfile(
-            id = "4",
-            name = "Emily",
-            profileImageUrl = null,
-            bio = "UI/UX Designer.",
-            xp = 15600,
-            rating = 4.2f,
-            problemsAsked = 8,
-            problemsSolved = 210,
-            isPremium = true
-        ),
-        UserProfile(
-            id = "5",
-            name = "Michael",
-            profileImageUrl = null,
-            bio = "Getting started!",
-            xp = 450,
-            rating = 4.0f,
-            problemsAsked = 3,
-            problemsSolved = 2,
-            isPremium = false
-        ),
+        )
     )
     KithTheme {
         LeaderboardContent(
             uiState = LeaderboardUiState.Success(users = sampleUsers),
             currentTab = LeaderboardTab.BY_XP,
+            onUserClick = {}
         )
     }
 }

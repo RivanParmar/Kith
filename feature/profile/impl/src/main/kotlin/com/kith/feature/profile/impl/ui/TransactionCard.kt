@@ -13,6 +13,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,6 +21,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kith.core.model.data.Transaction
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.Locale
 import kotlin.math.abs
 
 @Composable
@@ -32,6 +37,10 @@ internal fun TransactionCard(
     val textColor = if (isPositive) Color(0xFF137333) else Color(0xFFC5221F)
     val sign = if (isPositive) "+" else "-"
     val displayXp = "$sign ${abs(transaction.xpAmount)} XP"
+
+    val formattedDate = remember(transaction.timestamp) {
+        dateFormatted(transaction.timestamp)
+    }
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -54,7 +63,7 @@ internal fun TransactionCard(
                     color = Color(0xFF1A1A1A),
                 )
                 Text(
-                    text = transaction.timestamp,
+                    text = formattedDate,
                     fontSize = 12.sp,
                     color = Color.Gray,
                     modifier = Modifier.padding(top = 4.dp),
@@ -75,5 +84,18 @@ internal fun TransactionCard(
                 )
             }
         }
+    }
+}
+
+private fun dateFormatted(timestampStr: String): String {
+    return try {
+        val instant = java.time.Instant.parse(timestampStr)
+        DateTimeFormatter
+            .ofLocalizedDate(FormatStyle.MEDIUM)
+            .withLocale(Locale.getDefault())
+            .withZone(ZoneId.systemDefault())
+            .format(instant)
+    } catch (e: Exception) {
+        timestampStr // Fallback to raw string if parsing fails
     }
 }

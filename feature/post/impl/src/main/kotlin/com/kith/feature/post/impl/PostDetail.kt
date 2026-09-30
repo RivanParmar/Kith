@@ -9,7 +9,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,6 +16,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,6 +40,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -51,7 +52,7 @@ import androidx.compose.material3.carousel.HorizontalCenteredHeroCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -70,7 +71,6 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -84,7 +84,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.model.data.User
-import com.kith.core.ui.ProfileAvatar
 import java.util.UUID
 
 data class AttachedFile(
@@ -120,7 +119,7 @@ private object PostDetailColors {
 }
 
 // =============================================================================
-// ICONS (Self-contained vector definitions)
+// ICONS
 // =============================================================================
 
 private val EditIcon: ImageVector
@@ -394,9 +393,10 @@ fun PostDetailScreen(
     onBackClick: () -> Unit = {},
     onCommunityClick: (String) -> Unit = {},
     onAuthorClick: (String) -> Unit = {},
+    onNavigateToMyProfile: () -> Unit = {},
     onAttachFileClick: (() -> Unit)? = null,
-    onRateSolution: (Int) -> Unit = {},
-    onSubmitSuccess: () -> Unit = {},
+    onRateSolution: (Float) -> Unit = {},
+    onSubmitSuccess: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -411,6 +411,7 @@ fun PostDetailScreen(
         },
         onCommunityClick = onCommunityClick,
         onAuthorClick = onAuthorClick,
+        onNavigateToMyProfile = onNavigateToMyProfile,
         onAttachFileClick = onAttachFileClick,
         onRateSolution = { rating ->
             viewModel.onRateSolution(rating)
@@ -418,7 +419,7 @@ fun PostDetailScreen(
         },
         onAcceptSolution = viewModel::onAcceptSolution,
         onRejectSolution = viewModel::onRejectSolution,
-        modifier = modifier,
+        modifier = modifier
     )
 }
 
@@ -432,8 +433,9 @@ internal fun PostDetailScreen(
     onSubmitAnswer: (String, List<AttachedFile>) -> Unit = { _, _ -> },
     onCommunityClick: (String) -> Unit = {},
     onAuthorClick: (String) -> Unit = {},
+    onNavigateToMyProfile: () -> Unit = {},
     onAttachFileClick: (() -> Unit)? = null,
-    onRateSolution: (Int) -> Unit = {},
+    onRateSolution: (Float) -> Unit = {},
     onAcceptSolution: () -> Unit = {},
     onRejectSolution: () -> Unit = {},
 ) {
@@ -478,12 +480,10 @@ internal fun PostDetailScreen(
             val post = uiState.post
             val isAnswerReceived = !post.answer.isNullOrBlank()
 
-            // Edit State for Author
             var isEditing by remember(post.id) { mutableStateOf(false) }
             var editedTitle by remember(post.id) { mutableStateOf(post.title) }
             var editedContent by remember(post.id) { mutableStateOf(post.content) }
 
-            // Open by default if question is active/unanswered, or keep open while editing
             var isAttachmentsExpanded by remember(post.id) { mutableStateOf(!isAnswerReceived) }
 
             var answerText by remember(post.id) { mutableStateOf("") }
@@ -495,7 +495,7 @@ internal fun PostDetailScreen(
                 }
             }
 
-            var userRating by remember(post.id) { mutableIntStateOf(uiState.userRating) }
+            var userRating by remember(post.id) { mutableFloatStateOf(uiState.userRating) }
             var currentSolutionStatus by remember(post.id, uiState.solutionStatus) {
                 mutableStateOf(uiState.solutionStatus)
             }
@@ -559,20 +559,24 @@ internal fun PostDetailScreen(
                         .padding(horizontal = 24.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(18.dp)
                 ) {
-                    // 1. Author Profile Card
                     AuthorProfileCard(
                         author = post.author,
-                        onClick = { onAuthorClick(post.author.id) }
+                        roleLabel = "ASKER",
+                        onClick = {
+                            if (uiState.isAuthor) {
+                                onNavigateToMyProfile()
+                            } else {
+                                onAuthorClick(post.author.id)
+                            }
+                        }
                     )
 
-                    // 2. Title / Problem Statement Row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (isEditing) {
-                            // Editable Problem Statement
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
@@ -626,14 +630,12 @@ internal fun PostDetailScreen(
                         }
                     }
 
-                    // 3. Post Tags Row
                     PostTagsRow(
                         isInPerson = post.isInPerson,
                         communityName = post.community.name,
                         onCommunityClick = { onCommunityClick(post.community.id) },
                     )
 
-                    // 4 & 5. Expandable Description & Image Attachments Section
                     AnimatedVisibility(
                         visible = isAttachmentsExpanded,
                         enter = expandVertically(animationSpec = tween(300)) + fadeIn(),
@@ -643,7 +645,6 @@ internal fun PostDetailScreen(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(14.dp)
                         ) {
-                            // Description text / Edit Box
                             if (isEditing) {
                                 Box(
                                     modifier = Modifier
@@ -682,19 +683,17 @@ internal fun PostDetailScreen(
                                 )
                             }
 
-                            // Image Carousel with delete cross button when editing
                             if (uiState.resolvedImageUris.isNotEmpty()) {
                                 PostMediaAttachments(
                                     images = uiState.resolvedImageUris,
                                     onRemoveImage = if (isEditing) { index ->
                                         if (index in uiState.resolvedImageUris.indices) {
-//                                            resolvedImageUrls.removeAt(index)
+                                            // Handle image removal if needed
                                         }
                                     } else null
                                 )
                             }
 
-                            // Attached Files
                             if (attachedFiles.isNotEmpty()) {
                                 Row(
                                     modifier = Modifier
@@ -713,10 +712,19 @@ internal fun PostDetailScreen(
                         }
                     }
 
-                    // 6. Answer / Solution Section
                     val currentAnswer = post.answer
                     if (isAnswerReceived && !currentAnswer.isNullOrBlank()) {
-                        SolutionCard(solution = currentAnswer)
+                        SolutionCard(
+                            solution = currentAnswer,
+                            solver = post.solver,
+                            onSolverClick = {
+                                if (uiState.isAcceptedByCurrentUser) {
+                                    onNavigateToMyProfile()
+                                } else {
+                                    post.solver?.id?.let { onAuthorClick(it) }
+                                }
+                            }
+                        )
 
                         if (uiState.isAuthor) {
                             RateSolutionRow(
@@ -727,7 +735,6 @@ internal fun PostDetailScreen(
                                 }
                             )
 
-                            // Accept or Reject Solution UI for Author
                             SolutionDecisionRow(
                                 status = uiState.solutionStatus,
                                 onAccept = onAcceptSolution,
@@ -877,23 +884,30 @@ private fun SolutionDecisionRow(
 }
 
 @Composable
-private fun AuthorProfileCard(author: User, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun AuthorProfileCard(
+    author: User,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    roleLabel: String? = null,
+    containerColor: Color = PostDetailColors.AuthorCardBackground,
+    contentPadding: PaddingValues = PaddingValues(14.dp)
+) {
     Card(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = PostDetailColors.AuthorCardBackground),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(contentPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            ProfileAvatar(
+            com.kith.core.ui.ProfileAvatar(
                 user = author,
                 avatarSize = 52.dp,
             )
@@ -901,6 +915,15 @@ private fun AuthorProfileCard(author: User, onClick: () -> Unit, modifier: Modif
             Spacer(modifier = Modifier.width(14.dp))
 
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
+                if (roleLabel != null) {
+                    Text(
+                        text = roleLabel,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PostDetailColors.PrimaryBlue,
+                        modifier = Modifier.padding(bottom = 2.dp)
+                    )
+                }
                 Text(
                     text = author.name,
                     fontSize = 16.sp,
@@ -909,6 +932,7 @@ private fun AuthorProfileCard(author: User, onClick: () -> Unit, modifier: Modif
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+                Spacer(modifier = Modifier.height(2.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = KithIcons.StarRate,
@@ -995,7 +1019,6 @@ private fun PostMediaAttachments(
                         contentScale = ContentScale.Crop
                     )
 
-                    // Delete cross button on each image card
                     if (onRemoveImage != null) {
                         Surface(
                             onClick = { onRemoveImage(index) },
@@ -1022,78 +1045,10 @@ private fun PostMediaAttachments(
 }
 
 @Composable
-private fun PlaceholderMediaGraphic(
-    modifier: Modifier = Modifier,
-    page: Int = 0
-) {
-    Canvas(modifier = modifier) {
-        val w = size.width
-        val h = size.height
-        val shapeColors = listOf(
-            Color(0xFFC7CBD3),
-            Color(0xFFA5B4FC),
-            Color(0xFF93C5FD),
-            Color(0xFFFCA5A5)
-        )
-        val shapeColor = shapeColors[page % shapeColors.size]
-
-        when (page % 3) {
-            0 -> {
-                drawCircle(
-                    color = shapeColor,
-                    radius = w * 0.19f,
-                    center = Offset(w * 0.50f, h * 0.32f)
-                )
-                drawCircle(
-                    color = shapeColor,
-                    radius = w * 0.17f,
-                    center = Offset(w * 0.30f, h * 0.68f)
-                )
-                drawRoundRect(
-                    color = shapeColor,
-                    topLeft = Offset(w * 0.55f, h * 0.52f),
-                    size = Size(w * 0.32f, w * 0.32f),
-                    cornerRadius = CornerRadius(14f, 14f)
-                )
-            }
-            1 -> {
-                drawRoundRect(
-                    color = shapeColor,
-                    topLeft = Offset(w * 0.20f, h * 0.22f),
-                    size = Size(w * 0.60f, h * 0.34f),
-                    cornerRadius = CornerRadius(14f, 14f)
-                )
-                drawCircle(
-                    color = shapeColor,
-                    radius = w * 0.19f,
-                    center = Offset(w * 0.40f, h * 0.70f)
-                )
-                drawCircle(
-                    color = shapeColor,
-                    radius = w * 0.14f,
-                    center = Offset(w * 0.70f, h * 0.70f)
-                )
-            }
-            else -> {
-                drawCircle(
-                    color = shapeColor,
-                    radius = w * 0.24f,
-                    center = Offset(w * 0.35f, h * 0.45f)
-                )
-                drawRoundRect(
-                    color = shapeColor,
-                    topLeft = Offset(w * 0.52f, h * 0.40f),
-                    size = Size(w * 0.36f, w * 0.36f),
-                    cornerRadius = CornerRadius(14f, 14f)
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun SolutionCard(
     solution: String,
+    solver: User?,
+    onSolverClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -1106,28 +1061,41 @@ private fun SolutionCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 22.dp, vertical = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = "Solution",
-                fontSize = 19.sp,
-                fontWeight = FontWeight.Bold,
-                color = PostDetailColors.TextPrimary
-            )
-            Text(
-                text = solution,
-                fontSize = 14.sp,
-                color = PostDetailColors.TextSecondary,
-                lineHeight = 21.sp
-            )
+            if (solver != null) {
+                AuthorProfileCard(
+                    author = solver,
+                    roleLabel = "SOLVER",
+                    onClick = onSolverClick,
+                    containerColor = Color.Transparent,
+                    contentPadding = PaddingValues(0.dp)
+                )
+                HorizontalDivider(color = PostDetailColors.BorderLight)
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = "Solution",
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = PostDetailColors.TextPrimary
+                )
+                Text(
+                    text = solution,
+                    fontSize = 14.sp,
+                    color = PostDetailColors.TextSecondary,
+                    lineHeight = 21.sp
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun RateSolutionRow(
-    rating: Int,
-    onRatingChange: (Int) -> Unit,
+    rating: Float,
+    onRatingChange: (Float) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -1154,7 +1122,7 @@ private fun RateSolutionRow(
                     tint = if (i <= rating) PostDetailColors.RatingStar else Color(0xFFD1D5DB),
                     modifier = Modifier
                         .size(20.dp)
-                        .clickable { onRatingChange(i) }
+                        .clickable { onRatingChange(i.toFloat()) }
                 )
             }
         }
@@ -1478,126 +1446,148 @@ private fun SubmitAnswerBottomBar(
     }
 }
 
-    // =============================================================================
+// =============================================================================
 // PREVIEWS
 // =============================================================================
 
-    @Preview(name = "1. Loading", showBackground = true, widthDp = 390, heightDp = 844)
-    @Composable
-    private fun PreviewLoading() {
-        MaterialTheme {
-            PostDetailScreen(uiState = PostDetailUiState.Loading)
-        }
+@Preview(name = "1. Loading", showBackground = true, widthDp = 390, heightDp = 844)
+@Composable
+private fun PreviewLoading() {
+    MaterialTheme {
+        PostDetailScreen(uiState = PostDetailUiState.Loading)
     }
+}
 
-    @Preview(name = "2. Error", showBackground = true, widthDp = 390, heightDp = 844)
-    @Composable
-    private fun PreviewError() {
-        MaterialTheme {
-            PostDetailScreen(uiState = PostDetailUiState.Error("Something went wrong"))
-        }
+@Preview(name = "2. Error", showBackground = true, widthDp = 390, heightDp = 844)
+@Composable
+private fun PreviewError() {
+    MaterialTheme {
+        PostDetailScreen(uiState = PostDetailUiState.Error("Something went wrong"))
     }
+}
 
-    @Preview(name = "3. Visitor - Not Accepted", showBackground = true, widthDp = 390, heightDp = 844)
-    @Composable
-    private fun PreviewVisitorNotAccepted() {
-        MaterialTheme {
-            PostDetailScreen(
-                uiState = PostDetailUiState.Success(
-                    post = samplePostDetail.copy(answer = null),
-                    isAuthor = false,
-                    isAcceptedByCurrentUser = false
-                )
+@Preview(name = "3. Visitor - Not Accepted", showBackground = true, widthDp = 390, heightDp = 844)
+@Composable
+private fun PreviewVisitorNotAccepted() {
+    MaterialTheme {
+        PostDetailScreen(
+            uiState = PostDetailUiState.Success(
+                post = samplePostDetail.copy(answer = null),
+                isAuthor = false,
+                isAcceptedByCurrentUser = false,
+                solutionStatus = SolutionStatus.PENDING,
+                userRating = 5f,
+                isSubmitting = false,
+                isDeleting = false
             )
-        }
+        )
     }
+}
 
-    @Preview(name = "4. Solver - Accepted (Answer Form)", showBackground = true, widthDp = 390, heightDp = 844)
-    @Composable
-    private fun PreviewSolverAccepted() {
-        MaterialTheme {
-            PostDetailScreen(
-                uiState = PostDetailUiState.Success(
-                    post = samplePostDetail.copy(answer = null),
-                    isAuthor = false,
-                    isAcceptedByCurrentUser = true
-                )
+@Preview(name = "4. Solver - Accepted (Answer Form)", showBackground = true, widthDp = 390, heightDp = 844)
+@Composable
+private fun PreviewSolverAccepted() {
+    MaterialTheme {
+        PostDetailScreen(
+            uiState = PostDetailUiState.Success(
+                post = samplePostDetail.copy(answer = null),
+                isAuthor = false,
+                isAcceptedByCurrentUser = true,
+                solutionStatus = SolutionStatus.PENDING,
+                userRating = 5f,
+                isSubmitting = false,
+                isDeleting = false
             )
-        }
+        )
     }
+}
 
-    @Preview(name = "5. Author - Waiting For Answer", showBackground = true, widthDp = 390, heightDp = 844)
-    @Composable
-    private fun PreviewAuthorWaiting() {
-        MaterialTheme {
-            PostDetailScreen(
-                uiState = PostDetailUiState.Success(
-                    post = samplePostDetail.copy(answer = null),
-                    isAuthor = true,
-                    isAcceptedByCurrentUser = false
-                )
+@Preview(name = "5. Author - Waiting For Answer", showBackground = true, widthDp = 390, heightDp = 844)
+@Composable
+private fun PreviewAuthorWaiting() {
+    MaterialTheme {
+        PostDetailScreen(
+            uiState = PostDetailUiState.Success(
+                post = samplePostDetail.copy(answer = null),
+                isAuthor = true,
+                isAcceptedByCurrentUser = false,
+                solutionStatus = SolutionStatus.PENDING,
+                userRating = 5f,
+                isSubmitting = false,
+                isDeleting = false
             )
-        }
+        )
     }
+}
 
-    @Preview(name = "6. Author - Answer Pending Decision", showBackground = true, widthDp = 390, heightDp = 844)
-    @Composable
-    private fun PreviewAuthorAnswerPending() {
-        MaterialTheme {
-            PostDetailScreen(
-                uiState = PostDetailUiState.Success(
-                    post = samplePostDetailAnswered,
-                    isAuthor = true,
-                    isAcceptedByCurrentUser = false,
-                    userRating = 4,
-                    solutionStatus = SolutionStatus.PENDING
-                )
+@Preview(name = "6. Author - Answer Pending Decision", showBackground = true, widthDp = 390, heightDp = 844)
+@Composable
+private fun PreviewAuthorAnswerPending() {
+    MaterialTheme {
+        PostDetailScreen(
+            uiState = PostDetailUiState.Success(
+                post = samplePostDetailAnswered,
+                isAuthor = true,
+                isAcceptedByCurrentUser = false,
+                userRating = 4f,
+                solutionStatus = SolutionStatus.PENDING,
+                isSubmitting = false,
+                isDeleting = false
             )
-        }
+        )
     }
+}
 
-    @Preview(name = "7. Author - Solution Accepted", showBackground = true, widthDp = 390, heightDp = 844)
-    @Composable
-    private fun PreviewAuthorSolutionAccepted() {
-        MaterialTheme {
-            PostDetailScreen(
-                uiState = PostDetailUiState.Success(
-                    post = samplePostDetailAnswered,
-                    isAuthor = true,
-                    isAcceptedByCurrentUser = false,
-                    userRating = 5,
-                    solutionStatus = SolutionStatus.ACCEPTED
-                )
+@Preview(name = "7. Author - Solution Accepted", showBackground = true, widthDp = 390, heightDp = 844)
+@Composable
+private fun PreviewAuthorSolutionAccepted() {
+    MaterialTheme {
+        PostDetailScreen(
+            uiState = PostDetailUiState.Success(
+                post = samplePostDetailAnswered,
+                isAuthor = true,
+                isAcceptedByCurrentUser = false,
+                userRating = 5f,
+                solutionStatus = SolutionStatus.ACCEPTED,
+                isSubmitting = false,
+                isDeleting = false
             )
-        }
+        )
     }
+}
 
-    @Preview(name = "8. Author - Solution Rejected", showBackground = true, widthDp = 390, heightDp = 844)
-    @Composable
-    private fun PreviewAuthorSolutionRejected() {
-        MaterialTheme {
-            PostDetailScreen(
-                uiState = PostDetailUiState.Success(
-                    post = samplePostDetailAnswered,
-                    isAuthor = true,
-                    isAcceptedByCurrentUser = false,
-                    userRating = 2,
-                    solutionStatus = SolutionStatus.REJECTED
-                )
+@Preview(name = "8. Author - Solution Rejected", showBackground = true, widthDp = 390, heightDp = 844)
+@Composable
+private fun PreviewAuthorSolutionRejected() {
+    MaterialTheme {
+        PostDetailScreen(
+            uiState = PostDetailUiState.Success(
+                post = samplePostDetailAnswered,
+                isAuthor = true,
+                isAcceptedByCurrentUser = false,
+                userRating = 2f,
+                solutionStatus = SolutionStatus.REJECTED,
+                isSubmitting = false,
+                isDeleting = false
             )
-        }
+        )
     }
+}
 
-    @Preview(name = "9. Solver - Answer Sent (Read Only)", showBackground = true, widthDp = 390, heightDp = 844)
-    @Composable
-    private fun PreviewSolverAnswerSent() {
-        MaterialTheme {
-            PostDetailScreen(
-                uiState = PostDetailUiState.Success(
-                    post = samplePostDetailAnswered,
-                    isAuthor = false,
-                    isAcceptedByCurrentUser = true
-                )
+@Preview(name = "9. Solver - Answer Sent (Read Only)", showBackground = true, widthDp = 390, heightDp = 844)
+@Composable
+private fun PreviewSolverAnswerSent() {
+    MaterialTheme {
+        PostDetailScreen(
+            uiState = PostDetailUiState.Success(
+                post = samplePostDetailAnswered,
+                isAuthor = false,
+                isAcceptedByCurrentUser = true,
+                solutionStatus = SolutionStatus.ACCEPTED,
+                userRating = 5f,
+                isSubmitting = false,
+                isDeleting = false
             )
-        }
+        )
     }
+}

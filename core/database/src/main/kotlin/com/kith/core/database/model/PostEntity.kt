@@ -21,6 +21,8 @@ data class PostEntity(
     val content: String,
     val status: PostStatus,
     val reward: Int,
+    @ColumnInfo(defaultValue = "null")
+    val rating: Float?, // Caches the rating locally
     @ColumnInfo(name = "is_in_person")
     val isInPerson: Boolean,
     @ColumnInfo(name = "user_image_count", defaultValue = "0")

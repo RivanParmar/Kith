@@ -9,6 +9,8 @@ android {
 
 dependencies {
     implementation(projects.feature.browse.api)
+    implementation(projects.feature.post.api)
+    implementation(projects.feature.profile.api)
 
     implementation(projects.core.data)
 }
