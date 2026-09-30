@@ -82,6 +82,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.KithTheme
+import com.kith.core.designsystem.theme.OutfitFontFamily
 import com.kith.core.model.data.User
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -172,9 +173,10 @@ internal fun CreatePostScreen(
                     title = {
                         Text(
                             text = "Create Post",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+
+                            color = MaterialTheme.colorScheme.onSurface ,
+                            fontFamily = OutfitFontFamily,
+                            fontWeight = FontWeight.ExtraBold
                         )
                     },
 
