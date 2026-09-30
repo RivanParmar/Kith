@@ -94,23 +94,6 @@ fun RingProfileAvatar(
     }
 }
 
-/**
- * Compatibility alias for [RingProfileAvatar].
- */
-@Composable
-fun CrownProfileAvatar(
-    isPremium: Boolean,
-    modifier: Modifier = Modifier,
-    avatarSize: Dp = 40.dp,
-    onClick: (() -> Unit)? = null,
-    avatarContent: @Composable () -> Unit,
-) = RingProfileAvatar(
-    isPremium = isPremium,
-    modifier = modifier,
-    avatarSize = avatarSize,
-    onClick = onClick,
-    avatarContent = avatarContent,
-)
 
 /**
  * Renders a user's profile avatar. If [isPremium] is true, a golden ring is displayed

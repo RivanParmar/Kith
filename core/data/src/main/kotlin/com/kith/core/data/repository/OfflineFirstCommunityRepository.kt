@@ -3,6 +3,7 @@ package com.kith.core.data.repository
 import android.util.Log
 import com.kith.core.common.network.Dispatcher
 import com.kith.core.common.network.KithDispatchers
+import com.kith.core.data.Synchronizer
 import com.kith.core.data.model.asExternalModel
 import com.kith.core.database.dao.CommunityDao
 import com.kith.core.database.model.CommunityEntity
@@ -207,5 +208,9 @@ class OfflineFirstCommunityRepository @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    override suspend fun syncWith(synchronizer: Synchronizer): Boolean {
+        return syncJoinedCommunities().isSuccess
     }
 }

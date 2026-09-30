@@ -21,6 +21,10 @@ class HomeViewModel @Inject constructor(
     private val syncManager: SyncManager,
 ) : ViewModel() {
 
+    init {
+        syncManager.requestSync()
+    }
+
     val walletState: StateFlow<WalletUiState> = walletRepository.getWalletDataStream()
         .map { WalletUiState.Success(it) }
         .stateIn(

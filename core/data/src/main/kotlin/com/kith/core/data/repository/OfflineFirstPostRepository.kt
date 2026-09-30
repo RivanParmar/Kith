@@ -1,10 +1,12 @@
 package com.kith.core.data.repository
 
 import android.util.Log
+import com.kith.core.data.Synchronizer
 import com.kith.core.data.model.asCommunityEntity
 import com.kith.core.data.model.asEntity
 import com.kith.core.data.model.asNetworkModel
 import com.kith.core.data.model.asUserEntity
+import com.kith.core.data.suspendRunCatching
 import com.kith.core.database.dao.CommunityDao
 import com.kith.core.database.dao.PostDao
 import com.kith.core.database.dao.UserDao
@@ -60,7 +62,7 @@ class OfflineFirstPostRepository @Inject constructor(
 
         uniqueCommunityIds.forEach { id ->
             val community = networkDataSource.getCommunityById(id)
-            communityDao.upsertCommunity(community.asCommunityEntity())
+            communityDao.upsertCommunityPreservingStatus(community.asCommunityEntity())
         }
 
         networkPosts.forEach { networkPost ->
@@ -195,5 +197,11 @@ class OfflineFirstPostRepository @Inject constructor(
         networkDataSource.deletePost(postId)
 //        postDao.deletePostById(postId)
         // TODO
+    }
+
+    override suspend fun syncWith(synchronizer: Synchronizer): Boolean {
+        return suspendRunCatching {
+            syncDataFromNetwork()
+        }.isSuccess
     }
 }

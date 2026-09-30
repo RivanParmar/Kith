@@ -18,7 +18,7 @@ import javax.inject.Inject
 class CommunityDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val communityRepository: CommunityRepository,
-    private val authDataSource: KithAuthDataSource
+    authDataSource: KithAuthDataSource
 ) : ViewModel() {
 
     // Expects communityId to be passed via NavKey

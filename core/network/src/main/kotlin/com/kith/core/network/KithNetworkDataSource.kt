@@ -25,8 +25,6 @@ interface KithNetworkDataSource {
 
     suspend fun submitAnswer(postId: String, answer: String, currentUserId: String)
 
-//    suspend fun updatePostSolutionStatus(postId: String, isAccepted: Boolean)
-
     suspend fun acceptAnswer(postId: String)
 
     suspend fun deletePost(postId: String)

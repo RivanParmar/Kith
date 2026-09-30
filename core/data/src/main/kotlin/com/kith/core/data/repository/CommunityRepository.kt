@@ -1,9 +1,10 @@
 package com.kith.core.data.repository
 
+import com.kith.core.data.Syncable
 import com.kith.core.model.data.Community
 import kotlinx.coroutines.flow.Flow
 
-interface CommunityRepository {
+interface CommunityRepository : Syncable {
     val hasJoinedAnyCommunity: Flow<Boolean>
     suspend fun hasJoinedAnyCommunitySync(): Boolean
     fun getAvailableCommunities(): Flow<List<Community>>

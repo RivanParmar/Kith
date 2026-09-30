@@ -1,6 +1,8 @@
 package com.kith.core.data.repository
 
+import com.kith.core.data.Synchronizer
 import com.kith.core.data.model.asUserEntity
+import com.kith.core.data.suspendRunCatching
 import com.kith.core.database.dao.UserDao
 import com.kith.core.database.model.asUserProfile
 import com.kith.core.model.data.UserProfile
@@ -53,6 +55,10 @@ class OfflineFirstUserRepository @Inject constructor(
     }
 
     override suspend fun syncFcmToken(token: String) {
-        syncFcmToken(token)
+        authDataSource.syncFcmToken(token)
+    }
+
+    override suspend fun syncWith(synchronizer: Synchronizer): Boolean {
+        return suspendRunCatching { syncCurrentUser() }.isSuccess
     }
 }

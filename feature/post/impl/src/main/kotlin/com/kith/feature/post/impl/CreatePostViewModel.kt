@@ -64,8 +64,7 @@ class CreatePostViewModel @Inject constructor(
         viewModelScope.launch {
             communityRepository.searchCommunityMembers(communityId, query)
                 .onSuccess { users ->
-                    @Suppress("UNCHECKED_CAST")
-                    _userSearchResults.value = users as List<User>
+                    _userSearchResults.value = users
                 }
                 .onFailure { error ->
                     _userSearchResults.value = emptyList()

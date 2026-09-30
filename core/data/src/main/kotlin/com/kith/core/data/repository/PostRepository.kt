@@ -1,11 +1,12 @@
 package com.kith.core.data.repository
 
+import com.kith.core.data.Syncable
 import com.kith.core.model.data.NewPostRequest
 import com.kith.core.model.data.Post
 import com.kith.core.model.data.PostDetail
 import kotlinx.coroutines.flow.Flow
 
-interface PostRepository {
+interface PostRepository : Syncable {
     fun getAllPostsStream(): Flow<List<Post>>
     fun getPostDetailStream(postId: String): Flow<PostDetail>
     suspend fun syncUserPosts(userId: String)
