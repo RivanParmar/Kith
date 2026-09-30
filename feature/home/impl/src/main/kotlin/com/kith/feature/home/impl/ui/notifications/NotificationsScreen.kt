@@ -50,7 +50,7 @@ fun NotificationsRoute(
 }
 
 @Composable
-fun NotificationsScreen(
+internal fun NotificationsScreen(
     uiState: NotificationsUiState,
     onNotificationClick: (String) -> Unit,
     modifier: Modifier = Modifier

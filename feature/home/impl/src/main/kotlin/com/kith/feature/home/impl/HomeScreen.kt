@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -44,6 +45,7 @@ fun HomeRoute(
     onPostClick: (String) -> Unit = { _ -> },
     onAuthorClick: (String) -> Unit = {},
     onNavigateToMyProfile: () -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {},
 ) {
     val feedState by viewModel.feedState.collectAsStateWithLifecycle()
     val walletUiState by viewModel.walletState.collectAsStateWithLifecycle()
@@ -64,7 +66,8 @@ fun HomeRoute(
             } else {
                 onAuthorClick(clickedAuthorId)
             }
-        }
+        },
+        onNavigateToNotifications = onNavigateToNotifications,
     )
 }
 
@@ -77,6 +80,7 @@ internal fun HomeScreen(
     onSync: () -> Unit = {},
     onPostClick: (String) -> Unit = { _ -> },
     onAuthorClick: (String) -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {},
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -91,7 +95,8 @@ internal fun HomeScreen(
                 actionIconContentDescription = "Notifications",
                 scrollBehavior = scrollBehavior,
                 fontFamily = GugiFontFamily,
-                fontWeight = FontWeight.ExtraBold
+                fontWeight = FontWeight.ExtraBold,
+                onActionClick = onNavigateToNotifications,
             )
         }
     ) { padding ->
@@ -109,22 +114,23 @@ internal fun HomeScreen(
                 contentPadding = PaddingValues(start = 10.dp, end = 10.dp, top = 16.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                item {
+                item(
+                    contentType = "walletCard",
+                    span = { GridItemSpan(maxLineSpan) }
+                ) {
                     WalletCard(walletUiState = walletUiState)
                 }
 
-                item {
+                item(
+                    contentType = "headerText",
+                    span = { GridItemSpan(maxLineSpan) }
+                ) {
                     Text(
                         text = "Community Requests",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF1A1A1A),
-                        modifier = Modifier.padding(
-                            start = 24.dp,
-                            end = 24.dp,
-                            top = 24.dp,
-                            bottom = 8.dp,
-                        )
+                        modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 8.dp)
                     )
                 }
 
