@@ -51,6 +51,7 @@ import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.KithTheme
 import com.kith.core.designsystem.theme.OutfitFontFamily
 import com.kith.core.model.data.UserProfile
+import com.kith.core.ui.ProfileAvatar
 import com.kith.feature.profile.api.R
 import com.kith.feature.profile.impl.settings.SettingsDialog
 import java.util.Locale
@@ -132,29 +133,10 @@ internal fun ProfileScreen(
                             .padding(20.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(72.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFE2E8F0)),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            if (uiState.userProfile.profileImageUrl != null) {
-                                AsyncImage(
-                                    model = uiState.userProfile.profileImageUrl,
-                                    contentDescription = "Profile Image",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = KithIcons.Person, // Fallback icon
-                                    contentDescription = null,
-                                    tint = Color(0xFF94A3B8),
-                                    modifier = Modifier.size(32.dp)
-                                )
-                            }
-                        }
+                        ProfileAvatar(
+                            userProfile = uiState.userProfile,
+                            avatarSize = 72.dp,
+                        )
 
                         Spacer(modifier = Modifier.width(16.dp))
 

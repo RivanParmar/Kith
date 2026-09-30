@@ -28,6 +28,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kith.core.designsystem.component.KithMediumTopAppBar
 import com.kith.core.designsystem.component.LoadingWheel
+import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.KithTheme
 import com.kith.core.designsystem.theme.OutfitFontFamily
 import com.kith.core.model.data.Transaction
@@ -40,6 +41,7 @@ import com.kith.feature.profile.impl.ui.TransactionCard
 @Composable
 fun TransactionsScreen(
     modifier: Modifier = Modifier,
+    onBackClick: () -> Unit = {},
     viewModel: TransactionsViewModel = hiltViewModel(),
 ) {
     val walletUiState by viewModel.walletState.collectAsStateWithLifecycle()
@@ -52,6 +54,7 @@ fun TransactionsScreen(
         uiState = uiState,
         modifier = modifier,
         onSync = viewModel::sync,
+        onBackClick = onBackClick,
     )
 }
 
@@ -62,6 +65,7 @@ internal fun TransactionsScreen(
     uiState: TransactionsUiState,
     modifier: Modifier = Modifier,
     onSync: () -> Unit = {},
+    onBackClick: () -> Unit = {},
 ) {
     when (uiState) {
         TransactionsUiState.Loading -> {
@@ -80,11 +84,12 @@ internal fun TransactionsScreen(
                 topBar = {
                     KithMediumTopAppBar(
                         titleRes = R.string.feature_profile_api_transactions_title,
-                        navigationIcon = null,
-                        navigationIconContentDescription = null,
+                        navigationIcon = KithIcons.ArrowBack,
+                        navigationIconContentDescription = "Back",
                         actionIcon = null,
                         actionIconContentDescription = null,
                         scrollBehavior = scrollBehavior,
+                        onNavigationClick = onBackClick,
                         fontFamily = OutfitFontFamily,
                         fontWeight = FontWeight.ExtraBold
                     )

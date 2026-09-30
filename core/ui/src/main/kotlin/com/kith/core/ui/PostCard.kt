@@ -61,29 +61,10 @@ fun PostCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (post.author.profileImageUrl != null) {
-                        AsyncImage(
-                            model = post.author.profileImageUrl,
-                            contentDescription = "User profile picture",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Icon(
-                            imageVector = KithIcons.Person,
-                            contentDescription = null,
-                            tint = Color.Gray,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
+                ProfileAvatar(
+                    user = post.author,
+                    avatarSize = 40.dp,
+                )
 
                 Spacer(modifier = Modifier.width(12.dp))
 

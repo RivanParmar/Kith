@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,6 +27,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
+import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.KithTheme
 import com.kith.core.model.data.User
 import com.kith.core.model.data.UserProfile
@@ -54,7 +57,9 @@ fun RingProfileAvatar(
     avatarContent: @Composable () -> Unit,
 ) {
     val clickableModifier = if (onClick != null) {
-        Modifier.clickable(onClick = onClick)
+        Modifier
+            .clip(CircleShape)
+            .clickable(onClick = onClick)
     } else {
         Modifier
     }
@@ -154,14 +159,14 @@ fun ProfileAvatar(
 
 @Composable
 fun ProfileAvatar(
-    userProfile: UserProfile,
+    userProfile: UserProfile?,
     modifier: Modifier = Modifier,
     avatarSize: Dp = 40.dp,
     onClick: (() -> Unit)? = null,
 ) = ProfileAvatar(
-    imageUrl = userProfile.profileImageUrl,
-    name = userProfile.name,
-    isPremium = userProfile.isPremium,
+    imageUrl = userProfile?.profileImageUrl,
+    name = userProfile?.name ?: "",
+    isPremium = userProfile?.isPremium ?: false,
     modifier = modifier,
     avatarSize = avatarSize,
     onClick = onClick,
@@ -180,8 +185,8 @@ private fun AvatarContent(
         contentAlignment = Alignment.Center,
     ) {
         if (!imageUrl.isNullOrEmpty()) {
-            Image(
-                painter = painterResource(id = android.R.drawable.ic_menu_camera),
+            AsyncImage(
+                model = imageUrl,
                 contentDescription = name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),
@@ -202,11 +207,11 @@ private fun AvatarContent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         } else {
-            Image(
-                painter = painterResource(id = android.R.drawable.ic_menu_camera),
+            Icon(
+                imageVector = KithIcons.Person,
                 contentDescription = "User profile picture",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size((avatarSize * 0.55f).coerceAtLeast(16.dp)),
             )
         }
     }

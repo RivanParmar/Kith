@@ -46,6 +46,8 @@ import com.kith.core.designsystem.component.KithMediumTopAppBar
 import com.kith.core.designsystem.theme.KithTheme
 import com.kith.core.designsystem.theme.OutfitFontFamily
 import com.kith.core.model.data.UserProfile
+import com.kith.core.ui.ProfileAvatar
+import com.kith.core.ui.RingProfileAvatar
 
 private object LeaderboardColors {
     val primary = Color(0xFF2563EB)
@@ -264,29 +266,34 @@ private fun PodiumColumn(
         verticalArrangement = Arrangement.Bottom,
     ) {
         Box(contentAlignment = Alignment.BottomCenter, modifier = Modifier.padding(bottom = 6.dp)) {
-            Box(
-                modifier = Modifier
-                    .size(style.avatarSize)
-                    .border(3.5.dp, style.accent, CircleShape)
-                    .padding(3.dp)
-                    .clip(CircleShape)
-                    .background(LeaderboardColors.tabBg),
-                contentAlignment = Alignment.Center,
+            RingProfileAvatar(
+                isPremium = user.isPremium,
+                avatarSize = style.avatarSize,
             ) {
-                if (!user.profileImageUrl.isNullOrEmpty()) {
-                    AsyncImage(
-                        model = user.profileImageUrl,
-                        contentDescription = user.name,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Text(
-                        text = user.name.take(1).uppercase(),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = LeaderboardColors.textDark,
-                    )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .border(if (user.isPremium) 0.dp else 3.5.dp, style.accent, CircleShape)
+                        .padding(if (user.isPremium) 0.dp else 3.dp)
+                        .clip(CircleShape)
+                        .background(LeaderboardColors.tabBg),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (!user.profileImageUrl.isNullOrEmpty()) {
+                        AsyncImage(
+                            model = user.profileImageUrl,
+                            contentDescription = user.name,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Text(
+                            text = user.name.take(1).uppercase(),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = LeaderboardColors.textDark,
+                        )
+                    }
                 }
             }
             Box(
@@ -374,29 +381,10 @@ private fun RankItemRow(
                 modifier = Modifier.width(28.dp),
             )
             Spacer(Modifier.width(8.dp))
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(LeaderboardColors.tabBg),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (!user.profileImageUrl.isNullOrEmpty()) {
-                    AsyncImage(
-                        model = user.profileImageUrl,
-                        contentDescription = user.name,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Text(
-                        text = user.name.take(1).uppercase(),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
-                        color = LeaderboardColors.textDark,
-                    )
-                }
-            }
+            ProfileAvatar(
+                userProfile = user,
+                avatarSize = 40.dp,
+            )
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

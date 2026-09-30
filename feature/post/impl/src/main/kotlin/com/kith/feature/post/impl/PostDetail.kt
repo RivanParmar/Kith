@@ -84,6 +84,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.model.data.User
+import com.kith.core.ui.ProfileAvatar
 import java.util.UUID
 
 data class AttachedFile(
@@ -892,28 +893,10 @@ private fun AuthorProfileCard(author: User, onClick: () -> Unit, modifier: Modif
                 .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFCBD5E1)),
-                contentAlignment = Alignment.Center
-            ) {
-                if (!author.profileImageUrl.isNullOrEmpty()) {
-                    Image(
-                        painter = painterResource(android.R.drawable.ic_menu_camera),
-                        contentDescription = author.name,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    Text(
-                        text = author.name.split(" ").mapNotNull { it.firstOrNull()?.toString() }.take(2).joinToString(""),
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF334155),
-                        fontSize = 18.sp
-                    )
-                }
-            }
+            ProfileAvatar(
+                user = author,
+                avatarSize = 52.dp,
+            )
 
             Spacer(modifier = Modifier.width(14.dp))
 

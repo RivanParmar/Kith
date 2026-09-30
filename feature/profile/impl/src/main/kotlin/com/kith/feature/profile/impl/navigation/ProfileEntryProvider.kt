@@ -19,7 +19,9 @@ fun EntryProviderScope<NavKey>.profileEntry(navigator: Navigator) {
     }
 
     entry<TransactionsNavKey> {
-        TransactionsScreen()
+        TransactionsScreen(
+            onBackClick = navigator::goBack
+        )
     }
 
     entry<PostHistoryNavKey> {
