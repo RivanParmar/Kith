@@ -49,6 +49,7 @@ import coil3.compose.AsyncImage
 import com.kith.core.designsystem.component.LoadingWheel
 import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.KithTheme
+import com.kith.core.designsystem.theme.OutfitFontFamily
 import com.kith.core.model.data.UserProfile
 import com.kith.feature.profile.api.R
 import com.kith.feature.profile.impl.settings.SettingsDialog
@@ -113,9 +114,10 @@ internal fun ProfileScreen(
                 Text(
                     text = stringResource(R.string.feature_profile_api_title),
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.ExtraBold,
                     color = Color.Black,
                     modifier = Modifier.padding(top = 16.dp, bottom = 24.dp),
+                    fontFamily = OutfitFontFamily,
                 )
 
                 Card(

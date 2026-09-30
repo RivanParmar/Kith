@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.kith.core.designsystem.theme.OutfitFontFamily
 import com.kith.core.model.data.Community
 import java.text.NumberFormat
 import java.util.Locale
@@ -44,7 +45,8 @@ fun CommunitiesScreen(
                 text = "Communities",
                 color = Color(0xFF1B1F3B),
                 fontSize = 30.sp,
-                fontWeight = FontWeight.Bold,
+                fontFamily = OutfitFontFamily,
+                fontWeight = FontWeight.ExtraBold,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp)
             )
 

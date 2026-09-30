@@ -13,6 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import com.kith.core.designsystem.theme.OutfitFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,9 +30,11 @@ fun KithMediumTopAppBar(
     colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
     onNavigationClick: () -> Unit = {},
     onActionClick: () -> Unit = {},
+    fontFamily: FontFamily = OutfitFontFamily,
+    fontWeight: FontWeight = FontWeight.ExtraBold
 ) {
     MediumFlexibleTopAppBar(
-        title = { Text(text = stringResource(id = titleRes)) },
+        title = { Text(text = stringResource(id = titleRes), fontFamily = fontFamily, fontWeight = fontWeight) },
         navigationIcon = {
             if (navigationIcon != null) {
                 IconButton(onClick = onNavigationClick) {

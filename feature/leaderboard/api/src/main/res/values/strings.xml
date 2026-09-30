@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="feature_leaderboard_api_title">Leaderboard</string>
+    <string name="feature_leaderboard_api_title">Ranking</string>
 </resources>

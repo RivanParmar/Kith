@@ -29,6 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kith.core.designsystem.component.KithMediumTopAppBar
 import com.kith.core.designsystem.component.LoadingWheel
 import com.kith.core.designsystem.theme.KithTheme
+import com.kith.core.designsystem.theme.OutfitFontFamily
 import com.kith.core.model.data.Transaction
 import com.kith.core.model.data.WalletData
 import com.kith.core.ui.WalletCard
@@ -84,6 +85,8 @@ internal fun TransactionsScreen(
                         actionIcon = null,
                         actionIconContentDescription = null,
                         scrollBehavior = scrollBehavior,
+                        fontFamily = OutfitFontFamily,
+                        fontWeight = FontWeight.ExtraBold
                     )
                 }
             ) { padding ->

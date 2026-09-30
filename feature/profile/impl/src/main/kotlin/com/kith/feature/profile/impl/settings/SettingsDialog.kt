@@ -25,11 +25,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.kith.core.designsystem.theme.OutfitFontFamily
 
 @Composable
 fun SettingsDialog(
@@ -66,7 +68,9 @@ fun SettingsDialog(
         title = {
             Text(
                 text = "Settings",
-                fontSize = 32.sp
+                fontSize = 32.sp,
+                fontFamily = OutfitFontFamily,
+                fontWeight = FontWeight.ExtraBold
             )
         },
         text = {

@@ -25,6 +25,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kith.core.designsystem.component.KithMediumTopAppBar
 import com.kith.core.designsystem.icon.KithIcons
+import com.kith.core.designsystem.theme.GugiFontFamily
 import com.kith.core.designsystem.theme.KithTheme
 import com.kith.core.model.data.Post
 import com.kith.core.model.data.WalletData
@@ -73,7 +74,8 @@ internal fun HomeScreen(
 //            Text(
 //                text = "KITH",
 //                fontSize = 32.sp,
-//                fontWeight = FontWeight.Bold,
+//                fontFamily = OutfitFontFamily,
+//                fontWeight = FontWeight.ExtraBold,
 //                color = Color.Black,
 //                letterSpacing = 1.5.sp,
 //                modifier = Modifier.padding(horizontal = 24.dp, vertical = 30.dp),
@@ -85,6 +87,8 @@ internal fun HomeScreen(
                 actionIcon = KithIcons.Notifications,
                 actionIconContentDescription = "Notifications",
                 scrollBehavior = scrollBehavior,
+                fontFamily = GugiFontFamily,
+                fontWeight = FontWeight.ExtraBold
             )
         }
     ) { padding ->

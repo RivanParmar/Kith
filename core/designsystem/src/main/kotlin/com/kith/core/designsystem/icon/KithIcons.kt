@@ -30,4 +30,6 @@ object KithIcons {
     val Close = close
     val ArrowDown = keyboard_double_arrow_down
     val CheckCircle = check_circle
+    val Cancel = cancel
+    val History = history
 }

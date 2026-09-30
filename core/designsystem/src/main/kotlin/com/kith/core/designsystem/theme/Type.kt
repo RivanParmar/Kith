@@ -8,15 +8,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.kith.core.designsystem.R
 
-val GugiFontFamily = FontFamily(
+val GugiFontFamily: FontFamily = FontFamily(
     Font(R.font.gugi, FontWeight.Normal)
 )
 
 val OutfitFontFamily = FontFamily(
-    Font(R.font.outfit_regular, FontWeight.Normal),
     Font(R.font.outfit_medium, FontWeight.Medium),
     Font(R.font.outfit_semibold, FontWeight.SemiBold),
-    Font(R.font.outfit_bold, FontWeight.Bold)
+    Font(R.font.outfit_bold, FontWeight.Bold),
+    Font(R.font.outfit_extrabold, FontWeight.ExtraBold),
+)
+
+val Oxanium = FontFamily(
+    Font(R.font.oxanium_extrabold, FontWeight.ExtraBold)
+)
+
+val Kiteone = FontFamily(
+    Font(R.font.kiteone_regular, FontWeight.Normal)
 )
 
 val InterFontFamily = FontFamily(

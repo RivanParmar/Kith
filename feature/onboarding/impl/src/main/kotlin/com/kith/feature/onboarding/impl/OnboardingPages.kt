@@ -43,6 +43,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.kith.core.designsystem.icon.KithIcons
+import com.kith.core.designsystem.theme.GugiFontFamily
+import com.kith.core.designsystem.theme.OutfitFontFamily
+import com.kith.core.designsystem.theme.Oxanium
+import com.kith.core.designsystem.theme.Kiteone
 import com.kith.feature.onboarding.api.R
 import kotlin.math.abs
 
@@ -70,7 +74,7 @@ fun OnboardingPageOne(
                 "KITH",
                 color = Color.White,
                 fontSize = 56.sp,
-                style = MaterialTheme.typography.headlineLarge,
+                fontFamily= GugiFontFamily,
                 modifier = Modifier.padding(top = 52.dp),
             )
         }
@@ -89,7 +93,8 @@ fun OnboardingPageOne(
                 text = stringResource(R.string.feature_onboarding_api_heading_page_one),
                 color = Color.White,
                 fontSize = 40.sp,
-                style = MaterialTheme.typography.titleLarge,
+                fontFamily = Oxanium,
+                fontWeight = FontWeight.ExtraBold,
                 textAlign = TextAlign.Center,
                 lineHeight = 42.sp,
             )
@@ -97,8 +102,10 @@ fun OnboardingPageOne(
             Text(
                 text = stringResource(R.string.feature_onboarding_api_content_page_one),
                 fontSize = 24.sp,
-                style = MaterialTheme.typography.bodyMedium,
+                fontFamily = Kiteone,
+                fontWeight = FontWeight.Normal,
                 textAlign = TextAlign.Center,
+               lineHeight = 30.sp
             )
         }
         Spacer(modifier = Modifier.weight(1f))
@@ -171,7 +178,7 @@ fun OnboardingPageTwo(
                         Row(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(Color(0xFFF0F5FF))
+                                .background(Color(0xFF111115))
                                 .padding(horizontal = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -194,8 +201,9 @@ fun OnboardingPageTwo(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "Title",
-                        style = MaterialTheme.typography.titleLarge,
+                        text = "React Hook infinite state re-render help",
+                        fontFamily = OutfitFontFamily,
+                        fontWeight = FontWeight.SemiBold,
                         color = Color.White,
                         modifier = Modifier.fillMaxWidth(),
                         lineHeight = 24.sp
@@ -215,15 +223,15 @@ fun OnboardingPageTwo(
                             fontSize = 10.sp,
                             modifier = Modifier
                                 .background(
-                                    Color(0xFFF0F5FF), RoundedCornerShape(6.dp)
+                                    Color(0xFF111115), RoundedCornerShape(6.dp)
                                 )
                                 .padding(vertical = 2.dp, horizontal = 4.dp)
                         )
 
                         Text(
-                            text = "5m ago",
+                            text = "Programming",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFFF0F5FF),
+                            color = Color(0xFF2563EB),
                         )
                     }
                 }
@@ -244,7 +252,8 @@ fun OnboardingPageTwo(
                 text = stringResource(R.string.feature_onboarding_api_heading_page_two),
                 color = Color.White,
                 fontSize = 40.sp,
-                style = MaterialTheme.typography.titleLarge,
+                fontFamily = Oxanium,
+                fontWeight = FontWeight.ExtraBold,
                 textAlign = TextAlign.Center,
                 lineHeight = 42.sp,
             )
@@ -252,8 +261,10 @@ fun OnboardingPageTwo(
             Text(
                 text = stringResource(R.string.feature_onboarding_api_content_page_two),
                 fontSize = 24.sp,
-                style = MaterialTheme.typography.bodyMedium,
+                fontFamily = Kiteone,
+                fontWeight = FontWeight.Normal,
                 textAlign = TextAlign.Center,
+                lineHeight = 30.sp
             )
         }
         Spacer(modifier = Modifier.weight(1f))
@@ -291,7 +302,8 @@ fun OnboardingPageThree(
                 text = "Earn XP & Build\nTrust",
                 color = Color.White,
                 fontSize = 36.sp,
-                style = MaterialTheme.typography.titleLarge,
+                fontFamily = Oxanium,
+                fontWeight = FontWeight.ExtraBold,
                 textAlign = TextAlign.Center,
                 lineHeight = 42.sp,
             )
@@ -299,8 +311,10 @@ fun OnboardingPageThree(
             Text(
                 text = "Receive XP bounties guaranteed upon completing favors. Level up your reputation tier, unlock exclusive campus perks, and gain verified trust.",
                 fontSize = 24.sp,
-                style = MaterialTheme.typography.bodyMedium,
+                fontFamily = Kiteone,
+                fontWeight = FontWeight.Normal,
                 textAlign = TextAlign.Center,
+                lineHeight = 30.sp
             )
         }
         Spacer(modifier = Modifier.weight(1f))
@@ -360,7 +374,8 @@ fun OnboardingPageFour(
                 text = stringResource(R.string.feature_onboarding_api_heading_page_four),
                 color = Color.White,
                 fontSize = 40.sp,
-                style = MaterialTheme.typography.titleLarge,
+                fontFamily = Oxanium,
+                fontWeight = FontWeight.ExtraBold,
                 textAlign = TextAlign.Center,
                 lineHeight = 42.sp,
             )
@@ -368,8 +383,10 @@ fun OnboardingPageFour(
             Text(
                 text = stringResource(R.string.feature_onboarding_api_content_page_four),
                 fontSize = 24.sp,
-                style = MaterialTheme.typography.bodyMedium,
+                fontFamily = Kiteone,
+                fontWeight = FontWeight.Normal,
                 textAlign = TextAlign.Center,
+                lineHeight = 30.sp
             )
         }
         Spacer(modifier = Modifier.weight(1f))

@@ -44,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.kith.core.designsystem.component.KithMediumTopAppBar
 import com.kith.core.designsystem.theme.KithTheme
+import com.kith.core.designsystem.theme.OutfitFontFamily
 import com.kith.core.model.data.UserProfile
 
 private object LeaderboardColors {
@@ -119,6 +120,8 @@ private fun LeaderboardContent(
                 navigationIconContentDescription = null,
                 actionIcon = null,
                 actionIconContentDescription = null,
+                fontFamily = OutfitFontFamily,
+                fontWeight = FontWeight.ExtraBold
             )
         }
     ) { padding ->

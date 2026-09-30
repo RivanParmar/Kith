@@ -35,6 +35,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kith.core.designsystem.theme.KithTheme
+import com.kith.core.designsystem.theme.OutfitFontFamily
+import com.kith.core.designsystem.theme.Oxanium
 import com.kith.feature.auth.api.R
 import com.kith.feature.auth.impl.ui.AuthLayout
 import com.kith.feature.auth.impl.ui.EmailField
@@ -95,8 +97,9 @@ internal fun SignInScreen(
         Text(
             text = stringResource(R.string.feature_auth_api_sign_in_title),
             color = Color.White,
-            fontSize = 32.sp,
-            fontWeight = FontWeight.Bold,
+            fontSize = 40.sp,
+            fontFamily = Oxanium,
+            fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Start,
             modifier = Modifier.fillMaxWidth(),
         )

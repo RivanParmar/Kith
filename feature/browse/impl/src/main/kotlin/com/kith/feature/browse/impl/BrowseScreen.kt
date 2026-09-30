@@ -53,6 +53,7 @@ import com.kith.core.designsystem.component.KithMediumTopAppBar
 import com.kith.core.designsystem.component.KithSearchBar
 import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.KithTheme
+import com.kith.core.designsystem.theme.OutfitFontFamily
 import com.kith.core.model.data.Post
 import com.kith.core.ui.PostPreviewParameterProvider
 import com.kith.core.ui.PostsFeedUiState
@@ -176,6 +177,8 @@ internal fun BrowseScreen(
                 actionIcon = null,
                 actionIconContentDescription = null,
                 scrollBehavior = scrollBehavior,
+                fontFamily = OutfitFontFamily,
+                fontWeight = FontWeight.ExtraBold
             )
         }
     ) { innerPadding ->
