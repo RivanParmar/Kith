@@ -3,6 +3,7 @@ package com.kith.feature.browse.impl
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -108,8 +110,38 @@ internal fun BrowseScreen(
     // True when the user taps into the search bar or activates search
     val isSearching = searchBarState.targetValue == SearchBarValue.Expanded
 
-    // Holds the currently active filter (All, In-person, or Online)
+    // Holds the currently active filter (All, In-person, or Virtual)
     var currentFilter by remember { mutableStateOf(initialFilter) }
+
+    // Live search query as the user types
+    val searchQuery = textFieldState.text.toString()
+
+    // Live-filtered feed state based on search query and selected filter chip
+    val filteredFeedState = remember(feedState, searchQuery, currentFilter) {
+        if (feedState is PostsFeedUiState.Success) {
+            val filtered = feedState.feed.filter { post ->
+                val matchesFilter = when (currentFilter) {
+                    BrowseFilter.ALL -> true
+                    BrowseFilter.IN_PERSON -> post.isInPerson
+                    BrowseFilter.VIRTUAL -> !post.isInPerson
+                }
+
+                val matchesQuery = if (searchQuery.isBlank()) {
+                    true
+                } else {
+                    val query = searchQuery.trim()
+                    post.title.contains(query, ignoreCase = true) ||
+                        post.content.contains(query, ignoreCase = true) ||
+                        post.community.name.contains(query, ignoreCase = true)
+                }
+
+                matchesFilter && matchesQuery
+            }
+            PostsFeedUiState.Success(filtered)
+        } else {
+            feedState
+        }
+    }
 
     val inputField =
         @Composable {
@@ -158,7 +190,7 @@ internal fun BrowseScreen(
                             }
                         ) {
                             Icon(
-                                imageVector = KithIcons.Cancel,
+                                imageVector = KithIcons.Add,
                                 contentDescription = "Clear search"
                             )
                         }
@@ -193,19 +225,47 @@ internal fun BrowseScreen(
                 inputField = inputField,
                 modifier = Modifier.padding(top = 18.dp)
             ) {
-                RecentSearchesContent(
-                    recentSearchQueriesUiState = recentSearchQueriesUiState,
-                    onRecentSearchClicked = { query ->
-                        textFieldState.setTextAndPlaceCursorAtEnd(query)
-                        onSearchTriggered(query)
-                        scope.launch { searchBarState.animateToCollapsed() }
-                        focusManager.clearFocus()
-                    },
-                    onClearRecentSearches = onClearRecentSearches,
-                )
+                if (searchQuery.isBlank()) {
+                    RecentSearchesContent(
+                        recentSearchQueriesUiState = recentSearchQueriesUiState,
+                        onRecentSearchClicked = { query ->
+                            textFieldState.setTextAndPlaceCursorAtEnd(query)
+                            onSearchTriggered(query)
+                            scope.launch { searchBarState.animateToCollapsed() }
+                            focusManager.clearFocus()
+                        },
+                        onClearRecentSearches = onClearRecentSearches,
+                    )
+                } else {
+                    LazyVerticalGrid(
+                        modifier = Modifier.fillMaxSize(),
+                        columns = GridCells.Adaptive(300.dp),
+                        contentPadding = PaddingValues(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 24.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        if (filteredFeedState is PostsFeedUiState.Success && filteredFeedState.feed.isEmpty()) {
+                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 32.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        text = "No posts found for \"${searchQuery.trim()}\"",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                        } else {
+                            postsFeed(filteredFeedState)
+                        }
+                    }
+                }
             }
 
-            // Dynamic Row for "All", "In-person", "Online" Filter Chips
+            // Dynamic Row for "All", "In-person", "Virtual" Filter Chips
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -235,7 +295,28 @@ internal fun BrowseScreen(
                 contentPadding = PaddingValues(start = 10.dp, end = 10.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                postsFeed(feedState)
+                if (filteredFeedState is PostsFeedUiState.Success && filteredFeedState.feed.isEmpty()) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 32.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = if (searchQuery.isNotBlank()) {
+                                    "No posts found for \"${searchQuery.trim()}\""
+                                } else {
+                                    "No posts available"
+                                },
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                } else {
+                    postsFeed(filteredFeedState)
+                }
             }
         }
     }
@@ -298,7 +379,7 @@ private fun RecentSearchesContent(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
                                 Icon(
-                                    imageVector = KithIcons.History,
+                                    imageVector = KithIcons.Edit,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
