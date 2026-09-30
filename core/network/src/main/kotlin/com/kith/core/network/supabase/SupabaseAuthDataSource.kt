@@ -1,5 +1,6 @@
 package com.kith.core.network.supabase
 
+import android.util.Log
 import com.kith.core.network.KithAuthDataSource
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -67,15 +68,23 @@ class SupabaseAuthDataSource @Inject constructor(
 
     override suspend fun syncFcmToken(token: String) {
         try {
-            val currentUser = currentUserId() ?: return
+            val currentUser = currentUserId()
+            if (currentUser == null) {
+                Log.e("FCM_SYNC", "Abort: currentUserId() is null!")
+                return
+            }
 
             supabase.postgrest["users"].update(
                 { set("fcm_token", token) }
             ) {
                 filter { eq("id", currentUser) }
             }
-        } catch (e: Exception) {
 
+            Log.d("FCM_SYNC", "Successfully updated Supabase for user: $currentUser")
+
+        } catch (e: Exception) {
+            // Now you will actually see if RLS or a network issue is blocking it
+            Log.e("FCM_SYNC", "Supabase update threw an exception", e)
         }
     }
 }

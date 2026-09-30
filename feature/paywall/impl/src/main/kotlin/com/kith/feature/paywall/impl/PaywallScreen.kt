@@ -19,9 +19,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -51,7 +53,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -105,9 +106,6 @@ fun PaywallScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 8.dp)
         ) {
-            // ─────────────────────────────────────────────────────────────────
-            // Top Row: Back Arrow + Segmented Annual/Monthly Toggle
-            // ─────────────────────────────────────────────────────────────────
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -118,6 +116,7 @@ fun PaywallScreen(
                 IconButton(
                     onClick = onBackClick,
                     modifier = Modifier
+                        .offset(x = (-12).dp) // Neutralizes the 12dp internal padding so it aligns flush left
                         .size(48.dp)
                         .testTag("paywall_back_button")
                 ) {
@@ -137,9 +136,6 @@ fun PaywallScreen(
                 )
             }
 
-            // ─────────────────────────────────────────────────────────────────
-            // Title Header
-            // ─────────────────────────────────────────────────────────────────
             Text(
                 text = "Pricing",
                 fontFamily = OutfitFontFamily,
@@ -149,18 +145,16 @@ fun PaywallScreen(
                 modifier = Modifier.padding(bottom = 20.dp)
             )
 
-            // ─────────────────────────────────────────────────────────────────
-            // Large Blue Kith Premium Pricing Card
-            // ─────────────────────────────────────────────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(26.dp))
+                    .padding(horizontal = 8.dp) // Prevents it from stretching too wide
+                    .defaultMinSize(minHeight = 500.dp) // Forces the container to be longer vertically
+                    .clip(RoundedCornerShape(32.dp))
                     .background(PaywallBlue)
-                    .padding(24.dp)
+                    .padding(horizontal = 24.dp, vertical = 36.dp) // Increased vertical padding
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    // Card Header Badge
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -182,7 +176,6 @@ fun PaywallScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Dynamic Pricing Section using AnimatedContent
                     AnimatedContent(
                         targetState = Pair(uiState.activePrimaryPrice, uiState.activeSubPrice),
                         transitionSpec = {
@@ -190,10 +183,10 @@ fun PaywallScreen(
                                 initialOffsetY = { -it / 2 },
                                 animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
                             ) + fadeIn(animationSpec = tween(durationMillis = 280))) togetherWith
-                                (slideOutVertically(
-                                    targetOffsetY = { it / 2 },
-                                    animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
-                                ) + fadeOut(animationSpec = tween(durationMillis = 280)))
+                                    (slideOutVertically(
+                                        targetOffsetY = { it / 2 },
+                                        animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
+                                    ) + fadeOut(animationSpec = tween(durationMillis = 280)))
                         },
                         label = "PricingTextTransition"
                     ) { (primaryPrice, subPrice) ->
@@ -215,9 +208,8 @@ fun PaywallScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                    // Billing Description
                     Text(
                         text = "Experience the full potential of Kith with unlimited requests, community unlocks, and priority attention from campus experts.",
                         color = Color.White.copy(alpha = 0.90f),
@@ -225,13 +217,12 @@ fun PaywallScreen(
                         lineHeight = 20.sp
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(28.dp))
 
-                    // Premium Benefits List (5 items with white checkmarks)
                     uiState.features.forEach { feature ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(vertical = 6.dp)
+                            modifier = Modifier.padding(vertical = 8.dp) // Added breathing room between list items
                         ) {
                             Box(
                                 modifier = Modifier
@@ -257,9 +248,9 @@ fun PaywallScreen(
                         }
                     }
 
+                    Spacer(modifier = Modifier.weight(1f))
                     Spacer(modifier = Modifier.height(28.dp))
 
-                    // White "Upgrade to Premium" CTA Button
                     Button(
                         onClick = {
                             if (activity != null) {
@@ -296,7 +287,6 @@ fun PaywallScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Restore Purchases CTA
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
@@ -322,15 +312,11 @@ fun PaywallScreen(
                     )
                 }
             }
-
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
 
-/**
- * Custom pill-shaped Annual / Monthly toggle with smooth animated colors.
- */
 @Composable
 private fun AnnualMonthlyPillToggle(
     selectedCycle: BillingCycle,
@@ -368,7 +354,6 @@ private fun AnnualMonthlyPillToggle(
             .padding(3.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Annual Tab
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(50))
@@ -390,7 +375,6 @@ private fun AnnualMonthlyPillToggle(
             )
         }
 
-        // Monthly Tab
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(50))

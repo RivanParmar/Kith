@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -159,23 +159,31 @@ private fun AvatarContent(
     name: String,
     modifier: Modifier = Modifier,
 ) {
-    var isError by remember { mutableStateOf(false) }
+    var isError by remember(imageUrl) { mutableStateOf(false) }
 
     Box(
-        modifier = modifier
-            .background(MaterialTheme.colorScheme.surfaceVariant),
+        modifier = modifier.background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center,
     ) {
-        AsyncImage(
-            model = imageUrl,
-            contentDescription = name,
-            contentScale = if (isError) ContentScale.Inside else ContentScale.Crop,
-            modifier = Modifier.fillMaxSize(),
-            placeholder = rememberVectorPainter(KithIcons.Person),
-            error = rememberVectorPainter(KithIcons.Person),
-            onError = { isError = true },
-            onSuccess = { isError = false },
-        )
+        if (imageUrl.isNullOrBlank() || isError) {
+            Icon(
+                imageVector = KithIcons.Person,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(24.dp),
+            )
+        }
+
+        if (!imageUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = name,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+                onError = { isError = true },
+                onSuccess = { isError = false },
+            )
+        }
     }
 }
 

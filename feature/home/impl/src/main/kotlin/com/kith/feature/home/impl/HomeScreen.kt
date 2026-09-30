@@ -36,6 +36,7 @@ import com.kith.core.ui.WalletCard
 import com.kith.core.ui.WalletUiState
 import com.kith.core.ui.postsFeed
 import com.kith.feature.home.api.R
+import com.kith.feature.home.impl.ui.DailyRewardDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,7 +52,15 @@ fun HomeRoute(
     val walletUiState by viewModel.walletState.collectAsStateWithLifecycle()
     val isSyncing by viewModel.isSyncing.collectAsStateWithLifecycle()
 
+    val showDailyRewardDialog by viewModel.showDailyRewardDialog.collectAsStateWithLifecycle()
+
     val currentUserId = viewModel.currentUserId
+
+    if (showDailyRewardDialog) {
+        DailyRewardDialog(
+            onDismiss = viewModel::dismissDailyRewardDialog
+        )
+    }
 
     HomeScreen(
         isSyncing = isSyncing,

@@ -390,7 +390,6 @@ private fun RankItemRow(
                 text = rank.toString(),
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
-                color = LeaderboardColors.textDark,
                 modifier = Modifier.width(28.dp),
             )
             Spacer(Modifier.width(8.dp))
@@ -405,7 +404,6 @@ private fun RankItemRow(
                         text = user.name,
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
-                        color = LeaderboardColors.textDark,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f, fill = false),

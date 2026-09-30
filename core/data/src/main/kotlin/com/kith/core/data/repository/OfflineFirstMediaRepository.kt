@@ -86,14 +86,34 @@ class OfflineFirstMediaRepository @Inject constructor(
     override suspend fun uploadProfileImage(userId: String, imageUri: String): Result<String> = withContext(Dispatchers.IO) {
         try {
             // Append timestamp to break Supabase cache on profile picture updates
-            val fileName = "profile_${userId}_${System.currentTimeMillis()}.webp"
+            val fileName = "profile_${userId}.webp"
             val webpBytes = compressToWebP(imageUri.toUri())
 
             // Upload to the specified profile_image bucket
             val uploadResult = storageDataSource.uploadMedia(fileName, webpBytes, "profile_image")
 
             if (uploadResult.isSuccess) {
-                val publicUrl = storageDataSource.getPublicUrl(fileName, "profile_image")
+                val publicUrl = storageDataSource.getPublicUrl(fileName, "profile_image") + "?t=${System.currentTimeMillis()}"
+                Result.success(publicUrl)
+            } else {
+                Result.failure(uploadResult.exceptionOrNull() ?: Exception("Unknown upload error"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun uploadCommunityImage(communityId: String, imageUri: String): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            // Fixes the filename to the community ID so it automatically overwrites in Supabase
+            val fileName = "community_${communityId}.webp"
+            val webpBytes = compressToWebP(imageUri.toUri())
+
+            val uploadResult = storageDataSource.uploadMedia(fileName, webpBytes, "media")
+
+            if (uploadResult.isSuccess) {
+                // Append timestamp to break the local Coil cache after an overwrite
+                val publicUrl = storageDataSource.getPublicUrl(fileName, "media") + "?t=${System.currentTimeMillis()}"
                 Result.success(publicUrl)
             } else {
                 Result.failure(uploadResult.exceptionOrNull() ?: Exception("Unknown upload error"))

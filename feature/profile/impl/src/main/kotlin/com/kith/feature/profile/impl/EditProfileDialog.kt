@@ -19,7 +19,6 @@ import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
 import com.kith.core.designsystem.icon.KithIcons
 
-// FIX: Signature updated to return a single Uri?
 class MediaPickerHelper(
     val launchPhotoPicker: (onResult: (Uri?) -> Unit) -> Unit,
 )
@@ -89,7 +88,7 @@ internal fun EditProfileDialog(
                             .background(Color(0xFFE2E8F0)),
                         contentAlignment = Alignment.Center,
                     ) {
-                        if (imageUrl != null) {
+                        if (!imageUrl.isNullOrBlank()) {
                             AsyncImage(
                                 model = imageUrl,
                                 contentDescription = "Profile Image",
@@ -97,7 +96,12 @@ internal fun EditProfileDialog(
                                 contentScale = ContentScale.Crop
                             )
                         } else {
-                            Icon(KithIcons.Person, contentDescription = null, tint = Color(0xFF94A3B8))
+                            Icon(
+                                imageVector = KithIcons.Person,
+                                contentDescription = null,
+                                tint = Color(0xFF94A3B8),
+                                modifier = Modifier.size(40.dp)
+                            )
                         }
                     }
                     SmallFloatingActionButton(

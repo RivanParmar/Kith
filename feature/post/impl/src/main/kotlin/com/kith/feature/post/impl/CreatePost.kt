@@ -49,6 +49,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -118,10 +120,15 @@ fun CreatePostScreen(
     val userSearchResults by viewModel.userSearchResults.collectAsStateWithLifecycle()
     val isPremium by viewModel.isPremium.collectAsStateWithLifecycle()
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
     LaunchedEffect(submissionState) {
         if (submissionState is PostSubmissionState.Success) {
             delay(1500) // The delay allows the success animation to play fully
             onNavigateBack()
+            viewModel.dismissSubmissionError()
+        } else if (submissionState is PostSubmissionState.Error) {
+            snackbarHostState.showSnackbar((submissionState as PostSubmissionState.Error).message)
             viewModel.dismissSubmissionError()
         }
     }
@@ -132,9 +139,9 @@ fun CreatePostScreen(
         userSearchResults = userSearchResults,
         submissionState = submissionState,
         isPremium = isPremium,
+        snackbarHostState = snackbarHostState,
         onSearchUsers = viewModel::searchUsersInCommunity,
         onClearSearch = viewModel::clearUserSearch,
-        onCancel = onNavigateBack,
         onPost = viewModel::createPost,
     )
 }
@@ -147,9 +154,9 @@ internal fun CreatePostScreen(
     userSearchResults: List<User> = emptyList(),
     submissionState: PostSubmissionState = PostSubmissionState.Idle,
     isPremium: Boolean = false,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onSearchUsers: (communityId: String, query: String) -> Unit = { _, _ -> },
     onClearSearch: () -> Unit = {},
-    onCancel: () -> Unit = {},
     onPost: (CreatePostFormState) -> Unit = { _ -> },
 ) {
     // Fetch the Media Picker Helper provided by KithApp.kt
@@ -165,10 +172,11 @@ internal fun CreatePostScreen(
     Box(modifier = modifier.fillMaxSize()) {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.surface,
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 CenterAlignedTopAppBar(
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
                     ),
                     title = {
                         Text(
@@ -315,7 +323,6 @@ internal fun CreatePostScreen(
                         }
                     }
 
-                    // Attachments Section
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
                             text = "ATTACHMENTS",
@@ -972,7 +979,6 @@ private fun CreatePostScreenPreview() {
         CreatePostScreen(
             communitiesUiState = CommunitiesUiState.Loading,
             isPremium = false,
-            onCancel = {},
             onPost = { _ -> }
         )
     }

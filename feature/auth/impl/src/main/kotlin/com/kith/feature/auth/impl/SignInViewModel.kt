@@ -3,21 +3,23 @@ package com.kith.feature.auth.impl
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.messaging.FirebaseMessaging
 import com.kith.core.data.repository.AuthRepository
-
+import com.kith.core.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
 class SignInViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    private val userRepository: UserRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SignInUiState())
@@ -65,6 +67,7 @@ class SignInViewModel @Inject constructor(
                 email = currentState.email,
                 password = currentState.password
             ).onSuccess {
+                fetchAndSyncFcmToken()
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -107,6 +110,23 @@ class SignInViewModel @Inject constructor(
 
     private fun validatePassword(password: String): Boolean {
         return password.isNotBlank() && password.length >= 6
+    }
+
+    suspend fun fetchAndSyncFcmToken() {
+        try {
+            // 1. Manually grab the existing token from Firebase
+            val token = FirebaseMessaging.getInstance().token.await()
+
+            // 2. WAIT for Supabase triggers and auth session to settle
+            delay(1500)
+
+            // 3. Push it to Supabase now that the user row definitely exists
+            userRepository.syncFcmToken(token)
+
+            Log.d("FCM_SYNC", "Token dispatched to repository")
+        } catch (e: Exception) {
+            Log.e("FCM_SYNC", "Failed to fetch Firebase token", e)
+        }
     }
 }
 

@@ -18,4 +18,6 @@ interface MediaRepository {
     ): String?
 
     suspend fun uploadProfileImage(userId: String, imageUri: String): Result<String>
+
+    suspend fun uploadCommunityImage(communityId: String, imageUri: String): Result<String>
 }

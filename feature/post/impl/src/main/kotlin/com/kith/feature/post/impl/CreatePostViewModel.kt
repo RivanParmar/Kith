@@ -4,15 +4,17 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kith.core.data.repository.CommunityRepository
+import com.kith.core.data.repository.UserRepository
+import com.kith.core.data.repository.WalletRepository // ADDED
 import com.kith.core.domain.CreatePostUseCase
 import com.kith.core.model.data.NewPostRequest
 import com.kith.core.model.data.User
-import com.kith.core.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -22,6 +24,7 @@ import javax.inject.Inject
 class CreatePostViewModel @Inject constructor(
     private val createPostUseCase: CreatePostUseCase,
     private val communityRepository: CommunityRepository,
+    private val walletRepository: WalletRepository, // ADDED
     userRepository: UserRepository,
 ) : ViewModel() {
 
@@ -35,7 +38,8 @@ class CreatePostViewModel @Inject constructor(
     val userSearchResults: StateFlow<List<User>> = _userSearchResults.asStateFlow()
 
     val communitiesUiState: StateFlow<CommunitiesUiState> =
-        communityRepository.getAvailableCommunities()
+        // FIX: Replaced getAvailableCommunities with getJoinedCommunitiesStream
+        communityRepository.getJoinedCommunitiesStream()
             .map { CommunitiesUiState.Success(it) }
             .stateIn(
                 scope = viewModelScope,
@@ -80,7 +84,6 @@ class CreatePostViewModel @Inject constructor(
     fun createPost(currentForm: CreatePostFormState) {
         if (!currentForm.isValid) {
             _submissionState.value = PostSubmissionState.Error("Please fill in the title, description, and select a community.")
-            Log.d("CREATE", "Reached here!")
             return
         }
 
@@ -88,6 +91,16 @@ class CreatePostViewModel @Inject constructor(
             _submissionState.value = PostSubmissionState.Submitting
 
             try {
+                // FIX: Check user XP balance before allowing creation
+                val walletData = walletRepository.getWalletDataStream().firstOrNull()
+                val currentXp = walletData?.balance ?: 0
+                val requiredXp = currentForm.reward.rewardValue
+
+                if (currentXp < requiredXp) {
+                    _submissionState.value = PostSubmissionState.Error("Not enough XP. You need $requiredXp XP to post this task.")
+                    return@launch
+                }
+
                 val communityId = currentForm.selectedCommunity?.id
                     ?: throw IllegalStateException("Community not selected")
 
@@ -98,13 +111,11 @@ class CreatePostViewModel @Inject constructor(
                     else -> "OPEN"
                 }
 
-                Log.d("CREATE", postStatus)
-
                 val request = NewPostRequest(
                     title = currentForm.title,
                     content = currentForm.content,
                     communityId = communityId,
-                    reward = currentForm.reward.rewardValue,
+                    reward = requiredXp,
                     isInPerson = currentForm.isInPerson,
                     imageUris = currentForm.selectedImageUris,
                     pdfUri = currentForm.selectedPdfUri,
@@ -117,7 +128,7 @@ class CreatePostViewModel @Inject constructor(
 
                 _submissionState.value = PostSubmissionState.Success
             } catch (e: Exception) {
-                _submissionState.value = PostSubmissionState.Error(e.message.toString())
+                _submissionState.value = PostSubmissionState.Error(e.message ?: "Failed to create post")
             }
         }
     }

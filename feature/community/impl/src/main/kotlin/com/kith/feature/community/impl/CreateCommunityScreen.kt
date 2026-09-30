@@ -1,5 +1,6 @@
 package com.kith.feature.community.impl
 
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
@@ -47,11 +48,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.MeshGradientPainter
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -61,16 +64,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.KithTheme
 import kotlinx.coroutines.launch
+
+class CommunityMediaPickerHelper(val launchPhotoPicker: (onResult: (Uri?) -> Unit) -> Unit)
+
+val LocalCommunityMediaPickerHelper = androidx.compose.runtime.staticCompositionLocalOf<CommunityMediaPickerHelper> {
+    error("No MediaPickerHelper provided. Ensure it is provided in KithApp.kt")
+}
 
 @Composable
 fun CreateCommunityScreen(
     viewModel: CreateCommunityViewModel = hiltViewModel(),
     onBack: () -> Unit,
     onCreated: () -> Unit,
-    onPickIcon: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -86,7 +95,7 @@ fun CreateCommunityScreen(
         onPasswordChanged = viewModel::onPasswordChanged,
         onDescriptionChanged = viewModel::onDescriptionChanged,
         onBackClicked = onBack,
-        onAddIconClicked = onPickIcon,
+        onAddIconClicked = viewModel::onImagePicked,
         onCreateClicked = viewModel::onCreateClicked,
     )
 }
@@ -98,9 +107,10 @@ internal fun CreateCommunityScreen(
     onPasswordChanged: (String) -> Unit,
     onDescriptionChanged: (String) -> Unit,
     onBackClicked: () -> Unit = {},
-    onAddIconClicked: () -> Unit = {},
+    onAddIconClicked: (String) -> Unit = {},
     onCreateClicked: () -> Unit = {},
 ) {
+    val mediaPicker = LocalCommunityMediaPickerHelper.current
     var nameError by rememberSaveable { mutableStateOf<String?>(null) }
     var passwordError by rememberSaveable { mutableStateOf<String?>(null) }
     var descriptionError by rememberSaveable { mutableStateOf<String?>(null) }
@@ -138,7 +148,6 @@ internal fun CreateCommunityScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Avatar/icon picker
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -146,14 +155,38 @@ internal fun CreateCommunityScreen(
                     .align(Alignment.CenterHorizontally),
                 contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(230.dp, 190.dp)
-                        .background(Color.White.copy(alpha = 0.92f), RoundedCornerShape(60.dp))
-                )
+                if (uiState.communityImageUri != null) {
+                    AsyncImage(
+                        model = uiState.communityImageUri,
+                        contentDescription = "Selected Community Image",
+                        modifier = Modifier
+                            .size(230.dp, 190.dp)
+                            .clip(RoundedCornerShape(60.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(230.dp, 190.dp)
+                            .background(Color.White.copy(alpha = 0.92f), RoundedCornerShape(60.dp))
+                    ) {
+                        Icon(
+                            imageVector = KithIcons.Groups,
+                            contentDescription = null,
+                            tint = Color.Gray,
+                            modifier = Modifier.align(Alignment.Center).size(64.dp)
+                        )
+                    }
+                }
 
                 InteractiveAddIconButton(
-                    onClick = onAddIconClicked,
+                    onClick = {
+                        mediaPicker.launchPhotoPicker { uri ->
+                            if (uri != null) {
+                                onAddIconClicked(uri.toString())
+                            }
+                        }
+                    },
                     modifier = Modifier
                         .align(Alignment.Center)
                         .offset(x = 95.dp, y = 80.dp)

@@ -16,6 +16,5 @@ dependencies {
 
     implementation(libs.coil.kt)
     implementation(libs.coil.kt.compose)
-
-    implementation("io.coil-kt.coil3:coil-network-okhttp:3.6.3")
+    implementation(libs.coil.network.okhttp)
 }

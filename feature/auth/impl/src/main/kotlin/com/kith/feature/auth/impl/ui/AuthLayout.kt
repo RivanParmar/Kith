@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,6 +18,7 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kith.core.designsystem.theme.KithTheme
+import com.kith.core.designsystem.theme.LightBlue
 
 @Composable
 internal fun AuthLayout(
@@ -42,7 +42,7 @@ internal fun AuthLayout(
 //                .weight(1f)
                 .heightIn(min = screenHeight * 0.65f)
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.tertiary)
+                .background(LightBlue)
                 .padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             content = content,

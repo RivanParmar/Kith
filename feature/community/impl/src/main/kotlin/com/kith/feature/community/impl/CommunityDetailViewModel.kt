@@ -3,6 +3,7 @@ package com.kith.feature.community.impl
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kith.core.data.repository.CommunityRepository
+import com.kith.core.data.repository.MediaRepository
 import com.kith.core.model.data.Community
 import com.kith.core.network.KithAuthDataSource
 import dagger.assisted.Assisted
@@ -19,6 +20,7 @@ import kotlinx.coroutines.launch
 class CommunityDetailViewModel @AssistedInject constructor(
     @Assisted val communityId: String,
     private val communityRepository: CommunityRepository,
+    private val mediaRepository: MediaRepository,
     authDataSource: KithAuthDataSource
 ) : ViewModel() {
 
@@ -49,6 +51,16 @@ class CommunityDetailViewModel @AssistedInject constructor(
     fun updateDescription(description: String) {
         viewModelScope.launch {
             communityRepository.updateCommunityDescription(communityId, description)
+        }
+    }
+
+    fun updateCommunityImage(imageUri: String) {
+        viewModelScope.launch {
+            val uploadResult = mediaRepository.uploadCommunityImage(communityId, imageUri)
+            uploadResult.onSuccess { url ->
+                // Ensure your CommunityRepository accepts the imageUrl update
+                communityRepository.updateCommunityImage(communityId, url)
+            }
         }
     }
 

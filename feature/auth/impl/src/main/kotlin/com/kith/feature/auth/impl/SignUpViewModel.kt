@@ -3,18 +3,23 @@ package com.kith.feature.auth.impl
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.messaging.FirebaseMessaging
 import com.kith.core.data.repository.AuthRepository
+import com.kith.core.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    private val userRepository: UserRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SignUpUiState())
@@ -56,6 +61,7 @@ class SignUpViewModel @Inject constructor(
                 email = currentState.email,
                 password = currentState.password,null
             ).onSuccess {
+                fetchAndSyncFcmToken()
                 _uiState.update { it.copy(isLoading = false) }
                 Log.d("SIGN_UP", "Success!")
             }.onFailure { throwable ->
@@ -63,6 +69,23 @@ class SignUpViewModel @Inject constructor(
                 Log.d("SIGN_UP", "Failed!")
                 Log.d("SIGN_UP", throwable.stackTraceToString())
             }
+        }
+    }
+
+    suspend fun fetchAndSyncFcmToken() {
+        try {
+            // 1. Manually grab the existing token from Firebase
+            val token = FirebaseMessaging.getInstance().token.await()
+
+            // 2. WAIT for Supabase triggers and auth session to settle
+            delay(1500)
+
+            // 3. Push it to Supabase now that the user row definitely exists
+            userRepository.syncFcmToken(token)
+
+            Log.d("FCM_SYNC", "Token dispatched to repository")
+        } catch (e: Exception) {
+            Log.e("FCM_SYNC", "Failed to fetch Firebase token", e)
         }
     }
 }

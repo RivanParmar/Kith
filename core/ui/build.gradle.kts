@@ -12,4 +12,5 @@ dependencies {
     api(projects.core.model)
     implementation(libs.coil.kt)
     implementation(libs.coil.kt.compose)
+    implementation(libs.coil.network.okhttp)
 }

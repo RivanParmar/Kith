@@ -3,6 +3,8 @@ package com.kith.feature.profile.impl.settings
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -54,14 +56,16 @@ fun SettingsDialog(
         )
     }
 
-//    val permissionLauncher = rememberLauncherForActivityResult(
-//        ActivityResultContracts.RequestPermission()
-//    ) { isGranted: Boolean ->
-//        hasNotificationPermission = isGranted
-//        if (isGranted) {
-//            viewModel.setPushNotificationsEnabled(true)
-//        }
-//    }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        hasNotificationPermission = isGranted
+        if (isGranted) {
+            viewModel.setPushNotificationsEnabled(true)
+        } else {
+            viewModel.setPushNotificationsEnabled(false)
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -75,14 +79,13 @@ fun SettingsDialog(
         },
         text = {
             Column(
-                // ADDED: verticalScroll so the options don't get cut off when the list is too long
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
             ) {
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(24.dp))
-                
+
                 // NOTIFICATION SETTING
                 SettingsSectionTitle(
                     text = "Notifications"
@@ -110,25 +113,29 @@ fun SettingsDialog(
                                         context,
                                         Manifest.permission.POST_NOTIFICATIONS
                                     ) == PackageManager.PERMISSION_GRANTED
+
                                     if (!isGranted) {
-//                                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                        // Ask for permission; the result is handled by permissionLauncher
+                                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                                     } else {
+                                        // Already granted, just turn it on in preferences
                                         hasNotificationPermission = true
                                         viewModel.setPushNotificationsEnabled(true)
                                     }
                                 } else {
+                                    // Android 12 and below don't need runtime permission for notifications
                                     viewModel.setPushNotificationsEnabled(true)
                                 }
                             } else {
+                                // Turning it off manually
                                 viewModel.setPushNotificationsEnabled(false)
                             }
                         }
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(24.dp))
 
-               
                 // DYNAMIC COLOR
                 SettingsSectionTitle(
                     text = "Use Dynamic Color"
@@ -136,63 +143,38 @@ fun SettingsDialog(
                 Spacer(modifier = Modifier.height(12.dp))
                 SettingsRadioOption(
                     text = "Yes",
-                    selected = uiState.dynamicColor ==
-                            DynamicColorOption.YES,
-                    onClick = {
-                        viewModel.setDynamicColor(
-                            DynamicColorOption.YES
-                        )
-                    }
+                    selected = uiState.dynamicColor == DynamicColorOption.YES,
+                    onClick = { viewModel.setDynamicColor(DynamicColorOption.YES) }
                 )
                 SettingsRadioOption(
                     text = "No",
-                    selected = uiState.dynamicColor ==
-                            DynamicColorOption.NO,
-                    onClick = {
-                        viewModel.setDynamicColor(
-                            DynamicColorOption.NO
-                        )
-                    }
+                    selected = uiState.dynamicColor == DynamicColorOption.NO,
+                    onClick = { viewModel.setDynamicColor(DynamicColorOption.NO) }
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // DARK MODE
                 SettingsSectionTitle(
-                    text = "Dark mode preference"
+                    text = "Dark mode"
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 SettingsRadioOption(
                     text = "System default",
-                    selected = uiState.darkMode ==
-                            DarkModePreference.SYSTEM_DEFAULT,
-                    onClick = {
-                        viewModel.setDarkMode(
-                            DarkModePreference.SYSTEM_DEFAULT
-                        )
-                    }
+                    selected = uiState.darkMode == DarkModePreference.SYSTEM_DEFAULT,
+                    onClick = { viewModel.setDarkMode(DarkModePreference.SYSTEM_DEFAULT) }
                 )
                 SettingsRadioOption(
                     text = "Light",
-                    selected = uiState.darkMode ==
-                            DarkModePreference.LIGHT,
-                    onClick = {
-                        viewModel.setDarkMode(
-                            DarkModePreference.LIGHT
-                        )
-                    }
+                    selected = uiState.darkMode == DarkModePreference.LIGHT,
+                    onClick = { viewModel.setDarkMode(DarkModePreference.LIGHT) }
                 )
                 SettingsRadioOption(
                     text = "Dark",
-                    selected = uiState.darkMode ==
-                            DarkModePreference.DARK,
-                    onClick = {
-                        viewModel.setDarkMode(
-                            DarkModePreference.DARK
-                        )
-                    }
+                    selected = uiState.darkMode == DarkModePreference.DARK,
+                    onClick = { viewModel.setDarkMode(DarkModePreference.DARK) }
                 )
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(8.dp))

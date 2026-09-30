@@ -26,7 +26,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.KithTheme
 import com.kith.core.model.data.StreakState
-import com.kith.feature.home.impl.DailyRewardDialogViewModel
 
 @Composable
 fun DailyRewardDialog(

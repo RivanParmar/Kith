@@ -19,10 +19,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.Int
 import kotlin.time.Instant
 
 private data class PostTransientState(
@@ -67,14 +67,32 @@ class PostDetailViewModel @AssistedInject constructor(
         transientState.update { it.copy(isAcceptedByCurrentUser = !it.isAcceptedByCurrentUser) }
     }
 
-    fun onSubmitAnswer(answer: String) {
+    fun onSubmitAnswer(answer: String, files: List<AttachedFile>) {
         viewModelScope.launch {
             transientState.update { it.copy(isSubmitting = true) }
             try {
                 val solverId = authRepository.currentUserId() ?: return@launch
+
+                // 1. Separate files by type for the MediaRepository
+                // (Assuming AttachedFile has a 'uri' property from your file picker)
+                val imageUris = files.filter { !it.isDocument }.map { it.uri }
+                val documentUri = files.firstOrNull { it.isDocument }?.uri
+
+                // 2. Upload media if any files are attached
+                if (imageUris.isNotEmpty() || documentUri != null) {
+                    mediaRepository.processAndUploadMedia(
+                        postId = postId,
+                        role = "solver",
+                        imageUris = imageUris as List<String>,
+                        pdfUri = documentUri,
+                        audioUri = null
+                    )
+                }
+
+                // 3. Submit the text answer
                 postRepository.submitAnswer(postId, answer, solverId)
                 transientState.update { it.copy(isSubmitting = false, isAcceptedByCurrentUser = false) }
-            } catch (_: Exception) { // FIX: Changed e to _ to clear warning
+            } catch (_: Exception) {
                 transientState.update { it.copy(isSubmitting = false) }
             }
         }
@@ -134,18 +152,9 @@ private fun postDetailUiState(
 ): Flow<PostDetailUiState> {
 
     val currentUserIdStream = flow { emit(authRepository.currentUserId()) }
-    val postStream = postRepository.getPostDetailStream(postId)
 
-    return combine(
-        postStream,
-        currentUserIdStream,
-        transientStateFlow
-    ) { postDetail, currentUserId, transient ->
-
-        val isAuthor = currentUserId != null && currentUserId == postDetail.author.id
-        val initialStatus = if (postDetail.isAccepted) SolutionStatus.ACCEPTED else SolutionStatus.PENDING
-        val effectiveStatus = transient.solutionStatus ?: initialStatus
-
+    // 1. Isolate the network calls so they ONLY trigger when the Post changes
+    val postWithUrisStream = postRepository.getPostDetailStream(postId).map { postDetail ->
         val resolvedUris = (0 until postDetail.userImageCount).mapNotNull { index ->
             mediaRepository.getResolvedMediaUri(
                 postId = postId,
@@ -155,14 +164,25 @@ private fun postDetailUiState(
                 isSolved = postDetail.isAccepted
             )
         }
+        postDetail to resolvedUris
+    }
+
+    return combine(
+        postWithUrisStream,
+        currentUserIdStream,
+        transientStateFlow
+    ) { (postDetail, resolvedUris), currentUserId, transient ->
+
+        val isAuthor = currentUserId != null && currentUserId == postDetail.author.id
+        val initialStatus = if (postDetail.isAccepted) SolutionStatus.ACCEPTED else SolutionStatus.PENDING
+        val effectiveStatus = transient.solutionStatus ?: initialStatus
 
         PostDetailUiState.Success(
             post = postDetail,
             resolvedImageUris = resolvedUris,
             isAuthor = isAuthor,
             isAcceptedByCurrentUser = transient.isAcceptedByCurrentUser,
-            solutionStatus = initialStatus,
-            // FIX: Prioritize the saved database rating over the transient default!
+            solutionStatus = effectiveStatus,
             userRating = postDetail.rating ?: transient.userRating,
             isSubmitting = transient.isSubmitting,
             isDeleting = transient.isDeleting

@@ -41,7 +41,17 @@ class JoinCommunityViewModel @Inject constructor(
     }
 
     fun onCommunityNameChanged(name: String) {
-        _uiState.update { it.copy(communityName = name, errorMessage = null) }
+        val matchedCommunity = serverCommunities.find {
+            it.name.equals(name.trim(), ignoreCase = true)
+        }
+
+        _uiState.update {
+            it.copy(
+                communityName = name,
+                selectedCommunityImageUrl = matchedCommunity?.imageUrl,
+                errorMessage = null
+            )
+        }
     }
 
     fun onPasswordChanged(password: String) {

@@ -18,11 +18,9 @@ interface CommunityRepository : Syncable {
     // Add this inside the interface:
     suspend fun searchCommunityMembers(communityId: String, query: String): Result<List<com.kith.core.model.data.User>>
 
-    suspend fun createCommunity(
-        name: String,
-        password: String,
-        description: String,
-    ): Result<Unit>
+    suspend fun createCommunity(name: String, password: String, description: String, imageUrl: String?): Result<Unit>
 
     suspend fun syncJoinedCommunities(): Result<Unit>
+
+    suspend fun updateCommunityImage(communityId: String, imageUrl: String)
 }

@@ -12,4 +12,7 @@ dependencies {
     implementation(projects.feature.home.api)
 
     implementation(projects.core.data)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.cloud.messaging)
 }

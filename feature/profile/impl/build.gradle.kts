@@ -12,6 +12,8 @@ dependencies {
     implementation(projects.feature.community.api)
     implementation(projects.feature.paywall.api)
 
+    implementation(libs.androidx.activity.compose)
+
     implementation(projects.core.model)
     implementation(projects.core.data)
 

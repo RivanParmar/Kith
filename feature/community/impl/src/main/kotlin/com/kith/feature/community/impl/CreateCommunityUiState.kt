@@ -4,6 +4,7 @@ data class CreateCommunityUiState(
     val communityName: String = "",
     val communityPassword: String = "",
     val communityDescription: String = "",
+    val communityImageUri: String? = null,
     val isCreating: Boolean = false,
     val errorMessage: String? = null,
     val createSuccessful: Boolean = false

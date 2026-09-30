@@ -22,6 +22,8 @@ fun EntryProviderScope<NavKey>.homeEntry(navigator: Navigator) {
     }
 
     entry<NotificationsNavKey> {
-        NotificationsRoute()
+        NotificationsRoute(
+            onBackClick = { navigator.goBack() }
+        )
     }
 }

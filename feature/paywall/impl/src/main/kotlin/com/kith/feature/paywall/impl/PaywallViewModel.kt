@@ -4,11 +4,12 @@ import android.app.Activity
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kith.core.data.repository.AuthRepository
 import com.kith.core.data.repository.UserRepository
 import com.kith.core.database.dao.UserDao
+import com.kith.core.network.KithNetworkDataSource
 import com.kith.feature.paywall.impl.data.PurchaseCancelledException
 import com.kith.feature.paywall.impl.data.RevenueCatBillingManager
-import com.revenuecat.purchases.Package
 import com.revenuecat.purchases.PackageType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +24,8 @@ import javax.inject.Inject
 class PaywallViewModel @Inject constructor(
     private val billingManager: RevenueCatBillingManager,
     private val userRepository: UserRepository,
+    private val authRepository: AuthRepository, // Added for User ID
+    private val networkDataSource: KithNetworkDataSource, // Added for Supabase Sync
     private val userDao: UserDao,
 ) : ViewModel() {
 
@@ -91,7 +94,7 @@ class PaywallViewModel @Inject constructor(
             billingManager.checkCustomerEntitlement()
                 .onSuccess { isEntitled ->
                     if (isEntitled) {
-                        markUserAsPremiumLocally()
+                        markUserAsPremium()
                         _uiState.update { it.copy(isPurchased = true) }
                     }
                 }
@@ -126,7 +129,7 @@ class PaywallViewModel @Inject constructor(
             result.onSuccess { customerInfo ->
                 val isEntitled = billingManager.isEntitledToPremium(customerInfo)
                 if (isEntitled) {
-                    markUserAsPremiumLocally()
+                    markUserAsPremium()
                     _uiState.update {
                         it.copy(
                             isPurchasing = false,
@@ -166,7 +169,7 @@ class PaywallViewModel @Inject constructor(
             result.onSuccess { customerInfo ->
                 val isEntitled = billingManager.isEntitledToPremium(customerInfo)
                 if (isEntitled) {
-                    markUserAsPremiumLocally()
+                    markUserAsPremium()
                     _uiState.update {
                         it.copy(
                             isRestoring = false,
@@ -193,14 +196,22 @@ class PaywallViewModel @Inject constructor(
         }
     }
 
-    private suspend fun markUserAsPremiumLocally() {
+    private suspend fun markUserAsPremium() {
         try {
+            // 1. Update Local UI State Instantly
             val userProfile = userRepository.getUserProfileStream().firstOrNull()
             if (userProfile != null) {
                 val currentEntity = userDao.getUserStream(userProfile.id).firstOrNull()
                 if (currentEntity != null) {
                     userDao.upsertUser(currentEntity.copy(isPremium = true))
                 }
+            }
+
+            // 2. Update Supabase Backend Truth
+            val userId = authRepository.currentUserId()
+            if (userId != null) {
+                // Ensure this function exists in your KithNetworkDataSource interface
+                networkDataSource.updateUserPremiumStatus(userId, true)
             }
         } catch (e: Exception) {
             Log.e("PaywallViewModel", "Failed to update local user premium flag", e)

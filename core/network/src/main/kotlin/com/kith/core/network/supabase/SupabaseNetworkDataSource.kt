@@ -7,6 +7,7 @@ import com.kith.core.network.model.NetworkPost
 import com.kith.core.network.model.NetworkTransaction
 import com.kith.core.network.model.NetworkUser
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
@@ -111,10 +112,13 @@ class SupabaseNetworkDataSource @Inject constructor(
 
     override suspend fun leaveCommunity(communityId: String): Boolean {
         return try {
-            supabaseClient.postgrest.rpc(
-                function = "leave_community",
-                parameters = buildJsonObject { put("p_community_id", communityId) }
-            ).decodeAs<Boolean>()
+            supabaseClient.postgrest["community_members"].delete {
+                filter {
+                    eq("community_id", communityId)
+                    eq("user_id", supabaseClient.auth.currentUserOrNull()?.id ?: return false)
+                }
+            }
+            true
         } catch (e: Exception) {
             e.printStackTrace()
             false
@@ -214,6 +218,40 @@ class SupabaseNetworkDataSource @Inject constructor(
                 put("p_rating", rating)
             }
         )
+    }
+
+    override suspend fun updateUserPremiumStatus(userId: String, isPremium: Boolean) {
+        try {
+            supabaseClient.postgrest["users"].update(
+                {
+                    set("is_premium", isPremium)
+                }
+            ) {
+                filter {
+                    eq("id", userId)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // Depending on your error handling, you might want to throw this
+            // so the caller knows the backend sync failed.
+        }
+    }
+
+    override suspend fun updateCommunityImage(communityId: String, imageUrl: String) {
+        try {
+            supabaseClient.postgrest["communities"].update(
+                {
+                    set("image_url", imageUrl)
+                }
+            ) {
+                filter {
+                    eq("id", communityId)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }
 

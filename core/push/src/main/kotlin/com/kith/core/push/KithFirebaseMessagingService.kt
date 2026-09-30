@@ -31,7 +31,9 @@ class KithFirebaseMessagingService : FirebaseMessagingService() {
     @Dispatcher(KithDispatchers.IO)
     lateinit var ioDispatcher: CoroutineDispatcher
 
-    private val scope = CoroutineScope(SupervisorJob())
+    private val scope by lazy {
+        CoroutineScope(SupervisorJob() + ioDispatcher)
+    }
 
     override fun onMessageReceived(message: RemoteMessage) {
         if (message.data.isNotEmpty()) {
@@ -61,6 +63,8 @@ class KithFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onDestroy() {
         super.onDestroy()
-        scope.cancel()
+        if (::ioDispatcher.isInitialized) {
+            scope.cancel()
+        }
     }
 }

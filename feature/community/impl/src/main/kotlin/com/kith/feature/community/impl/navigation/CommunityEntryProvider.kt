@@ -26,7 +26,6 @@ fun EntryProviderScope<NavKey>.communityEntry(navigator: Navigator) {
         CreateCommunityScreen(
             onBack = { navigator.goBack() },
             onCreated = {},
-            onPickIcon = {},
         )
     }
 

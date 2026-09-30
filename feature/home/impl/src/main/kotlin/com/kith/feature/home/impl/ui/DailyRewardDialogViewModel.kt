@@ -1,4 +1,4 @@
-package com.kith.feature.home.impl
+package com.kith.feature.home.impl.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -41,7 +41,6 @@ class DailyRewardDialogViewModel @Inject constructor(
         viewModelScope.launch {
             _isClaiming.value = true
             try {
-                // Call Supabase RPC entirely through TransactionRepository
                 val success = transactionRepository.claimDailyReward()
 
                 if (success) {

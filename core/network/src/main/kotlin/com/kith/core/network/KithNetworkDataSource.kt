@@ -43,7 +43,6 @@ interface KithNetworkDataSource {
     suspend fun deleteCommunity(communityId: String): Boolean
     suspend fun updateCommunityDescription(communityId: String, description: String)
 
-    // NEW: Search for users by name
     suspend fun searchUsers(communityId: String, query: String): List<NetworkUser>
 
     suspend fun getJoinedCommunities(userId: String): List<NetworkCommunity>
@@ -51,4 +50,7 @@ interface KithNetworkDataSource {
     suspend fun rejectAnswer(postId: String)
     suspend fun rateSolution(postId: String, rating: Float)
 
+    suspend fun updateUserPremiumStatus(userId: String, isPremium: Boolean)
+
+    suspend fun updateCommunityImage(communityId: String, imageUrl: String)
 }

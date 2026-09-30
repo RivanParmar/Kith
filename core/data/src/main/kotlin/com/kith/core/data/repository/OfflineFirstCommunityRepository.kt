@@ -16,6 +16,7 @@ import com.kith.core.network.model.NetworkCommunity
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -82,6 +83,7 @@ class OfflineFirstCommunityRepository @Inject constructor(
         name: String,
         password: String,
         description: String,
+        imageUrl: String?,
     ): Result<Unit> = withContext(ioDispatcher) {
         try {
             val currentUser = authDataSource.currentUserId() ?: return@withContext Result.failure(
@@ -93,7 +95,7 @@ class OfflineFirstCommunityRepository @Inject constructor(
                 name = name,
                 description = description,
                 password = password,
-                imageUrl = null,
+                imageUrl = imageUrl,
                 userId = currentUser,
                 updatedAt = Clock.System.now(),
             )
@@ -120,35 +122,68 @@ class OfflineFirstCommunityRepository @Inject constructor(
         }
     }
 
-    override suspend fun leaveCommunity(communityId: String): Result<Unit> = withContext(ioDispatcher) {
-        try {
-            val isSuccess = networkDataSource.leaveCommunity(communityId)
-            if (isSuccess) {
-                communityDao.markAsLeft(communityId)
-                Result.success(Unit)
-            } else {
-                Result.failure(Exception("Failed to leave community on server"))
+    override suspend fun updateCommunityImage(
+        communityId: String,
+        imageUrl: String
+    ) {
+        withContext(ioDispatcher) {
+            try {
+                // 1. Update Supabase
+                networkDataSource.updateCommunityImage(communityId, imageUrl)
+
+                // 2. Instantly update the local Room database
+                // Fetch the current entity, copy it with the new URL, and upsert it back.
+                val existingEntity = communityDao.getCommunityByIdStream(communityId).firstOrNull()
+                if (existingEntity != null) {
+                    communityDao.upsertCommunity(
+                        existingEntity.copy(
+                            imageUrl = imageUrl,
+                            updatedAt = Clock.System.now()
+                        )
+                    )
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e("UPDATE_COMMUNITY", "Failed to update community image", e)
             }
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
-    override suspend fun deleteCommunity(communityId: String): Result<Unit> = withContext(ioDispatcher) {
-        try {
-            val isSuccess = networkDataSource.deleteCommunity(communityId)
-            if (isSuccess) {
-                communityDao.deleteCommunityLocally(communityId)
-                Result.success(Unit)
-            } else {
-                Result.failure(Exception("Failed to delete community on server"))
+    override suspend fun leaveCommunity(communityId: String): Result<Unit> =
+        withContext(ioDispatcher) {
+            try {
+                val isSuccess = networkDataSource.leaveCommunity(communityId)
+                if (isSuccess) {
+                    communityDao.markAsLeft(communityId)
+                    Result.success(Unit)
+                } else {
+                    Result.failure(Exception("Failed to leave community on server"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
             }
-        } catch (e: Exception) {
-            Result.failure(e)
         }
-    }
 
-    override suspend fun updateCommunityDescription(communityId: String, description: String): Result<Unit> = withContext(ioDispatcher) {
+    override suspend fun deleteCommunity(communityId: String): Result<Unit> =
+        withContext(ioDispatcher) {
+            try {
+                val isSuccess = networkDataSource.deleteCommunity(communityId)
+                if (isSuccess) {
+                    communityDao.deleteCommunityLocally(communityId)
+                    Result.success(Unit)
+                } else {
+                    Result.failure(Exception("Failed to delete community on server"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+
+    override suspend fun updateCommunityDescription(
+        communityId: String,
+        description: String
+    ): Result<Unit> = withContext(ioDispatcher) {
         try {
             networkDataSource.updateCommunityDescription(communityId, description)
             val localEntity = communityDao.getCommunityByIdStream(communityId).first()
@@ -161,7 +196,10 @@ class OfflineFirstCommunityRepository @Inject constructor(
 
     // NEW: Execute search and map network model to domain model
     // NEW: Execute search and map network model to domain model
-    override suspend fun searchCommunityMembers(communityId: String, query: String): Result<List<User>> =
+    override suspend fun searchCommunityMembers(
+        communityId: String,
+        query: String
+    ): Result<List<User>> =
         withContext(ioDispatcher) {
             try {
                 val networkUsers = networkDataSource.searchUsers(communityId, query)
