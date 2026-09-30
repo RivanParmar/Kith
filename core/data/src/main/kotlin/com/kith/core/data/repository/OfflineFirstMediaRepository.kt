@@ -34,21 +34,21 @@ class OfflineFirstMediaRepository @Inject constructor(
                 val fileName = "kith_post_${postId}_${role}_img_$index.webp"
                 val webpBytes = compressToWebP(uriString.toUri())
                 saveToMediaStore(fileName, webpBytes, "image/webp", Environment.DIRECTORY_PICTURES)
-                storageDataSource.uploadMedia(fileName, webpBytes) // Defaults to "media"
+                storageDataSource.uploadMedia(fileName, webpBytes, "media") // Defaults to "media"
             }
 
             pdfUri?.let { uriString ->
                 val fileName = "kith_post_${postId}_${role}_doc.pdf"
                 val pdfBytes = readBytesFromUri(uriString.toUri())
                 saveToMediaStore(fileName, pdfBytes, "application/pdf", Environment.DIRECTORY_DOCUMENTS)
-                storageDataSource.uploadMedia(fileName, pdfBytes) // Defaults to "media"
+                storageDataSource.uploadMedia(fileName, pdfBytes, "media") // Defaults to "media"
             }
 
             audioUri?.let { uriString ->
                 val fileName = "kith_post_${postId}_${role}_audio.m4a"
                 val audioBytes = readBytesFromUri(uriString.toUri())
                 saveToMediaStore(fileName, audioBytes, "audio/mp4", Environment.DIRECTORY_MUSIC)
-                storageDataSource.uploadMedia(fileName, audioBytes) // Defaults to "media"
+                storageDataSource.uploadMedia(fileName, audioBytes, "media") // Defaults to "media"
             }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -56,7 +56,7 @@ class OfflineFirstMediaRepository @Inject constructor(
         }
     }
 
-    override fun getResolvedMediaUri(
+    override suspend fun getResolvedMediaUri(
         postId: String,
         role: String,
         index: Int,
@@ -77,7 +77,7 @@ class OfflineFirstMediaRepository @Inject constructor(
 
         return when {
             localFile.exists() -> localFile.absolutePath
-            !isSolved -> storageDataSource.getPublicUrl(fileName)
+            !isSolved -> storageDataSource.getSignedUrl(fileName).getOrNull()
             else -> null
         }
     }

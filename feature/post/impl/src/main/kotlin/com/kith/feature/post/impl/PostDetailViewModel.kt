@@ -3,6 +3,7 @@ package com.kith.feature.post.impl
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kith.core.data.repository.AuthRepository
+import com.kith.core.data.repository.MediaRepository
 import com.kith.core.data.repository.PostRepository
 import com.kith.core.model.data.Community
 import com.kith.core.model.data.PostDetail
@@ -21,10 +22,12 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.Int
 import kotlin.time.Instant
 
 private data class PostTransientState(
     val isAcceptedByCurrentUser: Boolean = false,
+    val solutionStatus: SolutionStatus? = null,
     val userRating: Int = 5,
     val isSubmitting: Boolean = false,
     val isDeleting: Boolean = false
@@ -35,6 +38,7 @@ class PostDetailViewModel @AssistedInject constructor(
     private val postRepository: PostRepository,
     private val authRepository: AuthRepository,
     @Assisted val postId: String,
+    val mediaRepository: MediaRepository,
 ) : ViewModel() {
 
     // Manage only the transient UI state manually
@@ -45,6 +49,7 @@ class PostDetailViewModel @AssistedInject constructor(
         postId = postId,
         postRepository = postRepository,
         authRepository = authRepository,
+        mediaRepository = mediaRepository,
         transientStateFlow = transientState
     ).stateIn(
         scope = viewModelScope,
@@ -89,21 +94,24 @@ class PostDetailViewModel @AssistedInject constructor(
     }
 
     fun onAcceptSolution() {
+        transientState.update { it.copy(solutionStatus = SolutionStatus.ACCEPTED) }
         viewModelScope.launch {
             try {
                 postRepository.acceptSolution(postId)
-                // We no longer manually update _uiState!
-                // Room will update the DB and instantly emit the new data to our pipeline.
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                android.util.Log.e("PostDetailViewModel", "Error in acceptSolution", e)
+            }
         }
     }
 
     fun onRejectSolution() {
+        transientState.update { it.copy(solutionStatus = SolutionStatus.REJECTED) }
         viewModelScope.launch {
             try {
                 postRepository.rejectSolution(postId)
-                // Room auto-emits the new data here too!
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                android.util.Log.e("PostDetailViewModel", "Error in rejectSolution", e)
+            }
         }
     }
 
@@ -130,6 +138,7 @@ private fun postDetailUiState(
     postId: String,
     postRepository: PostRepository,
     authRepository: AuthRepository,
+    mediaRepository: MediaRepository,
     transientStateFlow: StateFlow<PostTransientState>
 ): Flow<PostDetailUiState> {
 
@@ -145,12 +154,24 @@ private fun postDetailUiState(
 
         val isAuthor = currentUserId != null && currentUserId == postDetail.author.id
         val initialStatus = if (postDetail.isAccepted) SolutionStatus.ACCEPTED else SolutionStatus.PENDING
+        val effectiveStatus = transient.solutionStatus ?: initialStatus
+
+        val resolvedUris = (0 until postDetail.userImageCount).mapNotNull { index ->
+            mediaRepository.getResolvedMediaUri(
+                postId = postId,
+                role = "user",
+                index = index,
+                extension = "webp",
+                isSolved = postDetail.isAccepted
+            )
+        }
 
         PostDetailUiState.Success(
             post = postDetail,
+            resolvedImageUris = resolvedUris,
             isAuthor = isAuthor,
             isAcceptedByCurrentUser = transient.isAcceptedByCurrentUser,
-            solutionStatus = initialStatus,
+            solutionStatus = effectiveStatus,
             userRating = transient.userRating,
             isSubmitting = transient.isSubmitting,
             isDeleting = transient.isDeleting
@@ -189,7 +210,13 @@ val samplePostDetail = PostDetail(
     isInPerson = false,
     isAccepted = false,
     answer = null,
-    solver = null
+    solver = null,
+    userImageCount = 1233,
+    userHasPdf = false,
+    userHasAudio = false,
+    solverImageCount = 7,
+    solverHasPdf = false,
+    solverHasAudio = false,
 )
 
 val samplePostDetailAnswered = samplePostDetail.copy(

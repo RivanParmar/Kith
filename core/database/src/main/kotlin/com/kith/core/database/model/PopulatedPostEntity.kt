@@ -53,4 +53,10 @@ fun PopulatedPostEntity.asPostDetail() = PostDetail(
     isAccepted = post.status == PostStatus.ASSIGNED,
     answer = post.answer,
     solver = solver?.asExternalModel(),
+    userImageCount = post.userImageCount,
+    userHasPdf = post.userHasPdf,
+    userHasAudio = post.userHasAudio,
+    solverImageCount = post.solverImageCount,
+    solverHasPdf = post.userHasPdf,
+    solverHasAudio = post.solverHasAudio,
 )

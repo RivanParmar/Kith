@@ -9,7 +9,7 @@ interface MediaRepository {
         audioUri: String?
     ): Result<Unit>
 
-    fun getResolvedMediaUri(
+    suspend fun getResolvedMediaUri(
         postId: String,
         role: String,
         index: Int,

@@ -69,6 +69,7 @@ import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -80,6 +81,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.model.data.User
 import java.util.UUID
@@ -393,7 +395,7 @@ fun PostDetailScreen(
     onAuthorClick: (String) -> Unit = {},
     onAttachFileClick: (() -> Unit)? = null,
     onRateSolution: (Int) -> Unit = {},
-    onSubmitSuccess: () -> Unit = {}
+    onSubmitSuccess: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -415,7 +417,7 @@ fun PostDetailScreen(
         },
         onAcceptSolution = viewModel::onAcceptSolution,
         onRejectSolution = viewModel::onRejectSolution,
-        modifier = modifier
+        modifier = modifier,
     )
 }
 
@@ -432,7 +434,7 @@ internal fun PostDetailScreen(
     onAttachFileClick: (() -> Unit)? = null,
     onRateSolution: (Int) -> Unit = {},
     onAcceptSolution: () -> Unit = {},
-    onRejectSolution: () -> Unit = {}
+    onRejectSolution: () -> Unit = {},
 ) {
     when (uiState) {
         is PostDetailUiState.Loading -> {
@@ -479,7 +481,6 @@ internal fun PostDetailScreen(
             var isEditing by remember(post.id) { mutableStateOf(false) }
             var editedTitle by remember(post.id) { mutableStateOf(post.title) }
             var editedContent by remember(post.id) { mutableStateOf(post.content) }
-            val mediaImages = remember(post.id) { mutableStateListOf(0, 1, 2) }
 
             // Open by default if question is active/unanswered, or keep open while editing
             var isAttachmentsExpanded by remember(post.id) { mutableStateOf(!isAnswerReceived) }
@@ -494,6 +495,9 @@ internal fun PostDetailScreen(
             }
 
             var userRating by remember(post.id) { mutableIntStateOf(uiState.userRating) }
+            var currentSolutionStatus by remember(post.id, uiState.solutionStatus) {
+                mutableStateOf(uiState.solutionStatus)
+            }
 
             val handleAttachFile: () -> Unit = {
                 if (onAttachFileClick != null) {
@@ -678,12 +682,12 @@ internal fun PostDetailScreen(
                             }
 
                             // Image Carousel with delete cross button when editing
-                            if (mediaImages.isNotEmpty()) {
+                            if (uiState.resolvedImageUris.isNotEmpty()) {
                                 PostMediaAttachments(
-                                    images = mediaImages,
+                                    images = uiState.resolvedImageUris,
                                     onRemoveImage = if (isEditing) { index ->
-                                        if (index in mediaImages.indices) {
-                                            mediaImages.removeAt(index)
+                                        if (index in uiState.resolvedImageUris.indices) {
+//                                            resolvedImageUrls.removeAt(index)
                                         }
                                     } else null
                                 )
@@ -922,13 +926,6 @@ private fun AuthorProfileCard(author: User, onClick: () -> Unit, modifier: Modif
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(2.dp))
-//                Text(
-//                    text = "Economics Department • Senior",
-//                    fontSize = 12.sp,
-//                    color = PostDetailColors.TextSecondary
-//                )
-//                Spacer(modifier = Modifier.height(3.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = KithIcons.StarRate,
@@ -991,7 +988,7 @@ private fun PostTagsRow(
 @Composable
 private fun PostMediaAttachments(
     modifier: Modifier = Modifier,
-    images: List<Any> = remember { listOf(0, 1, 2) },
+    images: List<String>,
     onRemoveImage: ((Int) -> Unit)? = null,
 ) {
     if (images.isNotEmpty()) {
@@ -1008,11 +1005,11 @@ private fun PostMediaAttachments(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    PlaceholderMediaGraphic(
-                        page = index,
-                        modifier = Modifier
-                            .size(80.dp)
-                            .align(Alignment.Center)
+                    AsyncImage(
+                        model = images[index],
+                        contentDescription = "Selected Image",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
                     )
 
                     // Delete cross button on each image card

@@ -13,6 +13,7 @@ sealed interface PostDetailUiState {
 
     data class Success(
         val post: PostDetail,
+        val resolvedImageUris: List<String> = emptyList(),
         val isAuthor: Boolean = false,
         val isAcceptedByCurrentUser: Boolean = false,
         val solutionStatus: SolutionStatus = SolutionStatus.PENDING,

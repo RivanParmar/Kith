@@ -84,15 +84,31 @@ class OfflineFirstPostRepository @Inject constructor(
     }
 
     override suspend fun acceptSolution(postId: String) {
-//        networkDataSource.updatePostSolutionStatus(postId, true)
-        networkDataSource.acceptAnswer(postId)
-        syncPostById(postId)
+        try {
+            networkDataSource.acceptAnswer(postId)
+            val currentPost = postDao.getPostById(postId)
+            if (currentPost != null) {
+                postDao.insertPost(currentPost.copy(status = PostStatus.SOLVED))
+            }
+            syncPostById(postId)
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Failed to accept answer on network: ${e.message}", e)
+            throw e
+        }
     }
 
     override suspend fun rejectSolution(postId: String) {
-//        networkDataSource.updatePostSolutionStatus(postId, false)
-        networkDataSource.rejectAnswer(postId)
-        syncPostById(postId)
+        try {
+            networkDataSource.rejectAnswer(postId)
+            val currentPost = postDao.getPostById(postId)
+            if (currentPost != null) {
+                postDao.insertPost(currentPost.copy(status = PostStatus.OPEN, answer = null))
+            }
+            syncPostById(postId)
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Failed to reject answer on network: ${e.message}", e)
+            throw e
+        }
     }
 
     override suspend fun rateSolution(postId: String, rating: Int) {

@@ -4,6 +4,7 @@ import com.kith.core.network.KithStorageDataSource
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.storage.storage
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 class SupabaseStorageDataSource @Inject constructor(
     private val supabaseClient: SupabaseClient,
@@ -37,5 +38,16 @@ class SupabaseStorageDataSource @Inject constructor(
 
     override fun getPublicUrl(fileName: String, bucketName: String): String {
         return supabaseClient.storage.from(bucketName).publicUrl(fileName)
+    }
+
+    override suspend fun getSignedUrl(fileName: String): Result<String> {
+        return try {
+            val url = supabaseClient.storage.from("media").createSignedUrl(
+                fileName, expiresIn = 60.seconds
+            )
+            Result.success(url)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }
