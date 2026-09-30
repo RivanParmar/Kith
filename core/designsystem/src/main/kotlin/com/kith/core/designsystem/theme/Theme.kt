@@ -64,7 +64,7 @@ fun KithTheme(
 ) {
     val colorScheme = when {
         // 2. Dynamic color logic (keep your existing logic here)
-        disableDynamicTheming && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        !disableDynamicTheming && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }

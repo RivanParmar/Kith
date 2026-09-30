@@ -1,6 +1,5 @@
 package com.kith.core.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,22 +10,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.KithTheme
@@ -117,7 +116,6 @@ fun ProfileAvatar(
         AvatarContent(
             imageUrl = imageUrl,
             name = name,
-            avatarSize = avatarSize,
             modifier = Modifier
                 .fillMaxSize()
                 .clip(CircleShape),
@@ -159,44 +157,25 @@ fun ProfileAvatar(
 private fun AvatarContent(
     imageUrl: String?,
     name: String,
-    avatarSize: Dp,
     modifier: Modifier = Modifier,
 ) {
+    var isError by remember { mutableStateOf(false) }
+
     Box(
         modifier = modifier
             .background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center,
     ) {
-        if (!imageUrl.isNullOrEmpty()) {
-            AsyncImage(
-                model = imageUrl,
-                contentDescription = name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-        } else if (name.isNotBlank()) {
-            val initials = name.trim().split("\\s+".toRegex())
-                .mapNotNull { it.firstOrNull()?.toString() }
-                .take(2)
-                .joinToString("")
-                .uppercase()
-
-            val fontSize = (avatarSize.value * 0.38f).coerceAtLeast(11f).sp
-
-            Text(
-                text = initials.ifEmpty { "U" },
-                fontSize = fontSize,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        } else {
-            Icon(
-                imageVector = KithIcons.Person,
-                contentDescription = "User profile picture",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size((avatarSize * 0.55f).coerceAtLeast(16.dp)),
-            )
-        }
+        AsyncImage(
+            model = imageUrl,
+            contentDescription = name,
+            contentScale = if (isError) ContentScale.Inside else ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
+            placeholder = rememberVectorPainter(KithIcons.Person),
+            error = rememberVectorPainter(KithIcons.Person),
+            onError = { isError = true },
+            onSuccess = { isError = false },
+        )
     }
 }
 
