@@ -45,6 +45,8 @@ dependencies {
     implementation(projects.feature.leaderboard.impl)
     implementation(projects.feature.onboarding.api)
     implementation(projects.feature.onboarding.impl)
+    implementation(projects.feature.paywall.api)
+    implementation(projects.feature.paywall.impl)
     implementation(projects.feature.post.api)
     implementation(projects.feature.post.impl)
     implementation(projects.feature.profile.api)

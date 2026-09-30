@@ -36,6 +36,7 @@ import com.kith.feature.community.impl.navigation.communityEntry
 import com.kith.feature.home.impl.navigation.homeEntry
 import com.kith.feature.leaderboard.impl.navigation.leaderboardEntry
 import com.kith.feature.onboarding.impl.navigation.onboardingEntry
+import com.kith.feature.paywall.impl.navigation.paywallEntry
 import com.kith.feature.post.impl.navigation.postEntry
 import com.kith.feature.profile.impl.navigation.profileEntry
 import com.kith.navigation.TOP_LEVEL_NAV_ITEMS
@@ -55,15 +56,11 @@ fun KithApp(
     val navigator = remember { Navigator(appState.navigationState) }
     val isTopLevelDestination = appState.navigationState.currentKey in TOP_LEVEL_NAV_ITEMS.keys
 
-    // ==========================================
-    // ALL LAUNCHERS DEFINED STRICTLY IN KITHAPP
-    // ==========================================
     var photoCallback by remember { mutableStateOf<((List<Uri>) -> Unit)?>(null) }
     var singlePhotoCallback by remember { mutableStateOf<((Uri?) -> Unit)?>(null) } // NEW
     var pdfCallback by remember { mutableStateOf<((Uri?) -> Unit)?>(null) }
     var audioCallback by remember { mutableStateOf<((Uri?) -> Unit)?>(null) }
 
-    // Multi-Picker for Posts (Max 5)
     val photoLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5),
         onResult = { uris ->
@@ -72,7 +69,6 @@ fun KithApp(
         }
     )
 
-    // NEW: Single-Picker for Profile
     val singlePhotoLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
@@ -97,7 +93,6 @@ fun KithApp(
         }
     )
 
-    // Helper for CreatePostScreen
     val postMediaHelper = remember {
         PostMediaPicker(
             launchPhotoPicker = { callback ->
@@ -115,12 +110,10 @@ fun KithApp(
         )
     }
 
-    // Helper for EditProfileDialog
     val profileMediaHelper = remember {
         ProfileMediaPicker(
             launchPhotoPicker = { callback ->
                 singlePhotoCallback = callback
-                // Uses the single image launcher!
                 singlePhotoLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             }
         )
@@ -167,6 +160,7 @@ fun KithApp(
                         homeEntry(navigator)
                         leaderboardEntry(navigator)
                         onboardingEntry(navigator)
+                        paywallEntry(navigator)
                         postEntry(navigator)
                         profileEntry(navigator)
                     }

@@ -16,10 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState // NEW IMPORT
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll // NEW IMPORT
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -34,10 +33,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,7 +42,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.AsyncImage
 import com.kith.core.designsystem.component.LoadingWheel
 import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.KithTheme
@@ -63,6 +59,7 @@ fun ProfileScreen(
     onWalletClick: () -> Unit = {},
     onPostHistoryClick: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {},
+    onNavigateToPremium: () -> Unit = {},
     onNavigateToCommunity: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -76,6 +73,7 @@ fun ProfileScreen(
             viewModel.logout(onSuccess = onNavigateToLogin)
         },
         onEditProfile = viewModel::saveProfile,
+        onNavigateToPremium = onNavigateToPremium,
         onNavigateToCommunity = onNavigateToCommunity,
     )
 }
@@ -88,6 +86,7 @@ internal fun ProfileScreen(
     onLogoutClick: () -> Unit = {},
     onPostHistoryClick: () -> Unit = {},
     onNavigateToCommunity: () -> Unit = {},
+    onNavigateToPremium: () -> Unit = {},
     onEditProfile: (name: String, bio: String, imageUrl: String?) -> Unit = { _, _, _, -> },
 ) {
     when (uiState) {
@@ -103,7 +102,6 @@ internal fun ProfileScreen(
             var openEditProfileDialog by remember { mutableStateOf(false) }
             var openSettingsDialog by remember { mutableStateOf(false) }
 
-            // FIX: Remember a scroll state so the user can swipe down
             val scrollState = rememberScrollState()
 
             Column(
@@ -254,7 +252,7 @@ internal fun ProfileScreen(
                             labelColor = Color(0xFF3B82F6),
                             backgroundColor = Color(0xFFEFF6FF),
                             showProBadge = true,
-                            onClick = { /* TODO */ },
+                            onClick = onNavigateToPremium,
                         )
 
                         HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)

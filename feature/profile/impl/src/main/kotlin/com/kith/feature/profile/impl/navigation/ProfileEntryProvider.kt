@@ -4,6 +4,7 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.kith.core.navigation.Navigator
 import com.kith.feature.community.api.navigation.CommunityListNavKey
+import com.kith.feature.paywall.api.navigation.PaywallNavKey
 import com.kith.feature.profile.api.navigation.PostHistoryNavKey
 import com.kith.feature.profile.api.navigation.ProfileNavKey
 import com.kith.feature.profile.api.navigation.TransactionsNavKey
@@ -19,6 +20,7 @@ fun EntryProviderScope<NavKey>.profileEntry(navigator: Navigator) {
             onWalletClick = { navigator.navigate(TransactionsNavKey) },
             onPostHistoryClick = { navigator.navigate(PostHistoryNavKey) },
             onNavigateToCommunity = { navigator.navigate(CommunityListNavKey) },
+            onNavigateToPremium = { navigator.navigate(PaywallNavKey) }
         )
     }
 
