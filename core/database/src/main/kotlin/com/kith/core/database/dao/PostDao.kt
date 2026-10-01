@@ -10,7 +10,6 @@ import com.kith.core.database.util.SyncStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-
 interface PostDao {
     @Transaction
     @Query(value = "SELECT * FROM posts ORDER BY created_at DESC")
@@ -34,6 +33,9 @@ interface PostDao {
 
     @Query(value = "SELECT * FROM posts WHERE sync_status = :syncStatus")
     suspend fun getPostsBySyncStatus(syncStatus: SyncStatus): List<PostEntity>
+
+    @Query("DELETE FROM posts WHERE id NOT IN (:validIds) AND sync_status = :syncStatus")
+    suspend fun deleteSyncedPosts(validIds: List<String>, syncStatus: SyncStatus = SyncStatus.SYNCED)
 
     @Query(value = "DELETE FROM posts WHERE id = :postId")
     suspend fun deletePostById(postId: String)

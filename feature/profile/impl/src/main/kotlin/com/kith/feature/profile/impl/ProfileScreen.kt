@@ -89,6 +89,8 @@ internal fun ProfileScreen(
     onNavigateToPremium: () -> Unit = {},
     onEditProfile: (name: String, bio: String, imageUrl: String?) -> Unit = { _, _, _, -> },
 ) {
+    val extendedColors = KithTheme.extendedColors
+
     when (uiState) {
         ProfileUiState.Loading -> {
             LoadingState(modifier = modifier)
@@ -107,26 +109,26 @@ internal fun ProfileScreen(
             Column(
                 modifier = modifier
                     .fillMaxSize()
-                    .background(Color(0xFFF8F9FA))
+                    .background(extendedColors.profileBg) // Themed Background
                     .safeDrawingPadding()
                     .padding(horizontal = 24.dp)
-                    .verticalScroll(scrollState), // FIX: Applied the scroll state to the main Column
+                    .verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
                     text = stringResource(R.string.feature_profile_api_title),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Color.Black,
+                    color = extendedColors.profileTextPrimary, // Themed Text
                     modifier = Modifier.padding(top = 16.dp, bottom = 24.dp),
                     fontFamily = OutfitFontFamily,
                 )
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = extendedColors.profileCardBg),
                     shape = RoundedCornerShape(24.dp),
-                    border = BorderStroke(1.dp, Color(0xFFF0F0F0)),
+                    border = BorderStroke(1.dp, extendedColors.profileCardBorder),
                 ) {
                     Row(
                         modifier = Modifier
@@ -149,7 +151,7 @@ internal fun ProfileScreen(
                                 text = uiState.userProfile.name,
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.Black,
+                                color = extendedColors.profileTextPrimary,
                             )
 
                             Row(
@@ -159,7 +161,7 @@ internal fun ProfileScreen(
                                 Icon(
                                     imageVector = KithIcons.StarRate,
                                     contentDescription = "Rating",
-                                    tint = Color(0xFFF59E0B),
+                                    tint = extendedColors.profileRatingStar, // Themed Star
                                     modifier = Modifier.size(16.dp),
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
@@ -167,28 +169,28 @@ internal fun ProfileScreen(
                                     text = uiState.userProfile.rating.toString(),
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.Black,
+                                    color = extendedColors.profileTextPrimary,
                                 )
                             }
 
                             OutlinedButton(
                                 onClick = { openEditProfileDialog = true },
                                 shape = RoundedCornerShape(50),
-                                border = BorderStroke(1.dp, Color(0xFF3B82F6)),
+                                border = BorderStroke(1.dp, extendedColors.profileActionBlue),
                                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
                                 modifier = Modifier.height(36.dp)
                             ) {
                                 Icon(
                                     imageVector = KithIcons.Edit,
                                     contentDescription = "Edit",
-                                    tint = Color(0xFF3B82F6),
+                                    tint = extendedColors.profileActionBlue,
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = "Edit Profile",
                                     fontSize = 14.sp,
-                                    color = Color(0xFF3B82F6),
+                                    color = extendedColors.profileActionBlue,
                                     fontWeight = FontWeight.SemiBold,
                                 )
                             }
@@ -204,30 +206,30 @@ internal fun ProfileScreen(
                     ProfileStatCard(
                         value = uiState.userProfile.problemsAsked.toString(),
                         label = "ASKED",
-                        valueColor = Color(0xFF0F172A),
+                        valueColor = extendedColors.profileTextPrimary,
                         modifier = Modifier.weight(1f),
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     ProfileStatCard(
                         value = uiState.userProfile.problemsSolved.toString(),
                         label = "SOLVED",
-                        valueColor = Color(0xFF0F172A),
+                        valueColor = extendedColors.profileTextPrimary,
                         modifier = Modifier.weight(1f),
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     ProfileStatCard(
                         value = formatXp(uiState.userProfile.xp),
                         label = "XP EARNED",
-                        valueColor = Color(0xFF3B82F6),
+                        valueColor = extendedColors.profileActionBlue,
                         modifier = Modifier.weight(1f),
                     )
                 }
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = extendedColors.profileCardBg),
                     shape = RoundedCornerShape(24.dp),
-                    border = BorderStroke(1.dp, Color(0xFFF0F0F0)),
+                    border = BorderStroke(1.dp, extendedColors.profileCardBorder),
                 ) {
                     Column {
                         ProfileMenuItem(
@@ -236,7 +238,7 @@ internal fun ProfileScreen(
                             onClick = onWalletClick,
                         )
 
-                        HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
+                        HorizontalDivider(color = extendedColors.profileDivider, thickness = 1.dp)
 
                         ProfileMenuItem(
                             icon = KithIcons.Crown,
@@ -244,18 +246,18 @@ internal fun ProfileScreen(
                             onClick = onPostHistoryClick,
                         )
 
-                        HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
+                        HorizontalDivider(color = extendedColors.profileDivider, thickness = 1.dp)
 
                         ProfileMenuItem(
                             icon = KithIcons.Crown,
                             label = "Upgrade to Premium",
-                            labelColor = Color(0xFF3B82F6),
-                            backgroundColor = Color(0xFFEFF6FF),
+                            labelColor = extendedColors.profileActionBlue,
+                            backgroundColor = extendedColors.profileActionBlueBg,
                             showProBadge = true,
                             onClick = onNavigateToPremium,
                         )
 
-                        HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
+                        HorizontalDivider(color = extendedColors.profileDivider, thickness = 1.dp)
 
                         ProfileMenuItem(
                             icon = KithIcons.Settings,
@@ -265,7 +267,7 @@ internal fun ProfileScreen(
                             }
                         )
 
-                        HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
+                        HorizontalDivider(color = extendedColors.profileDivider, thickness = 1.dp)
 
                         ProfileMenuItem(
                             icon = KithIcons.Groups,
@@ -282,20 +284,20 @@ internal fun ProfileScreen(
                         .padding(top = 48.dp, bottom = 24.dp)
                         .height(52.dp),
                     shape = RoundedCornerShape(28.dp),
-                    border = BorderStroke(1.dp, Color(0xFFFCA5A5)),
-                    colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFFFEF2F2)),
+                    border = BorderStroke(1.dp, extendedColors.profileLogoutBorder),
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = extendedColors.profileLogoutBg),
                 ) {
                     Icon(
                         imageVector = KithIcons.Logout,
                         contentDescription = "Log Out",
-                        tint = Color(0xFFEF4444),
+                        tint = extendedColors.profileLogoutText,
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Log Out",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFEF4444),
+                        color = extendedColors.profileLogoutText,
                     )
                 }
             }
@@ -329,11 +331,13 @@ private fun ProfileStatCard(
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
 ) {
+    val extendedColors = KithTheme.extendedColors // Pull theme colors
+
     Card(
         modifier = modifier.height(88.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = extendedColors.profileCardBg),
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, Color(0xFFF0F0F0)),
+        border = BorderStroke(1.dp, extendedColors.profileCardBorder),
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -362,7 +366,7 @@ private fun ProfileStatCard(
                 text = label,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF64748B),
+                color = extendedColors.profileTextSecondary, // Themed Label
             )
         }
     }
@@ -373,10 +377,13 @@ private fun ProfileMenuItem(
     icon: ImageVector,
     label: String,
     onClick: () -> Unit,
-    labelColor: Color = Color(0xFF0F172A),
+    labelColor: Color? = null,
     backgroundColor: Color = Color.Transparent,
     showProBadge: Boolean = false,
 ) {
+    val extendedColors = KithTheme.extendedColors // Pull theme colors
+    val finalLabelColor = labelColor ?: extendedColors.profileTextPrimary // Fallback to themed text
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -388,7 +395,7 @@ private fun ProfileMenuItem(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = labelColor,
+            tint = finalLabelColor,
             modifier = Modifier.size(24.dp),
         )
         Spacer(modifier = Modifier.width(16.dp))
@@ -396,21 +403,21 @@ private fun ProfileMenuItem(
             text = label,
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
-            color = labelColor,
+            color = finalLabelColor,
             modifier = Modifier.weight(1f),
         )
 
         if (showProBadge) {
             Box(
                 modifier = Modifier
-                    .background(Color(0xFF3B82F6), shape = RoundedCornerShape(50))
+                    .background(extendedColors.profileProBadgeBg, shape = RoundedCornerShape(50))
                     .padding(horizontal = 10.dp, vertical = 4.dp),
             ) {
                 Text(
                     text = "PRO",
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = extendedColors.profileProBadgeText,
                 )
             }
             Spacer(modifier = Modifier.width(12.dp))
@@ -419,7 +426,7 @@ private fun ProfileMenuItem(
         Icon(
             imageVector = KithIcons.ChevronForward,
             contentDescription = "Navigate",
-            tint = Color(0xFF94A3B8),
+            tint = extendedColors.profileIconNeutral, // Themed chevron
             modifier = Modifier.size(20.dp),
         )
     }

@@ -28,12 +28,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.time.Instant
 
-
-
 private data class PostTransientState(
     val isAcceptedByCurrentUser: Boolean = false,
     val solutionStatus: SolutionStatus? = null,
-    val userRating: Float = 5f,
+    val userRating: Float = 0f,
     val isSubmitting: Boolean = false,
     val isDeleting: Boolean = false
 )
@@ -80,17 +78,18 @@ class PostDetailViewModel @AssistedInject constructor(
 
                 // 1. Separate files by type for the MediaRepository
                 // (Assuming AttachedFile has a 'uri' property from your file picker)
-                val imageUris = files.filter { !it.isDocument }.mapNotNull { it.uri }
-                val documentUri = files.firstOrNull { it.isDocument }?.uri
+                val imageUris = files.filter { it.name.endsWith(".webp") }.mapNotNull { it.uri }
+                val pdfUri = files.firstOrNull { it.name.endsWith(".pdf") }?.uri
+                val audioUri = files.firstOrNull { it.name.endsWith(".m4a") }?.uri
 
                 // 2. Upload media if any files are attached
-                if (imageUris.isNotEmpty() || documentUri != null) {
+                if (imageUris.isNotEmpty() || pdfUri != null || audioUri != null) {
                     mediaRepository.processAndUploadMedia(
                         postId = postId,
                         role = "solver",
                         imageUris = imageUris,
-                        pdfUri = documentUri,
-                        audioUri = null
+                        pdfUri = pdfUri,
+                        audioUri = audioUri
                     )
                 }
 
@@ -158,6 +157,15 @@ class PostDetailViewModel @AssistedInject constructor(
     }
 }
 
+private data class ResolvedMedia(
+    val authorImages: List<String>,
+    val authorPdf: String?,
+    val authorAudio: String?,
+    val solverImages: List<String>,
+    val solverPdf: String?,
+    val solverAudio: String?
+)
+
 private fun postDetailUiState(
     postId: String,
     postRepository: PostRepository,
@@ -168,25 +176,29 @@ private fun postDetailUiState(
 
     val currentUserIdStream = flow { emit(authRepository.currentUserId()) }
 
-    // 1. Isolate the network calls so they ONLY trigger when the Post changes
     val postWithUrisStream = postRepository.getPostDetailStream(postId).map { postDetail ->
-        val resolvedUris = (0 until postDetail.userImageCount).mapNotNull { index ->
-            mediaRepository.getResolvedMediaUri(
-                postId = postId,
-                role = "user",
-                index = index,
-                extension = "webp",
-                isSolved = postDetail.isAccepted
-            )
+        // Resolve Author Attachments
+        val authorImages = (0 until postDetail.userImageCount).mapNotNull { index ->
+            mediaRepository.getResolvedMediaUri(postId, "user", index, "webp", postDetail.isAccepted)
         }
-        postDetail to resolvedUris
+        val authorPdf = if (postDetail.userHasPdf) mediaRepository.getResolvedMediaUri(postId, "user", 0, "pdf", postDetail.isAccepted) else null
+        val authorAudio = if (postDetail.userHasAudio) mediaRepository.getResolvedMediaUri(postId, "user", 0, "m4a", postDetail.isAccepted) else null
+
+        // Resolve Solver Attachments
+        val solverImages = (0 until postDetail.solverImageCount).mapNotNull { index ->
+            mediaRepository.getResolvedMediaUri(postId, "solver", index, "webp", postDetail.isAccepted)
+        }
+        val solverPdf = if (postDetail.solverHasPdf) mediaRepository.getResolvedMediaUri(postId, "solver", 0, "pdf", postDetail.isAccepted) else null
+        val solverAudio = if (postDetail.solverHasAudio) mediaRepository.getResolvedMediaUri(postId, "solver", 0, "m4a", postDetail.isAccepted) else null
+
+        postDetail to ResolvedMedia(authorImages, authorPdf, authorAudio, solverImages, solverPdf, solverAudio)
     }
 
     return combine(
         postWithUrisStream,
         currentUserIdStream,
         transientStateFlow
-    ) { (postDetail, resolvedUris), currentUserId, transient ->
+    ) { (postDetail, media), currentUserId, transient ->
 
         val isAuthor = currentUserId != null && currentUserId == postDetail.author.id
         val initialStatus = if (postDetail.isAccepted) SolutionStatus.ACCEPTED else SolutionStatus.PENDING
@@ -194,7 +206,12 @@ private fun postDetailUiState(
 
         PostDetailUiState.Success(
             post = postDetail,
-            resolvedImageUris = resolvedUris,
+            authorImageUris = media.authorImages,
+            authorPdfUri = media.authorPdf,
+            authorAudioUri = media.authorAudio,
+            solverImageUris = media.solverImages,
+            solverPdfUri = media.solverPdf,
+            solverAudioUri = media.solverAudio,
             isAuthor = isAuthor,
             isAcceptedByCurrentUser = transient.isAcceptedByCurrentUser,
             solutionStatus = effectiveStatus,

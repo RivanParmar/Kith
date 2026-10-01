@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kith.core.designsystem.theme.KithTheme
 import com.kith.core.model.data.Transaction
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -32,9 +33,11 @@ internal fun TransactionCard(
     transaction: Transaction,
     modifier: Modifier = Modifier,
 ) {
+    val extendedColors = KithTheme.extendedColors
+
     val isPositive = transaction.xpAmount >= 0
-    val backgroundColor = if (isPositive) Color(0xFFE6F4EA) else Color(0xFFFCE8E6)
-    val textColor = if (isPositive) Color(0xFF137333) else Color(0xFFC5221F)
+    val backgroundColor = if (isPositive) extendedColors.transactionPositiveBg else extendedColors.transactionNegativeBg
+    val textColor = if (isPositive) extendedColors.transactionPositiveText else extendedColors.transactionNegativeText
     val sign = if (isPositive) "+" else "-"
     val displayXp = "$sign ${abs(transaction.xpAmount)} XP"
 
@@ -44,9 +47,9 @@ internal fun TransactionCard(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = extendedColors.transactionCardBg),
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, Color(0xFFF0F0F0)),
+        border = BorderStroke(1.dp, extendedColors.transactionCardBorder),
     ) {
         Row(
             modifier = Modifier
@@ -60,12 +63,12 @@ internal fun TransactionCard(
                     text = transaction.title,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1A1A),
+                    color = extendedColors.transactionTitleText,
                 )
                 Text(
                     text = formattedDate,
                     fontSize = 12.sp,
-                    color = Color.Gray,
+                    color = extendedColors.transactionDateText,
                     modifier = Modifier.padding(top = 4.dp),
                 )
             }

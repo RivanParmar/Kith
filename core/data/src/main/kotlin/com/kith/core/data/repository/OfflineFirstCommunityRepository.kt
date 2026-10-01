@@ -194,8 +194,6 @@ class OfflineFirstCommunityRepository @Inject constructor(
         }
     }
 
-    // NEW: Execute search and map network model to domain model
-    // NEW: Execute search and map network model to domain model
     override suspend fun searchCommunityMembers(
         communityId: String,
         query: String

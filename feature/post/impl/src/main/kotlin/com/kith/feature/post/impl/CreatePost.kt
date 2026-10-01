@@ -337,7 +337,7 @@ internal fun CreatePostScreen(
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             DocumentCard(
-                                icon = KithIcons.Settings,
+                                icon = KithIcons.Photo,
                                 label = "Photo",
                                 badgeText = if (formState.selectedImageUris.isNotEmpty()) "${formState.selectedImageUris.size}/5" else "Add",
                                 modifier = Modifier.weight(1f),
@@ -355,7 +355,7 @@ internal fun CreatePostScreen(
                                 }
                             )
                             DocumentCard(
-                                icon = KithIcons.Settings,
+                                icon = KithIcons.Description,
                                 label = "PDF",
                                 badgeText = if (formState.selectedPdfUri != null) "1/1" else "Docs",
                                 modifier = Modifier.weight(1f),
@@ -373,7 +373,7 @@ internal fun CreatePostScreen(
                                 }
                             )
                             DocumentCard(
-                                icon = KithIcons.Visibility,
+                                icon = KithIcons.AudioFile,
                                 label = "Audio",
                                 badgeText = if (formState.selectedAudioUri != null) "1/1" else "Voice",
                                 modifier = Modifier.weight(1f),

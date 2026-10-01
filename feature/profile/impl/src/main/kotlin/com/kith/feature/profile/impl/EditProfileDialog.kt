@@ -68,10 +68,8 @@ internal fun EditProfileDialog(
                             Text("Save", fontWeight = FontWeight.Bold, color = Color(0xFF3B82F6))
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
                 )
             },
-            containerColor = Color(0xFFF8F9FA),
         ) { paddingValues ->
             Column(
                 modifier = Modifier

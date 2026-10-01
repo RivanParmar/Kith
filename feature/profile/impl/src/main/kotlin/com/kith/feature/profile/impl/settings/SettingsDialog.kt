@@ -209,7 +209,7 @@ private fun SettingsRadioOption(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp),
+            .height(48.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         RadioButton(

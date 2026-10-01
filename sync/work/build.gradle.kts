@@ -13,6 +13,7 @@ dependencies {
     implementation(libs.androidx.work.ktx)
     implementation(libs.hilt.ext.work)
     implementation(projects.core.data)
+    implementation(projects.core.notifications)
 
     androidTestImplementation(libs.androidx.work.testing)
     androidTestImplementation(libs.hilt.android.testing)

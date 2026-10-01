@@ -6,10 +6,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,6 +36,8 @@ import java.util.Locale
 @Composable
 fun CommunitiesScreen(
     onCommunityClick: (String) -> Unit = {},
+    onBackClick: () -> Unit = {},
+    onJoinClick: () -> Unit = {}, // ADDED
     viewModel: CommunityListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -45,14 +49,53 @@ fun CommunitiesScreen(
                 .background(Color.White)
                 .padding(innerPadding)
         ) {
-            Text(
-                text = "Communities",
-                color = Color(0xFF1B1F3B),
-                fontSize = 30.sp,
-                fontFamily = OutfitFontFamily,
-                fontWeight = FontWeight.ExtraBold,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = KithIcons.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color(0xFF1B1F3B)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                Text(
+                    text = "Communities",
+                    color = Color(0xFF1B1F3B),
+                    fontSize = 30.sp,
+                    fontFamily = OutfitFontFamily,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.weight(1f) // Pushes the next item to the far right
+                )
+
+                if (uiState is CommunityListUiState.Success) {
+                    val state = uiState as CommunityListUiState.Success
+                    // Make sure you add 'val isPremium: Boolean' to your Success state class
+                    if (state.isPremium) {
+                        androidx.compose.material3.Surface(
+                            onClick = onJoinClick,
+                            shape = CircleShape,
+                            color = Color(0xFFEFF6FF), // Soft primary blue background
+                            modifier = Modifier.size(40.dp).padding(end = 4.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = KithIcons.Add,
+                                    contentDescription = "Join new community",
+                                    tint = Color(0xFF2563EB), // Primary blue icon
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
 
             when (uiState) {
                 is CommunityListUiState.Loading -> { /* Show loader */ }

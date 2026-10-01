@@ -76,6 +76,11 @@ class OfflineFirstPostRepository @Inject constructor(
             }
         }
 
+        val networkPostIds = networkPosts.map { it.id }
+        if (networkPostIds.isNotEmpty()) {
+            postDao.deleteSyncedPosts(networkPostIds)
+        }
+
         networkPosts.forEach { networkPost ->
             postDao.insertPost(networkPost.asEntity())
         }
@@ -176,7 +181,7 @@ class OfflineFirstPostRepository @Inject constructor(
         uniqueCommunityIds.forEach { id ->
             try {
                 val community = networkDataSource.getCommunityById(id)
-                communityDao.upsertCommunity(community.asCommunityEntity())
+                communityDao.upsertCommunityPreservingStatus(community.asCommunityEntity())
             } catch (e: Exception) {
                 Log.e("PostRepository", "Failed to fetch community $id", e)
             }
@@ -256,5 +261,43 @@ class OfflineFirstPostRepository @Inject constructor(
         return suspendRunCatching {
             syncDataFromNetwork()
         }.isSuccess
+    }
+
+    override suspend fun searchAndSyncPosts(query: String, userId: String) {
+        try {
+            val networkPosts = networkDataSource.searchPosts(query, userId)
+            if (networkPosts.isEmpty()) return
+
+            val uniqueUserIds = networkPosts.map { it.userId }.toSet()
+            val uniqueCommunityIds = networkPosts.map { it.communityId }.toSet()
+
+            // 1. Sync required foreign keys (Users)
+            uniqueUserIds.forEach { id ->
+                try {
+                    val user = networkDataSource.getUserById(id)
+                    userDao.upsertUser(user.asUserEntity())
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            // 2. Sync required foreign keys (Communities)
+            uniqueCommunityIds.forEach { id ->
+                try {
+                    val community = networkDataSource.getCommunityById(id)
+                    communityDao.upsertCommunityPreservingStatus(community.asCommunityEntity())
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            // 3. Insert the newly found posts into the local database
+            networkPosts.forEach { networkPost ->
+                postDao.insertPost(networkPost.asEntity())
+            }
+
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Search and sync failed for query: $query", e)
+        }
     }
 }

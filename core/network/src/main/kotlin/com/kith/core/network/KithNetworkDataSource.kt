@@ -53,4 +53,6 @@ interface KithNetworkDataSource {
     suspend fun updateUserPremiumStatus(userId: String, isPremium: Boolean)
 
     suspend fun updateCommunityImage(communityId: String, imageUrl: String)
+
+    suspend fun searchPosts(query: String, userId: String): List<NetworkPost>
 }

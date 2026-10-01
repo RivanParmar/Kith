@@ -24,7 +24,7 @@ class KithPreferencesDataSource @Inject constructor(
                     DarkThemeConfigProto.DARK_THEME_CONFIG_LIGHT -> DarkThemeConfig.LIGHT
                     DarkThemeConfigProto.DARK_THEME_CONFIG_DARK -> DarkThemeConfig.DARK
                 },
-                useDynamicColor = if (preferences.hasUseDynamicColor()) preferences.useDynamicColor else true,
+                useDynamicColor = if (preferences.hasUseDynamicColor()) preferences.useDynamicColor else false,
                 pushNotificationsEnabled = preferences.pushNotificationsEnabled,
                 shouldHideOnboarding = preferences.hasDoneOnboarding,
                 lastLoginTimestamp = preferences.lastLoginTimestamp

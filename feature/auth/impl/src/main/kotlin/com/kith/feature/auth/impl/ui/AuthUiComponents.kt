@@ -17,6 +17,7 @@ import androidx.compose.foundation.text.input.TextObfuscationMode
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedSecureTextField
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -30,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -40,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.designsystem.theme.GugiFontFamily
+import com.kith.core.designsystem.theme.KithTheme
 import com.kith.core.designsystem.theme.LightBlue
 import com.kith.feature.auth.api.R as apiR
 import com.kith.feature.auth.impl.R
@@ -48,21 +51,23 @@ import com.kith.feature.auth.impl.R
 internal fun WaveHeader(
     modifier: Modifier = Modifier,
 ) {
+    val bgColor = KithTheme.extendedColors.authWaveColor
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color.White),
+            .background(KithTheme.extendedColors.authWaveBackgroundColor),
     ) {
          Image(
              painter = painterResource(R.drawable.wave_backgroundimage),
              contentDescription = null,
              contentScale = ContentScale.Crop,
              modifier = Modifier.matchParentSize(),
+             colorFilter = ColorFilter.tint(KithTheme.extendedColors.authDesignColor)
          )
 
         Text(
             text = "KITH",
-            color = Color.Black,
+            color = KithTheme.extendedColors.authTitleColor,
             fontSize = 54.sp,
             fontWeight = FontWeight.SemiBold,
             fontFamily = GugiFontFamily,
@@ -93,7 +98,7 @@ internal fun WaveHeader(
                 lineTo(0f, h)
                 close()
             }
-            drawPath(path, LightBlue)
+            drawPath(path, bgColor)
         }
     }
 }
@@ -126,7 +131,7 @@ internal fun EmailField(
             errorMessage?.let {
                 Text(
                     text = it,
-                    color = Color(0xFFFF6B6B),
+                    color = MaterialTheme.colorScheme.error,
                     fontSize = 12.sp,
                 )
             }
@@ -147,7 +152,7 @@ internal fun EmailField(
             Icon(
                 imageVector = KithIcons.Mail,
                 contentDescription = stringResource(apiR.string.feature_auth_api_email),
-                tint = if (errorMessage != null) Color(0xFFFF6B6B) else Color.White,
+                tint = if (errorMessage != null) MaterialTheme.colorScheme.error else Color.White,
                 modifier = Modifier.size(20.dp),
             )
         },
@@ -211,7 +216,13 @@ internal fun PasswordField(
         placeholder = { Text(stringResource(placeholderRes)) },
         isError = displayError != null,
         supportingText = displayError?.let { { Text(it, color = Color(0xFFFF6B6B)) } },
-        leadingIcon = { Icon(KithIcons.Password, contentDescription = null, tint = Color.White) },
+        leadingIcon = {
+            Icon(
+                imageVector = KithIcons.Password,
+                contentDescription = null,
+                tint = if (displayError != null) MaterialTheme.colorScheme.error else Color.White,
+            )
+        },
         trailingIcon = {
             IconButton(onClick = {
                 passwordVisible = !passwordVisible

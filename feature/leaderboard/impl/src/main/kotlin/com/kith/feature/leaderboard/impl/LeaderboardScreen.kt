@@ -1,15 +1,20 @@
 package com.kith.feature.leaderboard.impl
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,6 +22,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
@@ -24,14 +30,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -48,6 +59,7 @@ import com.kith.core.designsystem.theme.OutfitFontFamily
 import com.kith.core.model.data.UserProfile
 import com.kith.core.ui.ProfileAvatar
 import com.kith.core.ui.RingProfileAvatar
+import kotlinx.coroutines.delay
 
 private object LeaderboardColors {
     val primary = Color(0xFF2563EB)
@@ -126,8 +138,12 @@ private fun LeaderboardContent(
     onTabChanged: (LeaderboardTab) -> Unit = {},
     onUserClick: (String) -> Unit = {}
 ) {
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             KithMediumTopAppBar(
                 titleRes = com.kith.feature.leaderboard.api.R.string.feature_leaderboard_api_title,
@@ -135,8 +151,7 @@ private fun LeaderboardContent(
                 navigationIconContentDescription = null,
                 actionIcon = null,
                 actionIconContentDescription = null,
-                fontFamily = OutfitFontFamily,
-                fontWeight = FontWeight.ExtraBold
+                scrollBehavior = scrollBehavior,
             )
         }
     ) { padding ->
@@ -202,36 +217,66 @@ private fun SegmentedTabs(
     onTabSelected: (LeaderboardTab) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
+    val tabs = LeaderboardTab.entries
+    val selectedIndex = tabs.indexOf(selectedTab)
+
+    val extendedColors = KithTheme.extendedColors
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(LeaderboardColors.tabBg, CircleShape)
-            .padding(4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
+            .background(extendedColors.tabTrackBg, CircleShape)
+            .padding(4.dp)
     ) {
-        LeaderboardTab.entries.forEach { tab ->
-            val isSelected = tab == selectedTab
+        BoxWithConstraints(modifier = Modifier.matchParentSize()) {
+            val tabWidth = maxWidth / tabs.size
+            val indicatorOffset by animateDpAsState(
+                targetValue = tabWidth * selectedIndex,
+                animationSpec = spring(dampingRatio = 0.75f, stiffness = 400f),
+                label = "indicator_offset"
+            )
+
             Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .background(if (isSelected) Color.White else Color.Transparent, CircleShape)
-                    .clip(CircleShape)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) {
-                        onTabSelected(tab)
-                    }
-                    .padding(vertical = 10.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = tab.title,
-                    fontSize = 14.sp,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                    color = if (isSelected) LeaderboardColors.primary else LeaderboardColors.textMuted,
+                    .offset(x = indicatorOffset)
+                    .width(tabWidth)
+                    .fillMaxHeight()
+                    .background(extendedColors.tabPillBg, CircleShape)
+            )
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            tabs.forEach { tab ->
+                val isSelected = tab == selectedTab
+                val animatedTextColor by animateColorAsState(
+                    targetValue = if (isSelected) extendedColors.tabTextSelected else extendedColors.tabTextUnselected,
+                    label = "tab_text_color"
                 )
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(CircleShape)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            onTabSelected(tab)
+                        }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = tab.title,
+                        fontSize = 14.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        color = animatedTextColor,
+                    )
+                }
             }
         }
     }
@@ -248,9 +293,14 @@ private fun PodiumRow(
         podium.getOrNull(style.rank - 1)?.let { user -> style to user }
     }
 
+    var startAnim by remember(podium) { mutableStateOf(false) }
+    LaunchedEffect(podium) {
+        startAnim = true
+    }
+
     Row(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 25.dp),
-        horizontalArrangement = Arrangement.spacedBy(45.dp),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.Bottom,
     ) {
         ordered.forEach { (style, user) ->
@@ -258,8 +308,10 @@ private fun PodiumRow(
                 user = user,
                 style = style,
                 currentTab = currentTab,
+                startAnim = startAnim, // Pass the animation state down
                 onClick = { onUserClick(user) },
-                modifier = Modifier.weight(if (style.rank == 1) 1.05f else 1f),
+                // FIX 2: Slimmer podiums (reduced from 110.dp to 86.dp)
+                modifier = Modifier.widthIn(max = 86.dp)
             )
         }
     }
@@ -270,11 +322,21 @@ private fun PodiumColumn(
     user: UserProfile,
     style: PodiumStyle,
     currentTab: LeaderboardTab,
+    startAnim: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val animatedHeight by animateDpAsState(
+        targetValue = if (startAnim) style.height else 0.dp,
+        animationSpec = spring(dampingRatio = 0.75f, stiffness = 300f),
+        label = "podium_height"
+    )
+
     Column(
-        modifier = modifier.clickable { onClick() },
+        modifier = modifier.clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = null
+        ) { onClick() },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Bottom,
     ) {
@@ -317,7 +379,12 @@ private fun PodiumColumn(
                     .border(1.5.dp, Color.White, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(style.rank.toString(), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    style.rank.toString(),
+                    color = Color.White,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                )
             }
         }
 
@@ -331,7 +398,6 @@ private fun PodiumColumn(
                 text = user.name,
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.5.sp,
-                color = LeaderboardColors.textDark,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f, fill = false),
@@ -350,20 +416,22 @@ private fun PodiumColumn(
         Box(
             Modifier
                 .background(LeaderboardColors.primaryBg, RoundedCornerShape(50))
-                .padding(horizontal = 10.dp, vertical = 3.dp)
+                .padding(horizontal = 8.dp, vertical = 3.dp)
         ) {
             Text(
                 text = user.getFormattedScore(currentTab),
-                fontSize = 11.5.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = LeaderboardColors.primary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
         Spacer(Modifier.height(10.dp))
         Box(
             Modifier
                 .fillMaxWidth()
-                .height(style.height)
+                .height(animatedHeight) // Animated smoothly from the parent trigger
                 .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
                 .background(style.gradient)
         )

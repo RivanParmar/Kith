@@ -3,8 +3,10 @@ package com.kith.feature.profile.impl.navigation
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.kith.core.navigation.Navigator
+import com.kith.core.navigation.horizontalSlideMetadata
 import com.kith.feature.community.api.navigation.CommunityListNavKey
 import com.kith.feature.paywall.api.navigation.PaywallNavKey
+import com.kith.feature.post.api.navigation.navigateToPostDetail
 import com.kith.feature.profile.api.navigation.PostHistoryNavKey
 import com.kith.feature.profile.api.navigation.ProfileNavKey
 import com.kith.feature.profile.api.navigation.TransactionsNavKey
@@ -24,17 +26,26 @@ fun EntryProviderScope<NavKey>.profileEntry(navigator: Navigator) {
         )
     }
 
-    entry<TransactionsNavKey> {
+    entry<TransactionsNavKey>(
+        metadata = horizontalSlideMetadata()
+    ) {
         TransactionsScreen(
             onBackClick = navigator::goBack
         )
     }
 
-    entry<PostHistoryNavKey> {
-        PostHistoryScreen()
+    entry<PostHistoryNavKey>(
+        metadata = horizontalSlideMetadata()
+    ) {
+        PostHistoryScreen(
+            onBackClick = { navigator.goBack() },
+            onPostClick = { navigator.navigateToPostDetail(it) }
+        )
     }
 
-    entry<UserProfileNavKey> { key ->
+    entry<UserProfileNavKey>(
+        metadata = horizontalSlideMetadata()
+    ) { key ->
         OtherUserProfileScreen(
             userId = key.userId,
             onBackClick = { navigator.goBack() }

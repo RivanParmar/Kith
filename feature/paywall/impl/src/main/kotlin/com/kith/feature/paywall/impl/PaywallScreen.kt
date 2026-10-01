@@ -58,6 +58,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kith.core.designsystem.icon.KithIcons
+import com.kith.core.designsystem.theme.KithExtendedColors
+import com.kith.core.designsystem.theme.KithTheme
 import com.kith.core.designsystem.theme.OutfitFontFamily
 import kotlinx.coroutines.delay
 
@@ -78,6 +80,8 @@ fun PaywallScreen(
     val context = LocalContext.current
     val activity = context as? Activity
 
+    val extendedColors = KithTheme.extendedColors // Pull the theme colors
+
     LaunchedEffect(uiState.userMessage) {
         val msg = uiState.userMessage
         if (msg != null) {
@@ -95,7 +99,7 @@ fun PaywallScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = Color.White,
+        containerColor = extendedColors.paywallBg, // Apply themed background
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         Column(
@@ -116,20 +120,21 @@ fun PaywallScreen(
                 IconButton(
                     onClick = onBackClick,
                     modifier = Modifier
-                        .offset(x = (-12).dp) // Neutralizes the 12dp internal padding so it aligns flush left
+                        .offset(x = (-12).dp)
                         .size(48.dp)
                         .testTag("paywall_back_button")
                 ) {
                     Icon(
                         imageVector = KithIcons.ArrowBack,
                         contentDescription = "Back",
-                        tint = TextDark,
+                        tint = extendedColors.paywallTextPrimary, // Themed icon
                         modifier = Modifier.size(24.dp)
                     )
                 }
 
                 AnnualMonthlyPillToggle(
                     selectedCycle = uiState.selectedCycle,
+                    extendedColors = extendedColors, // Pass colors to the toggle
                     onSelect = { cycle ->
                         viewModel.onEvent(PaywallUiEvent.SelectCycle(cycle))
                     }
@@ -141,7 +146,7 @@ fun PaywallScreen(
                 fontFamily = OutfitFontFamily,
                 fontSize = 36.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextDark,
+                color = extendedColors.paywallTextPrimary, // Themed text
                 modifier = Modifier.padding(bottom = 20.dp)
             )
 
@@ -300,13 +305,13 @@ fun PaywallScreen(
                         CircularProgressIndicator(
                             modifier = Modifier.size(16.dp),
                             strokeWidth = 2.dp,
-                            color = TextMuted
+                            color = extendedColors.paywallTextSecondary // Themed loader
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                     }
                     Text(
                         text = "Restore Purchases",
-                        color = TextMuted,
+                        color = extendedColors.paywallTextSecondary, // Themed text
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -320,6 +325,7 @@ fun PaywallScreen(
 @Composable
 private fun AnnualMonthlyPillToggle(
     selectedCycle: BillingCycle,
+    extendedColors: KithExtendedColors,
     onSelect: (BillingCycle) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -331,7 +337,7 @@ private fun AnnualMonthlyPillToggle(
         label = "AnnualBgColor"
     )
     val annualTextColor by animateColorAsState(
-        targetValue = if (isAnnual) Color.White else TextMuted,
+        targetValue = if (isAnnual) Color.White else extendedColors.paywallTextSecondary,
         animationSpec = tween(durationMillis = 220),
         label = "AnnualTextColor"
     )
@@ -341,7 +347,7 @@ private fun AnnualMonthlyPillToggle(
         label = "MonthlyBgColor"
     )
     val monthlyTextColor by animateColorAsState(
-        targetValue = if (!isAnnual) Color.White else TextMuted,
+        targetValue = if (!isAnnual) Color.White else extendedColors.paywallTextSecondary,
         animationSpec = tween(durationMillis = 220),
         label = "MonthlyTextColor"
     )
@@ -349,8 +355,8 @@ private fun AnnualMonthlyPillToggle(
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(50))
-            .background(LightPillBackground)
-            .border(width = 1.dp, color = PillBorderColor, shape = RoundedCornerShape(50))
+            .background(extendedColors.paywallPillTrackBg) // Themed Track
+            .border(width = 1.dp, color = extendedColors.paywallPillTrackBorder, shape = RoundedCornerShape(50)) // Themed Border
             .padding(3.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

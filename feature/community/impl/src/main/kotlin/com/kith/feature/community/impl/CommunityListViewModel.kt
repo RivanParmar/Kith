@@ -52,7 +52,7 @@ class CommunityListViewModel @Inject constructor(
     ) { communities, isPremium ->
         // Enforce the rule: Only Premium users get multiple joined communities in this view
         val displayList = if (isPremium) communities else communities.take(1)
-        CommunityListUiState.Success(displayList)
+        CommunityListUiState.Success(displayList, isPremium)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -62,5 +62,8 @@ class CommunityListViewModel @Inject constructor(
 
 sealed interface CommunityListUiState {
     data object Loading : CommunityListUiState
-    data class Success(val communities: List<Community>) : CommunityListUiState
+    data class Success(
+        val communities: List<Community>,
+        val isPremium: Boolean,
+    ) : CommunityListUiState
 }

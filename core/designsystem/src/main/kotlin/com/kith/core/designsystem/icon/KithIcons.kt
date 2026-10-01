@@ -5,10 +5,12 @@ object KithIcons {
     val Add = add
     val ArrowBack = arrow_back
     val ArrowForward = arrow_forward
+    val AudioFile = audio_file
     val Bolt = bolt
     val Check = check
     val ChevronForward = chevron_forward
     val Crown = crown
+    val Description = description
     val Edit = edit
     val Error = error
     val Groups = groups
@@ -22,9 +24,11 @@ object KithIcons {
     val Password = password
     val Person = person
     val PersonOutlined = person_outlined
+    val Photo = photo
     val Search = search
     val Settings = settings
     val StarRate = star_rate
+    val StarRateOutlined = star_rate_outlined
     val Visibility = visibility
     val VisibilityOff = visibility_off
     val Close = close

@@ -18,7 +18,6 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kith.core.designsystem.theme.KithTheme
-import com.kith.core.designsystem.theme.LightBlue
 
 @Composable
 internal fun AuthLayout(
@@ -39,10 +38,9 @@ internal fun AuthLayout(
 
         Column(
             modifier = Modifier
-//                .weight(1f)
                 .heightIn(min = screenHeight * 0.65f)
                 .fillMaxWidth()
-                .background(LightBlue)
+                .background(KithTheme.extendedColors.authBackground)
                 .padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             content = content,

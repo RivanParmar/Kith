@@ -8,6 +8,7 @@ import androidx.core.app.NotificationCompat
 import androidx.work.Constraints
 import androidx.work.ForegroundInfo
 import androidx.work.NetworkType
+import com.kith.sync.R
 
 const val SYNC_TOPIC = "sync"
 private const val SYNC_NOTIFICATION_ID = 0
@@ -24,14 +25,13 @@ fun Context.syncForegroundInfo() = ForegroundInfo(
     syncWorkNotification(),
 )
 
-// TODO: Add names and icons
 private fun Context.syncWorkNotification(): Notification {
     val channel = NotificationChannel(
         SYNC_NOTIFICATION_CHANNEL_ID,
-        "",
+        getString(R.string.sync_work_notification_channel_name),
         NotificationManager.IMPORTANCE_DEFAULT,
     ).apply {
-        description = ""
+        description = getString(R.string.sync_work_notification_channel_description)
     }
     // Register the channel with the system
     val notificationManager: NotificationManager? =
@@ -43,8 +43,8 @@ private fun Context.syncWorkNotification(): Notification {
         this,
         SYNC_NOTIFICATION_CHANNEL_ID
     )
-        .setSmallIcon(0)
-        .setContentTitle("")
+        .setSmallIcon(com.kith.core.notifications.R.drawable.ic_stat_name)
+        .setContentTitle(getString(R.string.sync_work_notification_title))
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         .build()
 }

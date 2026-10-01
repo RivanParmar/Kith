@@ -11,6 +11,7 @@ dependencies {
     implementation(projects.feature.profile.api)
     implementation(projects.feature.community.api)
     implementation(projects.feature.paywall.api)
+    implementation(projects.feature.post.api)
 
     implementation(libs.androidx.activity.compose)
 

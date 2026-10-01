@@ -3,6 +3,7 @@ package com.kith.feature.auth.impl.navigation
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.kith.core.navigation.Navigator
+import com.kith.core.navigation.horizontalSlideMetadata
 import com.kith.feature.auth.api.navigation.ForgotPasswordNavKey
 import com.kith.feature.auth.api.navigation.ResetPasswordNavKey
 import com.kith.feature.auth.api.navigation.SignInNavKey
@@ -22,19 +23,25 @@ fun EntryProviderScope<NavKey>.authEntry(navigator: Navigator) {
         )
     }
 
-    entry<SignUpNavKey> {
+    entry<SignUpNavKey>(
+        metadata = horizontalSlideMetadata()
+    ) {
         SignUpScreen(
             onSignInClicked = { navigator.navigate(SignInNavKey) }
         )
     }
 
-    entry<ForgotPasswordNavKey> {
+    entry<ForgotPasswordNavKey>(
+        metadata = horizontalSlideMetadata()
+    ) {
         ForgotPasswordScreen()
     }
 
-    entry<ResetPasswordNavKey> {
+    entry<ResetPasswordNavKey>(
+        metadata = horizontalSlideMetadata()
+    ) {
         ResetPasswordScreen(
-            onResetSuccess = { /* TODO */ }
+            onResetSuccess = { /* Handle completion */ }
         )
     }
 }

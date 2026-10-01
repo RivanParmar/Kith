@@ -13,12 +13,17 @@ sealed interface PostDetailUiState {
     data class Error(val message: String?) : PostDetailUiState
     data class Success(
         val post: PostDetail,
-        val resolvedImageUris: List<String> = emptyList(),
+        val authorImageUris: List<String> = emptyList(),
+        val authorPdfUri: String? = null,
+        val authorAudioUri: String? = null,
+        val solverImageUris: List<String> = emptyList(),
+        val solverPdfUri: String? = null,
+        val solverAudioUri: String? = null,
         val isAuthor: Boolean,
         val isAcceptedByCurrentUser: Boolean,
         val solutionStatus: SolutionStatus,
         val userRating: Float,
         val isSubmitting: Boolean,
-        val isDeleting: Boolean
+        val isDeleting: Boolean,
     ) : PostDetailUiState
 }

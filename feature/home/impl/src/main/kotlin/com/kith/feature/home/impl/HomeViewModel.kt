@@ -23,7 +23,7 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     postRepository: PostRepository,
     walletRepository: WalletRepository,
-    transactionRepository: TransactionRepository, // ADDED THIS
+    transactionRepository: TransactionRepository,
     private val syncManager: SyncManager,
     authDataSource: KithAuthDataSource,
 ) : ViewModel() {
@@ -59,7 +59,10 @@ class HomeViewModel @Inject constructor(
         )
 
     val feedState: StateFlow<PostsFeedUiState> = postRepository.getAllPostsStream()
-        .map { PostsFeedUiState.Success(it) }
+        .map { posts ->
+            val openPosts = posts.filter { it.status == "OPEN" }
+            PostsFeedUiState.Success(openPosts)
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),

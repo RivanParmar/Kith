@@ -23,11 +23,14 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,9 +38,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.kith.core.designsystem.component.KithMediumTopAppBar
 import com.kith.core.designsystem.component.LoadingWheel
 import com.kith.core.designsystem.icon.KithIcons
 import com.kith.core.model.data.Notification
+import com.kith.feature.home.api.R
 import kotlin.time.Clock
 
 @Composable
@@ -45,12 +50,16 @@ fun NotificationsRoute(
     modifier: Modifier = Modifier,
     viewModel: NotificationsViewModel = hiltViewModel(),
     onBackClick: () -> Unit = {},
+    onNavigateToPost: (String) -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     NotificationsScreen(
         uiState = uiState,
-        onNotificationClick = viewModel::markAsRead,
+        onNotificationClick = { notification ->
+            viewModel.markAsRead(notification.id)
+            onNavigateToPost(notification.postId)
+        },
         onBackClick = onBackClick,
         modifier = modifier
     )
@@ -59,92 +68,86 @@ fun NotificationsRoute(
 @Composable
 internal fun NotificationsScreen(
     uiState: NotificationsUiState,
-    onNotificationClick: (String) -> Unit,
+    onNotificationClick: (Notification) -> Unit,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 12.dp, top = 24.dp, bottom = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = KithIcons.ArrowBack,
-                    contentDescription = "Navigate back",
-                    tint = MaterialTheme.colorScheme.onBackground
-                )
-            }
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
-            Spacer(modifier = Modifier.width(4.dp))
-
-            Text(
-                text = "Notifications",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
+    Scaffold(
+        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            KithMediumTopAppBar(
+                titleRes = R.string.feature_notifications_api_title,
+                navigationIcon = KithIcons.ArrowBack,
+                navigationIconContentDescription = "Back",
+                actionIcon = null,
+                actionIconContentDescription = null,
+                scrollBehavior = scrollBehavior,
+                onNavigationClick = onBackClick,
             )
         }
-
-        when (uiState) {
-            is NotificationsUiState.Loading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    LoadingWheel(contentDesc = "Loading notifications")
-                }
-            }
-
-            is NotificationsUiState.Error -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = uiState.message,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                    )
-                }
-            }
-
-            is NotificationsUiState.Success -> {
-                if (uiState.notifications.isEmpty()) {
+    ) { padding ->
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(padding)
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+        ) {
+            when (uiState) {
+                is NotificationsUiState.Loading -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
+                        LoadingWheel(contentDesc = "Loading notifications")
+                    }
+                }
+
+                is NotificationsUiState.Error -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(
-                            text = "No notifications yet",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodyLarge
+                            text = uiState.message,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center,
                         )
                     }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(
-                            items = uiState.notifications,
-                            key = { it.id }
-                        ) { notification ->
-                            NotificationCard(
-                                notification = notification,
-                                onClick = { onNotificationClick(notification.id) }
+                }
+
+                is NotificationsUiState.Success -> {
+                    if (uiState.notifications.isEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No notifications yet",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodyLarge
                             )
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            items(
+                                items = uiState.notifications,
+                                key = { it.id }
+                            ) { notification ->
+                                NotificationCard(
+                                    notification = notification,
+                                    onClick = { onNotificationClick(notification) }
+                                )
+                            }
                         }
                     }
                 }

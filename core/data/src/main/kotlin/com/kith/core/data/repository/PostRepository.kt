@@ -13,7 +13,6 @@ interface PostRepository : Syncable {
     suspend fun syncDataFromNetwork()
     suspend fun syncPostById(postId: String)
 
-    // FIX: Added solverId here so it perfectly matches OfflineFirstPostRepository
     suspend fun submitAnswer(postId: String, answer: String, solverId: String)
 
     suspend fun acceptSolution(postId: String)
@@ -23,4 +22,5 @@ interface PostRepository : Syncable {
     suspend fun createDraft(postId: String, userId: String, request: NewPostRequest)
     suspend fun publishPostToNetwork(postId: String)
     fun getPostsByUserIdStream(userId: String): Flow<List<Post>>
+    suspend fun searchAndSyncPosts(query: String, userId: String)
 }

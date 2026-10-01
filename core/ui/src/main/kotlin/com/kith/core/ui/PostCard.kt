@@ -21,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,6 +45,8 @@ fun PostCard(
     onPostClick: (String) -> Unit = { _ -> },
     onAuthorClick: (String) -> Unit = { _ -> },
 ) {
+    val extendedColors = KithTheme.extendedColors
+
     OutlinedCard(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
@@ -78,7 +79,7 @@ fun PostCard(
                             Icon(
                                 imageVector = KithIcons.StarRate,
                                 contentDescription = null,
-                                tint = Color(0xFFFDB814),
+                                tint = extendedColors.postCardStar, // Themed Star
                                 modifier = Modifier.size(14.dp),
                             )
                             Spacer(modifier = Modifier.width(2.dp))
@@ -86,7 +87,7 @@ fun PostCard(
                                 text = "${post.author.rating}",
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.Medium,
-                                color = Color.Gray,
+                                color = extendedColors.postCardRatingText, // Themed Rating Text
                             )
                         }
                     }
@@ -97,7 +98,7 @@ fun PostCard(
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))
-                        .background(Color(0xFFEEF2FF))
+                        .background(extendedColors.postCardBadgeBg) // Themed Badge Bg
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
@@ -105,13 +106,13 @@ fun PostCard(
                     Icon(
                         imageVector = KithIcons.Bolt,
                         contentDescription = null,
-                        tint = Color(0xFF5B8DF9),
+                        tint = extendedColors.postCardBadgeText, // Themed Badge Text/Icon
                         modifier = Modifier.size(16.dp),
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "${post.reward} XP",
-                        color = Color(0xFF5B8DF9),
+                        color = extendedColors.postCardBadgeText, // Themed Badge Text
                         fontFamily = OutfitFontFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = 12.sp,
@@ -133,7 +134,7 @@ fun PostCard(
             Text(
                 text = post.content,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray,
+                color = extendedColors.postCardContentText, // Themed Content Text
                 modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
                 lineHeight = 22.sp,
                 maxLines = 3,
@@ -149,12 +150,12 @@ fun PostCard(
             ) {
                 Text(
                     text = if (post.isInPerson) "In-person" else "Virtual",
-                    color = Color(0xFF5B8DF9),
+                    color = extendedColors.postCardBadgeText, // Themed Badge Text
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 12.sp,
                     modifier = Modifier
-                        .background(Color(0xFFEEF2FF), shape = RoundedCornerShape(6.dp))
+                        .background(extendedColors.postCardBadgeBg, shape = RoundedCornerShape(6.dp)) // Themed Badge Bg
                         .padding(6.dp),
                 )
 
@@ -162,7 +163,7 @@ fun PostCard(
                 Text(
                     text = formattedDate,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.LightGray,
+                    color = extendedColors.postCardDateText, // Themed Date Text
                 )
             }
         }

@@ -1,5 +1,8 @@
 package com.kith.feature.post.impl
 
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -35,15 +38,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -65,11 +69,9 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathFillType
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -81,6 +83,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.kith.core.designsystem.icon.KithIcons
+import com.kith.core.designsystem.theme.KithExtendedColors
+import com.kith.core.designsystem.theme.KithTheme
 import com.kith.core.model.data.User
 import java.util.UUID
 
@@ -166,13 +170,19 @@ internal fun PostDetailScreen(
     onRejectSolution: () -> Unit = {},
 ) {
     val mediaPicker = LocalMediaPickerHelper.current
+    val extendedColors = KithTheme.extendedColors
 
     when (uiState) {
         is PostDetailUiState.Loading -> {
             Scaffold(
                 modifier = modifier.fillMaxSize(),
-                containerColor = PostDetailColors.Background,
-                topBar = { PostDetailTopBar(onBackClick = onBackClick) }
+                containerColor = extendedColors.detailBg,
+                topBar = {
+                    PostDetailTopBar(
+                        extendedColors = extendedColors,
+                        onBackClick = onBackClick,
+                    )
+                }
             ) { innerPadding ->
                 Box(
                     modifier = Modifier
@@ -180,15 +190,20 @@ internal fun PostDetailScreen(
                         .padding(innerPadding),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = PostDetailColors.BountyTitle)
+                    CircularWavyProgressIndicator(color = extendedColors.detailBountyTitle)
                 }
             }
         }
         is PostDetailUiState.Error -> {
             Scaffold(
                 modifier = modifier.fillMaxSize(),
-                containerColor = PostDetailColors.Background,
-                topBar = { PostDetailTopBar(onBackClick = onBackClick) }
+                containerColor = extendedColors.detailBg,
+                topBar = {
+                    PostDetailTopBar(
+                        extendedColors = extendedColors,
+                        onBackClick = onBackClick,
+                    )
+                }
             ) { innerPadding ->
                 Box(
                     modifier = Modifier
@@ -217,12 +232,10 @@ internal fun PostDetailScreen(
             var selectedAudioUri by remember { mutableStateOf<String?>(null) }
 
             var userRating by remember(post.id) { mutableFloatStateOf(uiState.userRating) }
-            var localSolutionStatus by remember(post.id, uiState.solutionStatus) { mutableStateOf(uiState.solutionStatus) }
+            var showDeleteDialog by remember { mutableStateOf(false) }
+
             // Full Screen Image Dialog State
             var fullScreenImageUrl by remember { mutableStateOf<String?>(null) }
-
-
-            var showDeleteDialog by remember { mutableStateOf(false) }
 
             if (showDeleteDialog) {
                 AlertDialog(
@@ -237,7 +250,7 @@ internal fun PostDetailScreen(
                         TextButton(
                             onClick = {
                                 showDeleteDialog = false
-                                onDeleteClick() // Invokes viewModel.onDeletePost(onBackClick)
+                                onDeleteClick()
                             }
                         ) {
                             Text("Delete", color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
@@ -245,10 +258,9 @@ internal fun PostDetailScreen(
                     },
                     dismissButton = {
                         TextButton(onClick = { showDeleteDialog = false }) {
-                            Text("Cancel", color = PostDetailColors.TextPrimary)
+                            Text("Cancel")
                         }
                     },
-                    containerColor = Color.White
                 )
             }
 
@@ -289,10 +301,11 @@ internal fun PostDetailScreen(
 
             Scaffold(
                 modifier = modifier.fillMaxSize(),
-                containerColor = PostDetailColors.Background,
+                containerColor = extendedColors.detailBg,
                 topBar = {
                     PostDetailTopBar(
                         onBackClick = onBackClick,
+                        extendedColors = extendedColors,
                         showDeleteButton = uiState.isAuthor,
                         onDeleteClick = { showDeleteDialog = true },
                     )
@@ -337,6 +350,7 @@ internal fun PostDetailScreen(
                     AuthorProfileCard(
                         author = post.author,
                         roleLabel = "ASKER",
+                        extendedColors = extendedColors,
                         onClick = {
                             if (uiState.isAuthor) {
                                 onNavigateToMyProfile()
@@ -355,7 +369,7 @@ internal fun PostDetailScreen(
                             text = post.title,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
-                            color = PostDetailColors.TextPrimary,
+                            color = extendedColors.detailTextPrimary,
                             lineHeight = 28.sp,
                             modifier = Modifier.weight(1f)
                         )
@@ -367,7 +381,7 @@ internal fun PostDetailScreen(
                             Icon(
                                 imageVector = if (isAttachmentsExpanded) KithIcons.ArrowDropUp else KithIcons.ArrowDropDown,
                                 contentDescription = if (isAttachmentsExpanded) "Collapse details" else "Expand details",
-                                tint = PostDetailColors.TextPrimary,
+                                tint = extendedColors.detailTextPrimary,
                                 modifier = Modifier.size(28.dp)
                             )
                         }
@@ -376,6 +390,7 @@ internal fun PostDetailScreen(
                     PostTagsRow(
                         isInPerson = post.isInPerson,
                         communityName = post.community.name,
+                        extendedColors = extendedColors,
                         onCommunityClick = { onCommunityClick(post.community.id) },
                     )
 
@@ -392,15 +407,23 @@ internal fun PostDetailScreen(
                                 Text(
                                     text = post.content,
                                     fontSize = 14.5.sp,
-                                    color = PostDetailColors.TextSecondary,
+                                    color = extendedColors.detailTextSecondary,
                                     lineHeight = 21.sp
                                 )
                             }
 
-                            if (uiState.resolvedImageUris.isNotEmpty()) {
+                            // Author Attachments
+                            if (uiState.authorImageUris.isNotEmpty()) {
                                 PostMediaAttachments(
-                                    images = uiState.resolvedImageUris,
+                                    images = uiState.authorImageUris,
                                     onImageClick = { url -> fullScreenImageUrl = url }
+                                )
+                            }
+
+                            if (uiState.authorPdfUri != null || uiState.authorAudioUri != null) {
+                                DocumentLinksRow(
+                                    pdfUri = uiState.authorPdfUri,
+                                    audioUri = uiState.authorAudioUri
                                 )
                             }
                         }
@@ -411,6 +434,20 @@ internal fun PostDetailScreen(
                         SolutionCard(
                             solution = currentAnswer,
                             solver = post.solver,
+                            imageUris = uiState.solverImageUris,
+                            pdfUri = uiState.solverPdfUri,
+                            audioUri = uiState.solverAudioUri,
+                            isAuthor = uiState.isAuthor, // PASSED
+                            status = uiState.solutionStatus, // PASSED
+                            rating = userRating, // PASSED
+                            extendedColors = extendedColors,
+                            onAccept = onAcceptSolution, // PASSED
+                            onReject = onRejectSolution, // PASSED
+                            onRatingChange = { newRating -> // PASSED
+                                userRating = newRating
+                                onRateSolution(newRating)
+                            },
+                            onImageClick = { url -> fullScreenImageUrl = url },
                             onSolverClick = {
                                 if (uiState.isAcceptedByCurrentUser) {
                                     onNavigateToMyProfile()
@@ -419,36 +456,38 @@ internal fun PostDetailScreen(
                                 }
                             }
                         )
+//                        if (uiState.isAuthor) {
+//                            RateSolutionCard(
+//                                rating = userRating,
+//                                onRatingChange = { newRating ->
+//                                    userRating = newRating
+//                                    onRateSolution(newRating)
+//                                }
+//                            )
+//
+//                            SolutionDecisionSection(
+//                                status = uiState.solutionStatus,
+//                                onAccept = onAcceptSolution,
+//                                onReject = onRejectSolution
+//                            )
+//                        }
 
-                        if (uiState.isAuthor) {
-                            RateSolutionCard(
-                                rating = userRating,
-                                onRatingChange = { newRating ->
-                                    userRating = newRating
-                                    onRateSolution(newRating)
-                                }
-                            )
-
-                            SolutionDecisionSection(
-                                status = localSolutionStatus,
-                                onAccept = {
-                                    localSolutionStatus = SolutionStatus.ACCEPTED
-                                    onAcceptSolution()
-                                },
-                                onReject = {
-                                    localSolutionStatus = SolutionStatus.REJECTED
-                                    onRejectSolution()
-                                }
-                            )
-                        }
-
-                        BountyRewardCard(reward = post.reward, isCompleted = true)
+                        BountyRewardCard(
+                            reward = post.reward,
+                            extendedColors = extendedColors,
+                            isCompleted = true,
+                        )
                     } else if (!uiState.isAuthor && uiState.isAcceptedByCurrentUser) {
-                        BountyRewardCard(reward = post.reward, isCompleted = false)
+                        BountyRewardCard(
+                            reward = post.reward,
+                            extendedColors = extendedColors,
+                            isCompleted = false,
+                        )
 
                         YourAnswerSectionModern(
                             answerText = answerText,
                             onAnswerChange = { answerText = it },
+                            extendedColors = extendedColors,
                             selectedImageUris = selectedImageUris,
                             selectedPdfUri = selectedPdfUri,
                             selectedAudioUri = selectedAudioUri,
@@ -480,7 +519,11 @@ internal fun PostDetailScreen(
                             onImageClick = { url -> fullScreenImageUrl = url }
                         )
                     } else {
-                        BountyRewardCard(reward = post.reward, isCompleted = false)
+                        BountyRewardCard(
+                            reward = post.reward,
+                            extendedColors = extendedColors,
+                            isCompleted = false,
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -493,6 +536,7 @@ internal fun PostDetailScreen(
 @Composable
 private fun PostDetailTopBar(
     onBackClick: () -> Unit,
+    extendedColors: KithExtendedColors,
     modifier: Modifier = Modifier,
     showDeleteButton: Boolean = false,
     onDeleteClick: () -> Unit = {},
@@ -509,7 +553,7 @@ private fun PostDetailTopBar(
             Icon(
                 imageVector = KithIcons.ArrowBack,
                 contentDescription = "Back",
-                tint = PostDetailColors.TextPrimary
+                tint = extendedColors.detailTextPrimary
             )
         }
 
@@ -518,8 +562,60 @@ private fun PostDetailTopBar(
                 Icon(
                     imageVector = KithIcons.Delete,
                     contentDescription = "Delete Post",
-                    tint = PostDetailColors.TextPrimary,
                     modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RateSolutionSection(
+    rating: Float,
+    extendedColors: KithExtendedColors,
+    onRatingChange: (Float) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "How helpful was this solution?",
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = extendedColors.detailTextPrimary,
+        )
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            for (i in 1..5) {
+                val isSelected = i <= rating
+                val starScale by animateFloatAsState(
+                    targetValue = if (isSelected) 1.2f else 1f,
+                    animationSpec = spring(dampingRatio = 0.5f, stiffness = 300f),
+                    label = "star_scale"
+                )
+
+                Icon(
+                    // UPDATED: Swap between filled and outlined icons based on selection
+                    imageVector = if (isSelected) KithIcons.StarRate else KithIcons.StarRateOutlined,
+                    contentDescription = "Rate $i stars",
+                    tint = if (isSelected) extendedColors.detailStar else Color(0xFF9CA3AF),
+                    modifier = Modifier
+                        .size(32.dp)
+                        .scale(starScale)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) {
+                            onRatingChange(i.toFloat())
+                        }
                 )
             }
         }
@@ -571,26 +667,33 @@ private fun SolutionDecisionSection(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // UPDATED: Standard M3 Expressive Button (removes custom green)
                 Button(
                     onClick = onAccept,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
-                    shape = RoundedCornerShape(14.dp),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                    shape = RoundedCornerShape(14.dp)
                 ) {
-                    Icon(imageVector = KithIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Icon(
+                        imageVector = KithIcons.Check,
+                        contentDescription = null,
+                        tint = androidx.compose.material3.LocalContentColor.current, // Overrides the hardcoded green in CheckIcon
+                        modifier = Modifier.size(20.dp)
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Accept Solution", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
 
-                TextButton(
+                // UPDATED: Standard M3 Expressive OutlinedButton (removes custom red)
+                OutlinedButton(
                     onClick = onReject,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
                     shape = RoundedCornerShape(14.dp)
                 ) {
-                    Text("Reject this answer", color = Color(0xFFEF4444), fontWeight = FontWeight.SemiBold)
+                    Text("Reject this answer", fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -619,17 +722,20 @@ private fun SolutionDecisionSection(
 private fun AuthorProfileCard(
     author: User,
     onClick: () -> Unit,
+    extendedColors: KithExtendedColors,
     modifier: Modifier = Modifier,
     roleLabel: String? = null,
-    containerColor: Color = PostDetailColors.AuthorCardBackground,
+    containerColor: Color? = null,
     contentPadding: PaddingValues = PaddingValues(14.dp)
 ) {
+    val actualBgColor = containerColor ?: extendedColors.detailCardBg
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = containerColor),
+        colors = CardDefaults.cardColors(containerColor = actualBgColor),
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -652,7 +758,7 @@ private fun AuthorProfileCard(
                         text = roleLabel,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = PostDetailColors.PrimaryBlue,
+                        color = extendedColors.detailPrimaryBlue,
                         modifier = Modifier.padding(bottom = 2.dp)
                     )
                 }
@@ -660,7 +766,7 @@ private fun AuthorProfileCard(
                     text = author.name,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = PostDetailColors.TextPrimary,
+                    color = extendedColors.detailTextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -669,7 +775,7 @@ private fun AuthorProfileCard(
                     Icon(
                         imageVector = KithIcons.StarRate,
                         contentDescription = "Rating",
-                        tint = PostDetailColors.RatingStar,
+                        tint = extendedColors.detailStar,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
@@ -677,7 +783,7 @@ private fun AuthorProfileCard(
                         text = "${author.rating}",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
-                        color = PostDetailColors.TextSecondary
+                        color = extendedColors.detailTextSecondary,
                     )
                 }
             }
@@ -689,6 +795,7 @@ private fun AuthorProfileCard(
 private fun PostTagsRow(
     isInPerson: Boolean,
     communityName: String,
+    extendedColors: KithExtendedColors,
     onCommunityClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -696,10 +803,10 @@ private fun PostTagsRow(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Surface(shape = RoundedCornerShape(50), color = PostDetailColors.TagBackground) {
+        Surface(shape = RoundedCornerShape(50), color = extendedColors.detailTagBg) {
             Text(
                 text = if (isInPerson) "In-Person" else "Virtual",
-                color = PostDetailColors.TagText,
+                color = extendedColors.detailTagText,
                 fontSize = 12.5.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
@@ -708,12 +815,12 @@ private fun PostTagsRow(
         if (communityName.isNotBlank()) {
             Surface(
                 shape = RoundedCornerShape(50),
-                color = PostDetailColors.TagBackground,
+                color = extendedColors.detailTagBg,
                 modifier = Modifier.clickable(onClick = onCommunityClick)
             ) {
                 Text(
                     text = communityName,
-                    color = PostDetailColors.TagText,
+                    color = extendedColors.detailTagText,
                     fontSize = 12.5.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
@@ -760,12 +867,23 @@ private fun PostMediaAttachments(
 private fun SolutionCard(
     solution: String,
     solver: User?,
+    imageUris: List<String>,
+    pdfUri: String?,
+    audioUri: String?,
+    isAuthor: Boolean,
+    status: SolutionStatus,
+    rating: Float,
+    extendedColors: KithExtendedColors,
+    onAccept: () -> Unit,
+    onReject: () -> Unit,
+    onRatingChange: (Float) -> Unit,
+    onImageClick: (String) -> Unit,
     onSolverClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = PostDetailColors.SolutionCardBackground),
+        colors = CardDefaults.cardColors(containerColor = extendedColors.detailSolutionBg),
         shape = RoundedCornerShape(22.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -779,11 +897,12 @@ private fun SolutionCard(
                 AuthorProfileCard(
                     author = solver,
                     roleLabel = "SOLVER",
+                    extendedColors = extendedColors,
                     onClick = onSolverClick,
                     containerColor = Color.Transparent,
                     contentPadding = PaddingValues(0.dp)
                 )
-                HorizontalDivider(color = PostDetailColors.BorderLight)
+                HorizontalDivider(color = extendedColors.detailBorderLight)
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -791,73 +910,44 @@ private fun SolutionCard(
                     text = "Solution",
                     fontSize = 19.sp,
                     fontWeight = FontWeight.Bold,
-                    color = PostDetailColors.TextPrimary
+                    color = extendedColors.detailTextPrimary
                 )
                 Text(
                     text = solution,
                     fontSize = 14.sp,
-                    color = PostDetailColors.TextSecondary,
+                    color = extendedColors.detailTextSecondary,
                     lineHeight = 21.sp
                 )
             }
-        }
-    }
-}
 
-@Composable
-private fun RateSolutionCard(
-    rating: Float,
-    onRatingChange: (Float) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
-        shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, PostDetailColors.BorderLight),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = "How helpful was this solution?",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = PostDetailColors.TextPrimary
-            )
+            if (imageUris.isNotEmpty()) {
+                PostMediaAttachments(
+                    images = imageUris,
+                    onImageClick = onImageClick
+                )
+            }
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                for (i in 1..5) {
-                    val isSelected = i <= rating
-                    val starScale by animateFloatAsState(
-                        targetValue = if (isSelected) 1.2f else 1f,
-                        animationSpec = spring(dampingRatio = 0.5f, stiffness = 300f),
-                        label = "star_scale"
-                    )
+            if (pdfUri != null || audioUri != null) {
+                DocumentLinksRow(pdfUri = pdfUri, audioUri = audioUri)
+            }
 
-                    Icon(
-                        imageVector = KithIcons.StarRate,
-                        contentDescription = "Rate $i stars",
-                        tint = if (isSelected) PostDetailColors.RatingStar else Color(0xFFE5E7EB),
-                        modifier = Modifier
-                            .size(32.dp)
-                            .scale(starScale)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                            ) {
-                                onRatingChange(i.toFloat())
-                            }
+            // ADDED: Inline author actions
+            if (isAuthor) {
+                HorizontalDivider(color = extendedColors.detailBorderLight)
+
+                if (status == SolutionStatus.PENDING) {
+                    RateSolutionSection(
+                        rating = rating,
+                        extendedColors = extendedColors,
+                        onRatingChange = onRatingChange
                     )
                 }
+
+                SolutionDecisionSection(
+                    status = status,
+                    onAccept = onAccept,
+                    onReject = onReject
+                )
             }
         }
     }
@@ -866,14 +956,15 @@ private fun RateSolutionCard(
 @Composable
 private fun BountyRewardCard(
     reward: Int,
+    extendedColors: KithExtendedColors,
     isCompleted: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = PostDetailColors.BountyCardBackground),
+        colors = CardDefaults.cardColors(containerColor = extendedColors.detailBountyBg),
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.2.dp, PostDetailColors.BountyCardBorder),
+        border = BorderStroke(1.2.dp, extendedColors.detailBountyBorder),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
@@ -887,13 +978,13 @@ private fun BountyRewardCard(
                 text = if (isCompleted) "Completed Bounty" else "Guaranteed Reward",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (isCompleted) PostDetailColors.BountyXp else PostDetailColors.TextPrimary
+                color = if (isCompleted) extendedColors.detailBountyXp else extendedColors.detailTextPrimary,
             )
             Text(
                 text = "$reward XP",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = PostDetailColors.BountyXp
+                color = PostDetailColors.BountyXp,
             )
         }
     }
@@ -907,6 +998,7 @@ private fun YourAnswerSectionModern(
     selectedImageUris: List<String>,
     selectedPdfUri: String?,
     selectedAudioUri: String?,
+    extendedColors: KithExtendedColors,
     onLaunchPhotoPicker: () -> Unit,
     onLaunchPdfPicker: () -> Unit,
     onLaunchAudioPicker: () -> Unit,
@@ -925,7 +1017,7 @@ private fun YourAnswerSectionModern(
                 text = "Your Answer",
                 fontSize = 19.sp,
                 fontWeight = FontWeight.Bold,
-                color = PostDetailColors.TextPrimary
+                color = extendedColors.detailTextPrimary,
             )
             OutlinedTextField(
                 value = answerText,
@@ -946,7 +1038,7 @@ private fun YourAnswerSectionModern(
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                     focusedContainerColor = MaterialTheme.colorScheme.surface,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                    focusedBorderColor = MaterialTheme.colorScheme.primary
+                    focusedBorderColor = extendedColors.detailPrimaryBlue,
                 )
             )
         }
@@ -956,7 +1048,7 @@ private fun YourAnswerSectionModern(
                 text = "ATTACHMENTS",
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = extendedColors.detailTextSecondary,
                 letterSpacing = 1.sp
             )
 
@@ -966,14 +1058,14 @@ private fun YourAnswerSectionModern(
             ) {
                 // Using standard material defaults matching CreatePostScreen's DocumentCard
                 DocumentCard(
-                    icon = KithIcons.Settings,
+                    icon = KithIcons.Photo,
                     label = "Photo",
                     badgeText = if (selectedImageUris.isNotEmpty()) "${selectedImageUris.size}/5" else "Add",
                     modifier = Modifier.weight(1f),
                     onClick = onLaunchPhotoPicker
                 )
                 DocumentCard(
-                    icon = KithIcons.Settings,
+                    icon = KithIcons.Description,
                     label = "PDF",
                     badgeText = if (selectedPdfUri != null) "1/1" else "Docs",
                     modifier = Modifier.weight(1f),
@@ -982,7 +1074,7 @@ private fun YourAnswerSectionModern(
                     onClick = onLaunchPdfPicker
                 )
                 DocumentCard(
-                    icon = KithIcons.Visibility,
+                    icon = KithIcons.AudioFile,
                     label = "Audio",
                     badgeText = if (selectedAudioUri != null) "1/1" else "Voice",
                     modifier = Modifier.weight(1f),
@@ -1207,6 +1299,70 @@ private fun SubmitAnswerBottomBar(
                 fontWeight = FontWeight.SemiBold,
                 color = Color.White
             )
+        }
+    }
+}
+
+@Composable
+private fun DocumentLinksRow(
+    pdfUri: String?,
+    audioUri: String?,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        if (pdfUri != null) {
+            Surface(
+                onClick = {
+                    try {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(pdfUri)))
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "No app found to open PDF", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(KithIcons.Description, contentDescription = null, tint = PostDetailColors.PrimaryBlue, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("View PDF", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                }
+            }
+        }
+
+        if (audioUri != null) {
+            Surface(
+                onClick = {
+                    try {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(audioUri)))
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "No app found to play audio", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(KithIcons.AudioFile, contentDescription = null, tint = PostDetailColors.PrimaryBlue, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Play Audio", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                }
+            }
         }
     }
 }

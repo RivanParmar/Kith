@@ -3,6 +3,8 @@ package com.kith.feature.community.impl.navigation
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.kith.core.navigation.Navigator
+import com.kith.core.navigation.horizontalSlideMetadata
+import com.kith.core.navigation.verticalSlideMetadata
 import com.kith.feature.community.api.navigation.CommunityListNavKey
 import com.kith.feature.community.api.navigation.CreateCommunityNavKey
 import com.kith.feature.community.api.navigation.JoinCommunityNavKey
@@ -22,28 +24,30 @@ fun EntryProviderScope<NavKey>.communityEntry(navigator: Navigator) {
         )
     }
 
-    entry<CreateCommunityNavKey> {
+    entry<CreateCommunityNavKey>(
+        metadata = verticalSlideMetadata()
+    ) {
         CreateCommunityScreen(
             onBack = { navigator.goBack() },
             onCreated = {},
         )
     }
 
-
-
     entry<CommunityListNavKey>{
         CommunitiesScreen(
-            // 1. Tell the list screen where to go when a card is clicked
             onCommunityClick = { communityId ->
                 navigator.navigate(CommunityDetailNavKey(communityId))
-            }
+            },
+            onJoinClick = { navigator.navigate(JoinCommunityNavKey) },
+            onBackClick = { navigator.goBack() }
         )
     }
 
-    // 2. Add the Detail Screen to your routing graph
-    entry<CommunityDetailNavKey> { key -> // <--- Grab the key here!
+    entry<CommunityDetailNavKey>(
+        metadata = horizontalSlideMetadata()
+    ) { key ->
         CommunityDetailScreen(
-            communityId = key.communityId, // <--- Pass it into the screen
+            communityId = key.communityId,
             onBackClick = { navigator.goBack() },
             onNavigateUp = { navigator.goBack() }
         )

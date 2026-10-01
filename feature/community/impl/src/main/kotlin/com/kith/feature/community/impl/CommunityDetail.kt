@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -74,7 +75,12 @@ fun CommunityDetailScreen(
                         onComplete = onNavigateUp
                     )
                 },
-                onDetailChange = viewModel::updateDescription
+                onDetailChange = viewModel::updateDescription,
+                onImageClick = { uri ->
+                    if (uri != null) {
+                        viewModel.updateCommunityImage(uri.toString())
+                    }
+                }
             )
         }
     }
@@ -99,6 +105,7 @@ internal fun CommunityDetailContent(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
+            .statusBarsPadding()
             .padding(horizontal = 24.dp)
     ) {
         Spacer(modifier = Modifier.height(24.dp))

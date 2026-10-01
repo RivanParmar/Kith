@@ -19,7 +19,7 @@ import javax.inject.Singleton
 
 private const val TARGET_ACTIVITY_NAME = "com.kith.MainActivity"
 private const val POST_NOTIFICATION_REQUEST_CODE = 0
-private const val POST_NOTIFICATION_CHANNEL_ID = ""
+private const val POST_NOTIFICATION_CHANNEL_ID = "PostUpdatesChannel"
 private const val DEEP_LINK_SCHEME_AND_HOST = "https://www.kith.com"
 private const val DEEP_LINK_HOME_PATH = "home"
 private const val DEEP_LINK_BASE_PATH = "$DEEP_LINK_SCHEME_AND_HOST/$DEEP_LINK_HOME_PATH"
@@ -42,13 +42,13 @@ internal class SystemTrayNotifier @Inject constructor(
 //        val notificationId = notification.id.toIntOrNull() ?: notification.hashCode()
 
         val postNotification = createPostNotification {
-//            .setSmallIcon(R.drawable.)
-            setContentTitle(notification.title)
-            .setContentText(notification.body)
-            .setAutoCancel(true)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setContentIntent(postsPendingIntent(notification.postId))
-            .setAutoCancel(true)
+            setSmallIcon(R.drawable.ic_stat_name)
+                .setContentTitle(notification.title)
+                .setContentText(notification.body)
+                .setAutoCancel(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(postsPendingIntent(notification.postId))
+                .setAutoCancel(true)
         }
 
 //        notificationManager.notify(notificationId, notificationBuilder.build())

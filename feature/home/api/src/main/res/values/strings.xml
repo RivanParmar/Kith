@@ -2,4 +2,5 @@
 <resources>
     <string name="feature_home_api_title">Home</string>
     <string name="feature_home_api_app_title">KITH</string>
+    <string name="feature_notifications_api_title">Notifications</string>
 </resources>

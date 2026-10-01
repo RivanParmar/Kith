@@ -33,6 +33,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -89,6 +90,7 @@ fun BrowseScreen(
         feedState = feedState,
         recentSearchQueriesUiState = recentSearchQueriesUiState,
         modifier = modifier,
+        onSearchQueryChanged = viewModel::onSearchQueryChanged,
         onSearchTriggered = viewModel::onSearchTriggered,
         onClearRecentSearches = viewModel::clearRecentSearches,
         onPostClick = onPostClick,
@@ -106,10 +108,11 @@ fun BrowseScreen(
 @Composable
 internal fun BrowseScreen(
     feedState: PostsFeedUiState,
-    recentSearchQueriesUiState: RecentSearchQueriesUiState = RecentSearchQueriesUiState.Loading,
+    recentSearchQueriesUiState: RecentSearchQueriesUiState,
     modifier: Modifier = Modifier,
     initialFilter: BrowseFilter = BrowseFilter.ALL,
     onFilterSelected: ((BrowseFilter) -> Unit)? = null,
+    onSearchQueryChanged: (String) -> Unit = {},
     onSearchTriggered: (String) -> Unit = {},
     onClearRecentSearches: () -> Unit = {},
     onPostClick: (String) -> Unit = { _ -> },
@@ -124,32 +127,22 @@ internal fun BrowseScreen(
 
     val isSearching = searchBarState.targetValue == SearchBarValue.Expanded
 
-    // Holds the currently active filter (All, In-person, or Online)
     var currentFilter by remember { mutableStateOf(initialFilter) }
 
-    // Live search query as the user types
     val searchQuery = textFieldState.text.toString()
 
-    // Live-filtered feed state based on search query and selected filter chip
-    val filteredFeedState = remember(feedState, searchQuery, currentFilter) {
+    LaunchedEffect(searchQuery) {
+        onSearchQueryChanged(searchQuery)
+    }
+
+    val filteredFeedState = remember(feedState, currentFilter) {
         if (feedState is PostsFeedUiState.Success) {
             val filtered = feedState.feed.filter { post ->
-                val matchesFilter = when (currentFilter) {
+                when (currentFilter) {
                     BrowseFilter.ALL -> true
                     BrowseFilter.IN_PERSON -> post.isInPerson
                     BrowseFilter.VIRTUAL -> !post.isInPerson
                 }
-
-                val matchesQuery = if (searchQuery.isBlank()) {
-                    true
-                } else {
-                    val query = searchQuery.trim()
-                    post.title.contains(query, ignoreCase = true) ||
-                        post.content.contains(query, ignoreCase = true) ||
-                        post.community.name.contains(query, ignoreCase = true)
-                }
-
-                matchesFilter && matchesQuery
             }
             PostsFeedUiState.Success(filtered)
         } else {
@@ -329,7 +322,11 @@ internal fun BrowseScreen(
                         }
                     }
                 } else {
-                    postsFeed(filteredFeedState)
+                    postsFeed(
+                        feedState = filteredFeedState,
+                        onPostClick = onPostClick,
+                        onAuthorClick = onAuthorClick,
+                    )
                 }
             }
         }

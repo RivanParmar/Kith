@@ -11,7 +11,7 @@ import com.kith.feature.profile.api.navigation.UserProfileNavKey
 fun EntryProviderScope<NavKey>.leaderboardEntry(navigator: Navigator) {
     entry<LeaderboardNavKey> {
         LeaderboardScreen(
-            onUserClick = { userId -> navigator.navigate(UserProfileNavKey(userId)) } // <--- ADD THIS
+            onUserClick = { userId -> navigator.navigate(UserProfileNavKey(userId)) }
         )
     }
 }

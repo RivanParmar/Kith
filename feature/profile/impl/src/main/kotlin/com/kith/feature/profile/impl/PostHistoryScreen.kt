@@ -39,11 +39,27 @@ import com.kith.core.designsystem.component.LoadingWheel
 import com.kith.core.model.data.Post
 import com.kith.feature.profile.api.R
 import android.text.format.DateUtils
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.remember
+import com.kith.core.designsystem.icon.KithIcons
+import com.kith.core.designsystem.theme.KithExtendedColors
+import com.kith.core.designsystem.theme.KithTheme
 
 @Composable
 fun PostHistoryScreen(
     modifier: Modifier = Modifier,
-    viewModel: PostHistoryViewModel = hiltViewModel()
+    viewModel: PostHistoryViewModel = hiltViewModel(),
+    onBackClick: () -> Unit = {},
+    onPostClick: (String) -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
@@ -55,7 +71,9 @@ fun PostHistoryScreen(
         isSyncing = isSyncing,
         onTabSelected = viewModel::setTab,
         onSync = viewModel::sync,
-        modifier = modifier
+        onBackClick = onBackClick,
+        modifier = modifier,
+        onPostClick = onPostClick,
     )
 }
 
@@ -64,10 +82,14 @@ internal fun PostHistoryScreen(
     uiState: PostHistoryUiState,
     selectedTab: PostHistoryTab,
     isSyncing: Boolean,
+    modifier: Modifier = Modifier,
     onTabSelected: (PostHistoryTab) -> Unit,
     onSync: () -> Unit,
-    modifier: Modifier = Modifier
+    onBackClick: () -> Unit = {},
+    onPostClick: (String) -> Unit = {},
 ) {
+    val extendedColors = KithTheme.extendedColors
+
     when (uiState) {
         is PostHistoryUiState.Loading -> {
             Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -87,8 +109,9 @@ internal fun PostHistoryScreen(
                 topBar = {
                     KithMediumTopAppBar(
                         titleRes = R.string.feature_profile_api_post_history_title,
-                        navigationIcon = null,
-                        navigationIconContentDescription = null,
+                        navigationIcon = KithIcons.ArrowBack,
+                        navigationIconContentDescription = "Back",
+                        onNavigationClick = onBackClick,
                         actionIcon = null,
                         actionIconContentDescription = null,
                         scrollBehavior = scrollBehavior,
@@ -105,10 +128,12 @@ internal fun PostHistoryScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Color.White)
+                            .padding(top = 16.dp)
+                            .background(MaterialTheme.colorScheme.background) // Themed Background
                     ) {
                         SegmentedTabControl(
                             selectedTab = selectedTab,
+                            extendedColors = extendedColors, // PASSED DOWN
                             onTabSelected = onTabSelected,
                             modifier = Modifier
                                 .padding(horizontal = 24.dp)
@@ -124,7 +149,11 @@ internal fun PostHistoryScreen(
                                 items = uiState.posts,
                                 key = { it.id }
                             ) { post ->
-                                PostHistoryCard(post = post)
+                                PostHistoryCard(
+                                    post = post,
+                                    extendedColors = extendedColors,
+                                    onClick = onPostClick,
+                                )
                             }
                         }
                     }
@@ -137,35 +166,68 @@ internal fun PostHistoryScreen(
 @Composable
 private fun SegmentedTabControl(
     selectedTab: PostHistoryTab,
+    extendedColors: KithExtendedColors, // REPLACED STATIC COLORS
     onTabSelected: (PostHistoryTab) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    val tabs = PostHistoryTab.entries
+    val selectedIndex = tabs.indexOf(selectedTab)
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .height(48.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color(0xFFF1F5F9))
-            .padding(4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .background(extendedColors.tabTrackBg, RoundedCornerShape(24.dp))
+            .padding(4.dp)
     ) {
-        PostHistoryTab.entries.forEach { tab ->
-            val isSelected = selectedTab == tab
+        BoxWithConstraints(modifier = Modifier.matchParentSize()) {
+            val tabWidth = maxWidth / tabs.size
+            val indicatorOffset by animateDpAsState(
+                targetValue = tabWidth * selectedIndex,
+                animationSpec = spring(dampingRatio = 0.75f, stiffness = 400f),
+                label = "indicator_offset"
+            )
+
             Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(if (isSelected) Color.White else Color.Transparent)
-                    .clickable { onTabSelected(tab) },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = tab.title,
-                    fontSize = 14.sp,
-                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                    color = if (isSelected) Color(0xFF3B82F6) else Color(0xFF64748B)
+                    .offset(x = indicatorOffset)
+                    .width(tabWidth)
+                    .fillMaxHeight()
+                    .background(extendedColors.tabPillBg, RoundedCornerShape(20.dp))
+            )
+        }
+
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            tabs.forEach { tab ->
+                val isSelected = selectedTab == tab
+
+                val animatedTextColor by animateColorAsState(
+                    targetValue = if (isSelected) extendedColors.tabTextSelected else extendedColors.tabTextUnselected,
+                    label = "tab_text_color"
                 )
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(20.dp))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) { onTabSelected(tab) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = tab.title,
+                        fontSize = 14.sp,
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                        color = animatedTextColor
+                    )
+                }
             }
         }
     }
@@ -174,19 +236,19 @@ private fun SegmentedTabControl(
 @Composable
 private fun PostHistoryCard(
     post: Post,
-    modifier: Modifier = Modifier
+    extendedColors: KithExtendedColors,
+    modifier: Modifier = Modifier,
+    onClick: (String) -> Unit = {},
 ) {
     val isActive = post.status == "OPEN" || post.status == "DRAFT"
 
-    val badgeColor = if (isActive) Color(0xFFEFF6FF) else Color(0xFFFFFBEB)
-    val badgeTextColor = if (isActive) Color(0xFF3B82F6) else Color(0xFFD97706)
-
+    val badgeColor = if (isActive) extendedColors.historyBadgeActiveBg else extendedColors.historyBadgeInactiveBg
+    val badgeTextColor = if (isActive) extendedColors.historyBadgeActiveText else extendedColors.historyBadgeInactiveText
     val badgeText = post.status.replace("_", " ")
 
-    val xpColor = if (isActive) Color(0xFF64748B) else Color(0xFF3B82F6)
+    val xpColor = if (isActive) extendedColors.historyXpActiveText else extendedColors.historyXpInactiveText
     val xpText = if (isActive) "${post.reward} XP Offered" else "${post.reward} XP Earned"
 
-    // ADDED: Automatically formats the time to "10 min ago", "Yesterday", "2 days ago", etc.
     val timeAgo = DateUtils.getRelativeTimeSpanString(
         post.createdAt.toEpochMilliseconds(),
         System.currentTimeMillis(),
@@ -195,9 +257,10 @@ private fun PostHistoryCard(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = extendedColors.historyCardBg),
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+        border = BorderStroke(1.dp, extendedColors.historyCardBorder),
+        onClick = { onClick(post.id) },
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -219,11 +282,10 @@ private fun PostHistoryCard(
                     )
                 }
 
-                // ADDED: Display the dynamic timestamp here
                 Text(
                     text = timeAgo,
                     fontSize = 12.sp,
-                    color = Color(0xFF94A3B8)
+                    color = extendedColors.historyTimeText
                 )
             }
 
@@ -233,7 +295,7 @@ private fun PostHistoryCard(
                 text = post.title,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF0F172A)
+                color = extendedColors.historyTitleText
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -246,7 +308,7 @@ private fun PostHistoryCard(
                 Text(
                     text = post.community.name,
                     fontSize = 14.sp,
-                    color = Color(0xFF64748B)
+                    color = extendedColors.historySubtitleText
                 )
 
                 Text(
@@ -259,6 +321,3 @@ private fun PostHistoryCard(
         }
     }
 }
-
-
-

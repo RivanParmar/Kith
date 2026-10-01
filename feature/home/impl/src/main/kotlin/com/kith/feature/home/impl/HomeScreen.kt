@@ -138,8 +138,7 @@ internal fun HomeScreen(
                         text = "Community Requests",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A1A1A),
-                        modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 8.dp)
+                        modifier = Modifier.padding(start = 20.dp, end = 24.dp, top = 24.dp, bottom = 8.dp)
                     )
                 }
 
