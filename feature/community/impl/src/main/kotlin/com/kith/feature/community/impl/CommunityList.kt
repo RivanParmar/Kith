@@ -3,7 +3,18 @@ package com.kith.feature.community.impl
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -19,7 +30,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,6 +38,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.kith.core.designsystem.icon.KithIcons
+import com.kith.core.designsystem.theme.KithExtendedColors
+import com.kith.core.designsystem.theme.KithTheme
 import com.kith.core.designsystem.theme.OutfitFontFamily
 import com.kith.core.model.data.Community
 import java.text.NumberFormat
@@ -37,16 +49,17 @@ import java.util.Locale
 fun CommunitiesScreen(
     onCommunityClick: (String) -> Unit = {},
     onBackClick: () -> Unit = {},
-    onJoinClick: () -> Unit = {}, // ADDED
+    onJoinClick: () -> Unit = {},
     viewModel: CommunityListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val extendedColors = KithTheme.extendedColors
 
-    Scaffold(containerColor = Color.White) { innerPadding ->
+    Scaffold(containerColor = extendedColors.communityBg) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(extendedColors.communityBg) // Themed Background
                 .padding(innerPadding)
         ) {
             Row(
@@ -59,7 +72,7 @@ fun CommunitiesScreen(
                     Icon(
                         imageVector = KithIcons.ArrowBack,
                         contentDescription = "Back",
-                        tint = Color(0xFF1B1F3B)
+                        tint = extendedColors.communityTextPrimary // Themed Icon
                     )
                 }
 
@@ -67,28 +80,27 @@ fun CommunitiesScreen(
 
                 Text(
                     text = "Communities",
-                    color = Color(0xFF1B1F3B),
+                    color = extendedColors.communityTextPrimary, // Themed Text
                     fontSize = 30.sp,
                     fontFamily = OutfitFontFamily,
                     fontWeight = FontWeight.ExtraBold,
-                    modifier = Modifier.weight(1f) // Pushes the next item to the far right
+                    modifier = Modifier.weight(1f)
                 )
 
                 if (uiState is CommunityListUiState.Success) {
                     val state = uiState as CommunityListUiState.Success
-                    // Make sure you add 'val isPremium: Boolean' to your Success state class
                     if (state.isPremium) {
                         androidx.compose.material3.Surface(
                             onClick = onJoinClick,
                             shape = CircleShape,
-                            color = Color(0xFFEFF6FF), // Soft primary blue background
+                            color = extendedColors.communityActionBg, // Themed Action Bg
                             modifier = Modifier.size(40.dp).padding(end = 4.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = KithIcons.Add,
                                     contentDescription = "Join new community",
-                                    tint = Color(0xFF2563EB), // Primary blue icon
+                                    tint = extendedColors.communityActionIcon, // Themed Action Icon
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
@@ -109,6 +121,7 @@ fun CommunitiesScreen(
                         items(communities, key = { it.id }) { community ->
                             CommunityCard(
                                 community = community,
+                                extendedColors = extendedColors, // PASSED DOWN
                                 onClick = { onCommunityClick(community.id) }
                             )
                         }
@@ -123,6 +136,7 @@ fun CommunitiesScreen(
 @Composable
 private fun CommunityCard(
     community: Community,
+    extendedColors: KithExtendedColors,
     onClick: () -> Unit
 ) {
     val memberCountToDisplay = community.memberCount ?: 0
@@ -131,8 +145,8 @@ private fun CommunityCard(
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFECEDF3)),
+        colors = CardDefaults.cardColors(containerColor = extendedColors.communityCardBg),
+        border = BorderStroke(1.dp, extendedColors.communityCardBorder),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -140,7 +154,10 @@ private fun CommunityCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier.size(56.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xFFE3E6F0)),
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(extendedColors.communityImagePlaceholderBg),
                 contentAlignment = Alignment.Center
             ) {
                 if (!community.imageUrl.isNullOrBlank()) {
@@ -154,7 +171,7 @@ private fun CommunityCard(
                     Icon(
                         imageVector = KithIcons.Groups,
                         contentDescription = null,
-                        tint = Color(0xFFA0A3B1)
+                        tint = extendedColors.communityImagePlaceholderIcon
                     )
                 }
             }
@@ -162,13 +179,27 @@ private fun CommunityCard(
             Spacer(modifier = Modifier.width(14.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = community.name, color = Color(0xFF1B1F3B), fontSize = 15.sp, fontWeight = FontWeight.SemiBold, lineHeight = 19.sp)
+                Text(
+                    text = community.name,
+                    color = extendedColors.communityTextPrimary,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    lineHeight = 19.sp
+                )
                 Spacer(modifier = Modifier.height(4.dp))
 
                 if (memberCountToDisplay > 0) {
-                    Text(text = "$memberCountFormatted Members", color = Color(0xFFA0A3B1), fontSize = 13.sp)
+                    Text(
+                        text = "$memberCountFormatted Members",
+                        color = extendedColors.communityTextSecondary,
+                        fontSize = 13.sp
+                    )
                 } else {
-                    Text(text = "Active Community", color = Color(0xFFA0A3B1), fontSize = 13.sp)
+                    Text(
+                        text = "Active Community",
+                        color = extendedColors.communityTextSecondary,
+                        fontSize = 13.sp
+                    )
                 }
             }
         }

@@ -121,6 +121,18 @@ data class KithExtendedColors(
     val detailPrimaryBlue: Color,
     val detailSolutionBg: Color,
     val detailBorderLight: Color,
+    val communityBg: Color,
+    val communityCardBg: Color,
+    val communityCardBorder: Color,
+    val communityTextPrimary: Color,
+    val communityTextSecondary: Color,
+    val communityActionBg: Color,
+    val communityActionIcon: Color,
+    val communityImagePlaceholderBg: Color,
+    val communityImagePlaceholderIcon: Color,
+    val communityIconSecondary: Color,
+    val communityDangerBg: Color,
+    val communityDangerText: Color,
 )
 
 val LocalKithExtendedColors = staticCompositionLocalOf {
@@ -202,5 +214,17 @@ val LocalKithExtendedColors = staticCompositionLocalOf {
         detailPrimaryBlue = Color.Unspecified,
         detailSolutionBg = Color.Unspecified,
         detailBorderLight = Color.Unspecified,
+        communityBg = Color.Unspecified,
+        communityCardBg = Color.Unspecified,
+        communityCardBorder = Color.Unspecified,
+        communityTextPrimary = Color.Unspecified,
+        communityTextSecondary = Color.Unspecified,
+        communityActionBg = Color.Unspecified,
+        communityActionIcon = Color.Unspecified,
+        communityImagePlaceholderBg = Color.Unspecified,
+        communityImagePlaceholderIcon = Color.Unspecified,
+        communityIconSecondary = Color.Unspecified,
+        communityDangerBg = Color.Unspecified,
+        communityDangerText = Color.Unspecified,
     )
 }

@@ -154,6 +154,18 @@ fun KithTheme(
             detailPrimaryBlue = PrimaryBlue,
             detailSolutionBg = Color(0xFF1E293B),
             detailBorderLight = Color(0xFF334155),
+            communityBg = BackgroundDark,
+            communityCardBg = SurfaceDark,
+            communityCardBorder = OutlineDark,
+            communityTextPrimary = White,
+            communityTextSecondary = Color(0xFF94A3B8),
+            communityActionBg = Color(0xFF1E3A8A).copy(alpha = 0.3f),
+            communityActionIcon = Color(0xFF60A5FA),
+            communityImagePlaceholderBg = Color(0xFF1E293B),
+            communityImagePlaceholderIcon = Color(0xFF64748B),
+            communityIconSecondary = Color(0xFF94A3B8),
+            communityDangerBg = Color(0xFF7F1D1D).copy(alpha = 0.3f),
+            communityDangerText = Color(0xFFF87171),
         )
     } else {
         KithExtendedColors(
@@ -234,6 +246,18 @@ fun KithTheme(
             detailPrimaryBlue = Color(0xFF2563EB),
             detailSolutionBg = Color(0xFFF7F6FB),
             detailBorderLight = Color(0xFFE5E7EB),
+            communityBg = White,
+            communityCardBg = White,
+            communityCardBorder = Color(0xFFECEDF3),
+            communityTextPrimary = Color(0xFF1B1F3B),
+            communityTextSecondary = Color(0xFFA0A3B1),
+            communityActionBg = Color(0xFFEFF6FF),
+            communityActionIcon = Color(0xFF2563EB),
+            communityImagePlaceholderBg = Color(0xFFE3E6F0),
+            communityImagePlaceholderIcon = Color(0xFFA0A3B1),
+            communityIconSecondary = Color(0xFFB9BCC9),
+            communityDangerBg = Color(0xFFFAD9D9),
+            communityDangerText = Color(0xFFD64545),
         )
     }
 

@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.util.Log
 import com.kith.core.network.KithStorageDataSource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -109,16 +110,19 @@ class OfflineFirstMediaRepository @Inject constructor(
             val fileName = "community_${communityId}.webp"
             val webpBytes = compressToWebP(imageUri.toUri())
 
-            val uploadResult = storageDataSource.uploadMedia(fileName, webpBytes, "media")
+            val uploadResult = storageDataSource.uploadMedia(fileName, webpBytes, "community")
 
             if (uploadResult.isSuccess) {
-                // Append timestamp to break the local Coil cache after an overwrite
-                val publicUrl = storageDataSource.getPublicUrl(fileName, "media") + "?t=${System.currentTimeMillis()}"
+                Log.d("Community", "Upload result success!")
+                val publicUrl = storageDataSource.getPublicUrl(fileName, "community") + "?t=${System.currentTimeMillis()}"
                 Result.success(publicUrl)
             } else {
+                val error = uploadResult.exceptionOrNull()
+                Log.e("Community", "Upload result failure! Reason: ${error?.message}", error)
                 Result.failure(uploadResult.exceptionOrNull() ?: Exception("Unknown upload error"))
             }
         } catch (e: Exception) {
+            Log.d("Community", "Something else failed!")
             Result.failure(e)
         }
     }

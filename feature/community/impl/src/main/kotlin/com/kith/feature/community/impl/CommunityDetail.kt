@@ -41,6 +41,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.kith.core.designsystem.icon.KithIcons
+import com.kith.core.designsystem.theme.KithExtendedColors
+import com.kith.core.designsystem.theme.KithTheme
 
 @Composable
 fun CommunityDetailScreen(
@@ -55,11 +57,10 @@ fun CommunityDetailScreen(
     )
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val extendedColors = KithTheme.extendedColors
 
     when (uiState) {
-        is CommunityDetailUiState.Loading -> { /* Loader */
-        }
-
+        is CommunityDetailUiState.Loading -> { /* Loader */ }
         is CommunityDetailUiState.Success -> {
             val state = uiState as CommunityDetailUiState.Success
             CommunityDetailContent(
@@ -68,6 +69,7 @@ fun CommunityDetailScreen(
                 initialDetail = state.community.description
                     ?: "Give details... What do you need help with or want to share?",
                 isAdmin = state.isAdmin,
+                extendedColors = extendedColors, // PASSED DOWN
                 onBackClick = onBackClick,
                 onLeaveOrDeleteClick = {
                     viewModel.leaveOrDeleteCommunity(
@@ -92,6 +94,7 @@ internal fun CommunityDetailContent(
     communityImageUrl: String?,
     initialDetail: String,
     isAdmin: Boolean,
+    extendedColors: KithExtendedColors,
     onBackClick: () -> Unit = {},
     onLeaveOrDeleteClick: () -> Unit = {},
     onDetailChange: (String) -> Unit = {},
@@ -104,7 +107,7 @@ internal fun CommunityDetailContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(extendedColors.communityBg) // Themed Background
             .statusBarsPadding()
             .padding(horizontal = 24.dp)
     ) {
@@ -113,13 +116,13 @@ internal fun CommunityDetailContent(
             Icon(
                 imageVector = KithIcons.ArrowBack,
                 contentDescription = "Back",
-                tint = Color(0xFFB9BCC9)
+                tint = extendedColors.communityIconSecondary // Themed Icon
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = communityName,
-            color = Color(0xFF1B1F3B),
+            color = extendedColors.communityTextPrimary, // Themed Text
             fontSize = 30.sp,
             fontWeight = FontWeight.Bold,
             lineHeight = 36.sp
@@ -132,7 +135,7 @@ internal fun CommunityDetailContent(
                     .fillMaxWidth()
                     .height(170.dp)
                     .clip(RoundedCornerShape(85.dp))
-                    .background(Color(0xFFEDEEF6))
+                    .background(extendedColors.communityImagePlaceholderBg) // Themed Placeholder Bg
                     .then(
                         if (isAdmin) Modifier.clickable {
                             mediaPicker.launchPhotoPicker { uri -> onImageClick(uri) }
@@ -151,7 +154,7 @@ internal fun CommunityDetailContent(
                     Icon(
                         imageVector = KithIcons.Groups,
                         contentDescription = null,
-                        tint = Color(0xFFA0A3B1),
+                        tint = extendedColors.communityImagePlaceholderIcon, // Themed Placeholder Icon
                         modifier = Modifier.size(64.dp)
                     )
                 }
@@ -163,7 +166,7 @@ internal fun CommunityDetailContent(
                         .padding(end = 18.dp, bottom = 6.dp)
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(Color.White)
+                        .background(extendedColors.communityCardBg) // Themed Edit Circle
                         .clickable {
                             mediaPicker.launchPhotoPicker { uri -> onImageClick(uri) }
                         },
@@ -172,7 +175,7 @@ internal fun CommunityDetailContent(
                     Icon(
                         imageVector = KithIcons.Edit,
                         contentDescription = "Edit community image",
-                        tint = Color(0xFF2A4FE0),
+                        tint = extendedColors.communityActionIcon, // Themed Edit Icon
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -184,7 +187,7 @@ internal fun CommunityDetailContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(14.dp))
-                .border(BorderStroke(1.dp, Color(0xFFE2E4ED)), RoundedCornerShape(14.dp))
+                .border(BorderStroke(1.dp, extendedColors.communityCardBorder), RoundedCornerShape(14.dp)) // Themed Border
                 .padding(16.dp)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -195,7 +198,7 @@ internal fun CommunityDetailContent(
                 ) {
                     Text(
                         text = "Detail",
-                        color = Color(0xFF1B1F3B),
+                        color = extendedColors.communityTextPrimary, // Themed Text
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -210,7 +213,7 @@ internal fun CommunityDetailContent(
                             Icon(
                                 imageVector = if (isEditingDetail) KithIcons.Check else KithIcons.Edit,
                                 contentDescription = "Edit detail",
-                                tint = Color(0xFF2A4FE0),
+                                tint = extendedColors.communityActionIcon, // Themed Action Icon
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -222,12 +225,20 @@ internal fun CommunityDetailContent(
                         value = detailText,
                         onValueChange = { detailText = it },
                         minLines = 2, maxLines = 4,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedBorderColor = extendedColors.communityCardBorder,
+                            focusedBorderColor = extendedColors.communityActionIcon,
+                            unfocusedTextColor = extendedColors.communityTextPrimary,
+                            focusedTextColor = extendedColors.communityTextPrimary
+                        )
                     )
                 } else {
                     Text(
                         text = detailText,
-                        color = Color(0xFF7A7D8C),
+                        color = extendedColors.communityTextSecondary, // Themed Text
                         fontSize = 14.sp,
                         lineHeight = 20.sp
                     )
@@ -242,8 +253,8 @@ internal fun CommunityDetailContent(
                 .height(52.dp),
             shape = RoundedCornerShape(26.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFFAD9D9),
-                contentColor = Color(0xFFD64545)
+                containerColor = extendedColors.communityDangerBg, // Themed Danger Bg
+                contentColor = extendedColors.communityDangerText // Themed Danger Text
             )
         ) {
             Text(

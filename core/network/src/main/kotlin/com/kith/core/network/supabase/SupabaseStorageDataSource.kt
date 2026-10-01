@@ -27,7 +27,7 @@ class SupabaseStorageDataSource @Inject constructor(
                 path = fileName,
                 data = fileBytes,
                 options = {
-                    upsert = true // Overwrites old profile pictures with the same name to save space
+                    upsert = true
                 }
             )
             Result.success(Unit)
