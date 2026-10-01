@@ -115,127 +115,6 @@ private object PostDetailColors {
     val SolutionCardBackground = Color(0xFFF7F6FB)
 }
 
-private val CheckIcon: ImageVector
-    get() = ImageVector.Builder(
-        name = "Check",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            fill = SolidColor(Color(0xFF10B981)),
-            pathFillType = PathFillType.NonZero
-        ) {
-            moveTo(9f, 16.17f)
-            lineTo(4.83f, 12f)
-            lineToRelative(-1.42f, 1.41f)
-            lineTo(9f, 19f)
-            lineTo(21f, 7f)
-            lineToRelative(-1.41f, -1.41f)
-            close()
-        }
-    }.build()
-
-private val DeleteIcon: ImageVector
-    get() = ImageVector.Builder(
-        name = "Delete",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            fill = SolidColor(Color(0xFFEF4444)),
-            pathFillType = PathFillType.NonZero
-        ) {
-            moveTo(6f, 19f)
-            curveToRelative(0f, 1.1f, 0.9f, 2f, 2f, 2f)
-            horizontalLineToRelative(8f)
-            curveToRelative(1.1f, 0f, 2f, -0.9f, 2f, -2f)
-            verticalLineTo(7f)
-            horizontalLineTo(6f)
-            verticalLineToRelative(12f)
-            close()
-            moveTo(19f, 4f)
-            horizontalLineToRelative(-3.5f)
-            lineToRelative(-1f, -1f)
-            horizontalLineToRelative(-5f)
-            lineToRelative(-1f, 1f)
-            horizontalLineTo(5f)
-            verticalLineToRelative(2f)
-            horizontalLineToRelative(14f)
-            verticalLineTo(4f)
-            close()
-        }
-    }.build()
-
-private val ArrowDropDownIcon: ImageVector
-    get() = ImageVector.Builder(
-        name = "ArrowDropDown",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            fill = SolidColor(Color(0xFF111827)),
-            pathFillType = PathFillType.NonZero
-        ) {
-            moveTo(7f, 10f)
-            lineToRelative(5f, 5f)
-            lineToRelative(5f, -5f)
-            close()
-        }
-    }.build()
-
-private val ArrowDropUpIcon: ImageVector
-    get() = ImageVector.Builder(
-        name = "ArrowDropUp",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            fill = SolidColor(Color(0xFF111827)),
-            pathFillType = PathFillType.NonZero
-        ) {
-            moveTo(7f, 14f)
-            lineToRelative(5f, -5f)
-            lineToRelative(5f, 5f)
-            close()
-        }
-    }.build()
-
-private val CloseIcon: ImageVector
-    get() = ImageVector.Builder(
-        name = "Close",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            fill = SolidColor(Color(0xFF9CA3AF)),
-            pathFillType = PathFillType.NonZero
-        ) {
-            moveTo(19f, 6.41f)
-            lineTo(17.59f, 5f)
-            lineTo(12f, 10.59f)
-            lineTo(6.41f, 5f)
-            lineTo(5f, 6.41f)
-            lineTo(10.59f, 12f)
-            lineTo(5f, 17.59f)
-            lineTo(6.41f, 19f)
-            lineTo(12f, 13.41f)
-            lineTo(17.59f, 19f)
-            lineTo(19f, 17.59f)
-            lineTo(13.41f, 12f)
-            close()
-        }
-    }.build()
-
 @Composable
 fun PostDetailScreen(
     modifier: Modifier = Modifier,
@@ -338,10 +217,12 @@ internal fun PostDetailScreen(
             var selectedAudioUri by remember { mutableStateOf<String?>(null) }
 
             var userRating by remember(post.id) { mutableFloatStateOf(uiState.userRating) }
-            var showDeleteDialog by remember { mutableStateOf(false) }
-
+            var localSolutionStatus by remember(post.id, uiState.solutionStatus) { mutableStateOf(uiState.solutionStatus) }
             // Full Screen Image Dialog State
             var fullScreenImageUrl by remember { mutableStateOf<String?>(null) }
+
+
+            var showDeleteDialog by remember { mutableStateOf(false) }
 
             if (showDeleteDialog) {
                 AlertDialog(
@@ -356,7 +237,7 @@ internal fun PostDetailScreen(
                         TextButton(
                             onClick = {
                                 showDeleteDialog = false
-                                onDeleteClick()
+                                onDeleteClick() // Invokes viewModel.onDeletePost(onBackClick)
                             }
                         ) {
                             Text("Delete", color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
@@ -397,7 +278,7 @@ internal fun PostDetailScreen(
                                 .statusBarsPadding()
                         ) {
                             Icon(
-                                imageVector = CloseIcon,
+                                imageVector = KithIcons.Close,
                                 contentDescription = "Close",
                                 tint = Color.White
                             )
@@ -484,7 +365,7 @@ internal fun PostDetailScreen(
                             modifier = Modifier.size(36.dp)
                         ) {
                             Icon(
-                                imageVector = if (isAttachmentsExpanded) ArrowDropUpIcon else ArrowDropDownIcon,
+                                imageVector = if (isAttachmentsExpanded) KithIcons.ArrowDropUp else KithIcons.ArrowDropDown,
                                 contentDescription = if (isAttachmentsExpanded) "Collapse details" else "Expand details",
                                 tint = PostDetailColors.TextPrimary,
                                 modifier = Modifier.size(28.dp)
@@ -549,9 +430,15 @@ internal fun PostDetailScreen(
                             )
 
                             SolutionDecisionSection(
-                                status = uiState.solutionStatus,
-                                onAccept = onAcceptSolution,
-                                onReject = onRejectSolution
+                                status = localSolutionStatus,
+                                onAccept = {
+                                    localSolutionStatus = SolutionStatus.ACCEPTED
+                                    onAcceptSolution()
+                                },
+                                onReject = {
+                                    localSolutionStatus = SolutionStatus.REJECTED
+                                    onRejectSolution()
+                                }
                             )
                         }
 
@@ -629,9 +516,9 @@ private fun PostDetailTopBar(
         if (showDeleteButton) {
             IconButton(onClick = onDeleteClick, modifier = Modifier.size(40.dp)) {
                 Icon(
-                    imageVector = DeleteIcon,
+                    imageVector = KithIcons.Delete,
                     contentDescription = "Delete Post",
-                    tint = Color(0xFFEF4444),
+                    tint = PostDetailColors.TextPrimary,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -663,7 +550,7 @@ private fun SolutionDecisionSection(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = CheckIcon,
+                        imageVector = KithIcons.Check,
                         contentDescription = null,
                         tint = Color(0xFF059669),
                         modifier = Modifier.size(24.dp)
@@ -693,7 +580,7 @@ private fun SolutionDecisionSection(
                     shape = RoundedCornerShape(14.dp),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                 ) {
-                    Icon(imageVector = CheckIcon, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Icon(imageVector = KithIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Accept Solution", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
@@ -1140,7 +1027,7 @@ private fun YourAnswerSectionModern(
                             contentColor = Color.White
                         ) {
                             Icon(
-                                imageVector = CloseIcon,
+                                imageVector = KithIcons.Close,
                                 contentDescription = "Remove Image",
                                 modifier = Modifier.padding(4.dp)
                             )
@@ -1182,7 +1069,7 @@ fun DocumentCard(
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
-                            imageVector = CloseIcon,
+                            imageVector = KithIcons.Close,
                             contentDescription = "Clear Selection",
                             tint = MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.size(12.dp)

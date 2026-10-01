@@ -21,6 +21,7 @@ import com.kith.core.model.data.PostDetail
 import com.kith.core.network.KithNetworkDataSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.util.Locale.filter
 import javax.inject.Inject
 import kotlin.time.Clock
 
@@ -52,17 +53,27 @@ class OfflineFirstPostRepository @Inject constructor(
     override suspend fun syncDataFromNetwork() {
         val networkPosts = networkDataSource.getPosts(limit = 20)
 
-        val uniqueUserIds = networkPosts.map { it.userId }.toSet()
+        val uniqueUserIds = (networkPosts.map { it.userId } + networkPosts.mapNotNull { it.solverId })
+            .filter { it.isNotBlank() }
+            .toSet()
         val uniqueCommunityIds = networkPosts.map { it.communityId }.toSet()
 
         uniqueUserIds.forEach { id ->
-            val user = networkDataSource.getUserById(id)
-            userDao.upsertUser(user.asUserEntity())
+            try {
+                val user = networkDataSource.getUserById(id)
+                userDao.upsertUser(user.asUserEntity())
+            } catch (e: Exception) {
+                Log.e("PostRepository", "Failed to fetch user $id", e)
+            }
         }
 
         uniqueCommunityIds.forEach { id ->
-            val community = networkDataSource.getCommunityById(id)
-            communityDao.upsertCommunityPreservingStatus(community.asCommunityEntity())
+            try {
+                val community = networkDataSource.getCommunityById(id)
+                communityDao.upsertCommunityPreservingStatus(community.asCommunityEntity())
+            } catch (e: Exception) {
+                Log.e("PostRepository", "Failed to fetch community $id", e)
+            }
         }
 
         networkPosts.forEach { networkPost ->
@@ -72,19 +83,28 @@ class OfflineFirstPostRepository @Inject constructor(
 
     override suspend fun syncPostById(postId: String) {
         val networkPost = networkDataSource.getPostById(postId)
-        val user = networkDataSource.getUserById(networkPost.userId)
-        val community = networkDataSource.getCommunityById(networkPost.communityId)
+        try {
+            val user = networkDataSource.getUserById(networkPost.userId)
+            userDao.upsertUser(user.asUserEntity())
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Failed to fetch post author ${networkPost.userId}", e)
+        }
 
-        userDao.upsertUser(user.asUserEntity())
-        communityDao.upsertCommunityPreservingStatus(community.asCommunityEntity())
+        try {
+            val community = networkDataSource.getCommunityById(networkPost.communityId)
+            communityDao.upsertCommunityPreservingStatus(community.asCommunityEntity())
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Failed to fetch community ${networkPost.communityId}", e)
+        }
 
-        // FIX 1: Used ?.let for a safe smart cast
         networkPost.solverId?.let { safeSolverId ->
-            try {
-                val solver = networkDataSource.getUserById(safeSolverId)
-                userDao.upsertUser(solver.asUserEntity())
-            } catch (e: Exception) {
-                e.printStackTrace()
+            if (safeSolverId.isNotBlank()) {
+                try {
+                    val solver = networkDataSource.getUserById(safeSolverId)
+                    userDao.upsertUser(solver.asUserEntity())
+                } catch (e: Exception) {
+                    Log.e("PostRepository", "Failed to fetch solver user $safeSolverId", e)
+                }
             }
         }
 
@@ -92,18 +112,24 @@ class OfflineFirstPostRepository @Inject constructor(
     }
 
     override suspend fun submitAnswer(postId: String, answer: String, solverId: String) {
-        // FIX 2: Passed solverId to the network data source
+        try {
+            val currentPost = postDao.getPostById(postId)
+            if (currentPost != null) {
+                postDao.insertPost(currentPost.copy(answer = answer, solverId = solverId))
+            }
+        } catch (_: Exception) {}
+
         networkDataSource.submitAnswer(postId, answer, solverId)
         syncPostById(postId)
     }
 
     override suspend fun acceptSolution(postId: String) {
         try {
-            networkDataSource.acceptAnswer(postId)
             val currentPost = postDao.getPostById(postId)
             if (currentPost != null) {
                 postDao.insertPost(currentPost.copy(status = PostStatus.SOLVED))
             }
+            networkDataSource.acceptAnswer(postId)
             syncPostById(postId)
         } catch (e: Exception) {
             Log.e("PostRepository", "Failed to accept answer on network: ${e.message}", e)
@@ -113,11 +139,11 @@ class OfflineFirstPostRepository @Inject constructor(
 
     override suspend fun rejectSolution(postId: String) {
         try {
-            networkDataSource.rejectAnswer(postId)
             val currentPost = postDao.getPostById(postId)
             if (currentPost != null) {
                 postDao.insertPost(currentPost.copy(status = PostStatus.OPEN, answer = null))
             }
+            networkDataSource.rejectAnswer(postId)
             syncPostById(postId)
         } catch (e: Exception) {
             Log.e("PostRepository", "Failed to reject answer on network: ${e.message}", e)
@@ -134,13 +160,25 @@ class OfflineFirstPostRepository @Inject constructor(
         val userPosts = networkDataSource.getPostsForUser(userId)
         if (userPosts.isEmpty()) return
 
+        val uniqueUserIds = (userPosts.map { it.userId } + userPosts.mapNotNull { it.solverId })
+            .filter { it.isNotBlank() }
+            .toSet()
+        uniqueUserIds.forEach { id ->
+            try {
+                val user = networkDataSource.getUserById(id)
+                userDao.upsertUser(user.asUserEntity())
+            } catch (e: Exception) {
+                Log.e("PostRepository", "Failed to fetch user $id", e)
+            }
+        }
+
         val uniqueCommunityIds = userPosts.map { it.communityId }.toSet()
         uniqueCommunityIds.forEach { id ->
             try {
                 val community = networkDataSource.getCommunityById(id)
                 communityDao.upsertCommunity(community.asCommunityEntity())
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("PostRepository", "Failed to fetch community $id", e)
             }
         }
 
@@ -205,9 +243,13 @@ class OfflineFirstPostRepository @Inject constructor(
     }
 
     override suspend fun deletePost(postId: String) {
-        networkDataSource.deletePost(postId)
-//        postDao.deletePostById(postId)
-        // TODO
+        try {
+            networkDataSource.deletePost(postId)
+            postDao.deletePostById(postId)
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Failed to delete post: ${e.message}", e)
+            throw e
+        }
     }
 
     override suspend fun syncWith(synchronizer: Synchronizer): Boolean {

@@ -1,11 +1,13 @@
 package com.kith.feature.post.impl
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kith.core.data.repository.AuthRepository
 import com.kith.core.data.repository.MediaRepository
 import com.kith.core.data.repository.PostRepository
 import com.kith.core.model.data.Community
+import com.kith.core.model.data.Post
 import com.kith.core.model.data.PostDetail
 import com.kith.core.model.data.User
 import dagger.assisted.Assisted
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
@@ -24,6 +27,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.time.Instant
+
+
 
 private data class PostTransientState(
     val isAcceptedByCurrentUser: Boolean = false,
@@ -75,7 +80,7 @@ class PostDetailViewModel @AssistedInject constructor(
 
                 // 1. Separate files by type for the MediaRepository
                 // (Assuming AttachedFile has a 'uri' property from your file picker)
-                val imageUris = files.filter { !it.isDocument }.map { it.uri }
+                val imageUris = files.filter { !it.isDocument }.mapNotNull { it.uri }
                 val documentUri = files.firstOrNull { it.isDocument }?.uri
 
                 // 2. Upload media if any files are attached
@@ -83,7 +88,7 @@ class PostDetailViewModel @AssistedInject constructor(
                     mediaRepository.processAndUploadMedia(
                         postId = postId,
                         role = "solver",
-                        imageUris = imageUris as List<String>,
+                        imageUris = imageUris,
                         pdfUri = documentUri,
                         audioUri = null
                     )
@@ -112,7 +117,10 @@ class PostDetailViewModel @AssistedInject constructor(
         viewModelScope.launch {
             try {
                 postRepository.acceptSolution(postId)
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                Log.e("PostDetailViewModel", "Failed to accept solution", e)
+                transientState.update { it.copy(solutionStatus = SolutionStatus.PENDING) }
+            }
         }
     }
 
@@ -121,18 +129,25 @@ class PostDetailViewModel @AssistedInject constructor(
         viewModelScope.launch {
             try {
                 postRepository.rejectSolution(postId)
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                Log.e("PostDetailViewModel", "Failed to reject solution", e)
+                transientState.update { it.copy(solutionStatus = SolutionStatus.PENDING) }
+            }
         }
     }
 
-    fun onDeletePost(onDeleted: () -> Unit) {
+    fun onDeletePost(onSuccess: () -> Unit) {
         viewModelScope.launch {
-            transientState.update { it.copy(isDeleting = true) }
             try {
-                postRepository.deletePost(postId)
-                onDeleted()
-            } catch (_: Exception) { // FIX: Changed e to _ to clear warning
-                transientState.update { it.copy(isDeleting = false) }
+                val currentPostId = (uiState.value as? PostDetailUiState.Success)?.post?.id ?: return@launch
+
+                // Execute backend deletion
+                postRepository.deletePost(currentPostId)
+
+                // Navigate back to previous screen after successful delete
+                onSuccess()
+            } catch (e: Exception) {
+                android.util.Log.e("PostDetailViewModel", "Failed to delete post: ${e.message}", e)
             }
         }
     }

@@ -19,6 +19,7 @@ interface PostDao {
     @Query(value = "SELECT * FROM posts WHERE user_id = :userId OR solver_id = :userId ORDER BY created_at DESC")
     fun getPostsByUserIdStream(userId: String): Flow<List<PopulatedPostEntity>>
 
+    @Transaction
     @Query(value = "SELECT * FROM posts WHERE id = :postId")
     fun getPostDetailStream(postId: String): Flow<PopulatedPostEntity>
 
@@ -33,4 +34,7 @@ interface PostDao {
 
     @Query(value = "SELECT * FROM posts WHERE sync_status = :syncStatus")
     suspend fun getPostsBySyncStatus(syncStatus: SyncStatus): List<PostEntity>
+
+    @Query(value = "DELETE FROM posts WHERE id = :postId")
+    suspend fun deletePostById(postId: String)
 }

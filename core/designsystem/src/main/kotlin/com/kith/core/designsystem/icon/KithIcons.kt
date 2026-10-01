@@ -28,6 +28,9 @@ object KithIcons {
     val Visibility = visibility
     val VisibilityOff = visibility_off
     val Close = close
+    val Delete = delete
+    val ArrowDropDown = arrow_drop_down
+    val ArrowDropUp = arrow_drop_up
     val ArrowDown = keyboard_double_arrow_down
     val CheckCircle = check_circle
     val Cancel = cancel
