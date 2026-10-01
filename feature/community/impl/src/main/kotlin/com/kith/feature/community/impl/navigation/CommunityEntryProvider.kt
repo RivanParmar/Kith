@@ -17,8 +17,8 @@ import com.kith.feature.community.impl.CommunityDetailScreen // <-- ADD THIS IMP
 fun EntryProviderScope<NavKey>.communityEntry(navigator: Navigator) {
     entry<JoinCommunityNavKey> {
         JoinCommunityScreen(
-            onBack = {},
-            onJoined = {},
+            onBack = { navigator.goBack() },
+            onJoined = { navigator.goBack() },
             onFindCommunity = {},
             onCreateCommunity = { navigator.navigate(CreateCommunityNavKey) },
         )
@@ -33,7 +33,9 @@ fun EntryProviderScope<NavKey>.communityEntry(navigator: Navigator) {
         )
     }
 
-    entry<CommunityListNavKey>{
+    entry<CommunityListNavKey>(
+        metadata = horizontalSlideMetadata()
+    ) {
         CommunitiesScreen(
             onCommunityClick = { communityId ->
                 navigator.navigate(CommunityDetailNavKey(communityId))
