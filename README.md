@@ -48,9 +48,9 @@ Kith is driven by a self-sustaining peer economy. The core loop operates in 8 st
 ## 🛠 Tech Stack & Requirements
 
 ### Compatibility
-*   **Minimum SDK:** 26 (Android 8.0)
-*   **Target SDK:** 34 (Android 14)
-*   **Kotlin:** 2.0.0+
+*   **Minimum SDK:** 28 (Android 9.0)
+*   **Target SDK:** 37 (Android 17)
+*   **Kotlin:** 2.3
 *   **Java Development Kit (JDK):** 17
 *   **IDE:** Android Studio Koala Feature Drop (or newer)
 
@@ -151,9 +151,6 @@ sdk.dir=...
 SUPABASE_URL=https://your-project-id.supabase.co
 SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key_here
 ```
-   > ⚠️ Never commit this file to version control.
 
-4. **Sync Gradle:** Click "Sync Project with Gradle Files".
-
-5. **Run:** Select the `debug` build variant and press Shift + F10.
+4. **Run**: Run the app!
 
