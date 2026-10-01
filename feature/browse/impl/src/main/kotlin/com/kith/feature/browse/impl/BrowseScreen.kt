@@ -266,7 +266,11 @@ internal fun BrowseScreen(
                                 }
                             }
                         } else {
-                            postsFeed(filteredFeedState)
+                            postsFeed(
+                                feedState = filteredFeedState,
+                                onPostClick = onPostClick,
+                                onAuthorClick = onAuthorClick,
+                            )
                         }
                     }
                 }

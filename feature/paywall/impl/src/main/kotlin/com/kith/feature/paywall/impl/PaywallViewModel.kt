@@ -24,8 +24,8 @@ import javax.inject.Inject
 class PaywallViewModel @Inject constructor(
     private val billingManager: RevenueCatBillingManager,
     private val userRepository: UserRepository,
-    private val authRepository: AuthRepository, // Added for User ID
-    private val networkDataSource: KithNetworkDataSource, // Added for Supabase Sync
+    private val authRepository: AuthRepository,
+    private val networkDataSource: KithNetworkDataSource,
     private val userDao: UserDao,
 ) : ViewModel() {
 

@@ -24,7 +24,7 @@ import kotlin.coroutines.resume
 
 class PurchaseCancelledException(message: String = "Purchase cancelled") : Exception(message)
 
-const val PREMIUM_ENTITLEMENT_ID = "premium"
+const val PREMIUM_ENTITLEMENT_ID = "kith_premium"
 
 @Singleton
 class RevenueCatBillingManager @Inject constructor(
@@ -158,9 +158,7 @@ class RevenueCatBillingManager @Inject constructor(
 
     fun isEntitledToPremium(customerInfo: CustomerInfo): Boolean {
         val premiumEntitlement = customerInfo.entitlements[PREMIUM_ENTITLEMENT_ID]
-        val proEntitlement = customerInfo.entitlements["pro"]
         return (premiumEntitlement != null && premiumEntitlement.isActive) ||
-                (proEntitlement != null && proEntitlement.isActive) ||
                 customerInfo.entitlements.active.containsKey(PREMIUM_ENTITLEMENT_ID)
     }
 }
